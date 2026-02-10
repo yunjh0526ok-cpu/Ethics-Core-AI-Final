@@ -14,11 +14,21 @@ import Contact from './components/Contact';
 import ProposalChatbot from './components/ProposalChatbot';
 import MBTI_Latte from './components/MBTI_Latte';
 import ProactiveAdministration from './components/ProactiveAdministration';
+import IntegratedCounseling from './components/IntegratedCounseling';
 
-type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact';
+type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewName>('home');
+
+  // Listen for custom navigation events from Hero
+  useEffect(() => {
+    const handleNavigation = (e: CustomEvent<ViewName>) => {
+      setCurrentView(e.detail);
+    };
+    window.addEventListener('navigate', handleNavigation as EventListener);
+    return () => window.removeEventListener('navigate', handleNavigation as EventListener);
+  }, []);
 
   // --- ETHICS-CORE AI SECURITY PROTOCOL ---
   useEffect(() => {
@@ -134,6 +144,12 @@ const App: React.FC = () => {
         {currentView === 'integrity' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <MBTI_Latte />
+          </div>
+        )}
+
+        {currentView === 'counseling_center' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <IntegratedCounseling />
           </div>
         )}
 
