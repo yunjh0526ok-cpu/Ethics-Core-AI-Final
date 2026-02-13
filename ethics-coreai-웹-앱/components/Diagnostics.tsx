@@ -10,7 +10,7 @@ import {
   ShieldAlert, BookOpen, Siren
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || "");
+
 // --- TYPE DEFINITIONS ---
 interface ChatMessage {
     role: 'user' | 'ai';
