@@ -261,7 +261,15 @@ const Diagnostics: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
+  // AI 상담관을 깨우는 진짜 열쇠입니다!
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY;
+    const aiInstance = apiKey ? new GoogleGenAI({ apiKey }) : null;
+    
+    if (!aiInstance) {
+        setChatLog(prev => [...prev, { role: 'ai', text: "연결 오류: API 키를 찾을 수 없습니다. (Vercel 설정을 확인해주세요)" }]);
+        setIsTyping(false);
+        return;
+    }
 
   // Initial Greeting for Law Tab
   useEffect(() => {
@@ -313,54 +321,48 @@ const Diagnostics: React.FC = () => {
     return scores.map(s => Math.min(1, s)); 
   };
 
-  const handleChatSend = async (text: string = chatInput) => {
+const handleChatSend = async (text: string = chatInput) => {
     if (!text.trim()) return;
     const msg = text;
     setChatLog(prev => [...prev, { role: 'user', text: msg }]);
     setChatInput('');
     setIsTyping(true);
 
-    if (!ai) {
+    // Vercel 금고에서 직접 키를 꺼내와서 AI를 즉시 깨웁니다.
+    const apiKey = process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY;
+    
+    if (!apiKey) {
         setTimeout(() => {
-            setChatLog(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API Key Error)" }]);
+            setChatLog(prev => [...prev, { role: 'ai', text: "시스템 연결 오류: API_KEY가 설정되지 않았습니다." }]);
             setIsTyping(false);
         }, 1000);
         return;
     }
 
-    // Persona & Instruction Selection
+    const aiInstance = new GoogleGenAI(apiKey);
     let systemInstruction = "";
+    
     if (activeTab === 'law') {
-        systemInstruction = `
-            당신은 '에코AI 수석 부패 감사관'입니다. 
-            사용자의 질의를 공무원 행동강령, 청탁금지법, 이해충돌방지법, 공익신고자 보호법 등 관련 법령에 근거하여 엄격하고 정밀하게 분석하십시오.
-            
-            [분석 가이드]
-            1. **어조**: 냉철하고 공정하며 신뢰감 있는 '수석 감사관' 톤을 유지하십시오. ("~입니다", "~판단됩니다")
-            2. **구조화된 출력**:
-               - **[위반 가능성 진단]**: 확률(%)과 위험도(고위험/중위험/저위험)를 명시하십시오. (예: **85% (고위험)**)
-               - **[관련 법령]**: 위반 소지가 있는 법 조항을 인용하십시오. (박스 처리 유도: > 기호 사용)
-               - **[감사관의 조언]**: 구체적인 대응 방안(자진 신고, 증거 확보 등)을 제시하십시오.
-            3. **신종 부패 연계**: '신종 부패 10대 유형'(출장비 횡령, 모바일 향응 수수, 사적 노무 동원 등)과 연관된 경우 이를 명시하십시오.
-        `;
+        systemInstruction = "당신은 에코AI 수석 부패 감사관입니다. 법규 위반 여부를 냉철하게 분석하세요.";
     } else {
-        systemInstruction = "당신은 '에코AI 마음치유 상담관'입니다. 조직 내 갈등이나 부패, 갑질로 힘들어하는 사용자의 마음에 깊이 공감하고, 따뜻한 위로와 심리적 안정을 위한 조언을 해주세요. 차가운 법률 용어보다는 감성적인 언어를 사용하세요.";
+        systemInstruction = "당신은 에코AI 마음치유 상담관입니다. 따뜻한 위로와 공감을 전하세요.";
     }
 
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
-            contents: msg,
-            config: { systemInstruction }
+        const model = aiInstance.getGenerativeModel({ 
+            model: "gemini-1.5-flash", 
+            systemInstruction 
         });
-        setChatLog(prev => [...prev, { role: 'ai', text: response.text || "답변을 생성할 수 없습니다." }]);
+        
+        const result = await model.generateContent(msg);
+        const response = await result.response;
+        setChatLog(prev => [...prev, { role: 'ai', text: response.text() || "답변을 드릴 수 없습니다." }]);
     } catch (e) {
-        setChatLog(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
+        setChatLog(prev => [...prev, { role: 'ai', text: "AI 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요." }]);
     } finally {
         setIsTyping(false);
     }
   };
-
   const currentCategoryData = DIAGNOSIS_CATEGORIES.find(c => c.id === diagCategory);
 
   return (
