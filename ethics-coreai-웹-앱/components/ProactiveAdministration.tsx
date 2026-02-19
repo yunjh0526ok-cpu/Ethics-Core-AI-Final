@@ -37,53 +37,71 @@ const ProactiveAdministration: React.FC = () => {
     const event = new CustomEvent('navigate', { detail: 'counseling_center' });
     window.dispatchEvent(event);
   };
-
-  const goToCorruption = () => {
-    sessionStorage.setItem('counseling_mode', 'corruption');
-    const event = new CustomEvent('navigate', { detail: 'counseling_center' });
-    window.dispatchEvent(event);
-  };
-
-  return (
+     
+const rollingQA = [
+    "적극행정 면책 제도(고의·중과실 배제) 신청 방법은?",
+    "2025년 적극행정 우수사례 경진대회 최신 수상작 리스트",
+    "주양순 전문강사의 '실패를 두려워않는 공직문화' 강의 커리큘럼",
+    "사전 컨설팅 감사제도와 적극행정위원회 심의 차이점",
+    "적극행정 우수공무원 특별승진 및 파격 인센티브 기준",
+    "소방청 '119패스' 및 행안부 '딥페이크 탐지' 우수사례 분석",
+    "지방공무원 적극행정 운영 지침 및 면책 요건 가이드",
+    "규제 샌드박스 및 적극적 법령 해석 지원 신청 절차",
+    "2026년 적극행정 전문강사단 정기 모집 기간 및 자격",
+    "적극행정 면책 보호관 제도 및 법률 지원 서비스 안내",
+    "적극행정 마일리지 제도 도입 및 운영 사례 공유",
+    "징계 의결 제외를 위한 적극행정 면책 건의서 작성법"
+  ];
+      
+return (
     <div className="min-h-screen bg-[#050A15] text-slate-300 font-sans selection:bg-blue-500/30">
-      {/* 1. 최상단 내비게이션 바 (Ethics-Core AI) */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#050A15]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-            <ShieldCheck className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-black text-white leading-none tracking-tight">Ethics-Core AI</h1>
-            <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider mt-0.5">청렴공정AI센터</p>
-          </div>
-        </div>
-        <div className="hidden md:flex items-center gap-8 text-xs font-bold text-slate-400 uppercase tracking-widest">
-          <span className="flex items-center gap-1.5 text-red-500/80"><div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"/> Security Active</span>
-          <span className="hover:text-white cursor-pointer transition-colors">About Center</span>
-          <span className="hover:text-white cursor-pointer transition-colors">AI Proposal</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Fun & Play</span>
-          <span className="hover:text-white cursor-pointer transition-colors">AI Solutions</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Core Services</span>
-          <span className="hover:text-white cursor-pointer transition-colors">Portfolio</span>
-        </div>
-        <button className="px-5 py-2 rounded-full bg-white text-[#050A15] text-xs font-black hover:bg-blue-50 transition-all shadow-xl shadow-white/5">
-          Contact Us
-        </button>
+      
+      {/* 3. 스타일 태그는 return 바로 아래에 한 번만! */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          display: flex;
+          width: max-content;
+          animation: marquee 40s linear infinite;
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      <nav className="fixed top-0 left-0 right-0 z-50 ...">
+        {/* ... */}
       </nav>
 
       <main className="pt-32 pb-20 px-6 max-w-[1400px] mx-auto">
-        {/* 2. 중앙 헤더 섹션 */}
+        {/* 5. 중앙 헤더 섹션 */}
         <div className="text-center mb-16">
-          <p className="text-blue-500 font-black tracking-[0.4em] text-[10px] uppercase mb-4 opacity-80">Government Innovation</p>
-          <h2 className="text-5xl md:text-6xl font-black text-white mb-6 tracking-tighter">
-            적극행정 AI 센터 <span className="text-blue-500">든든이</span>
-          </h2>
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed font-medium opacity-90">
+          <p className="...">Government Innovation</p>
+          <h2 className="...">적극행정 AI 센터 <span className="text-blue-500">든든이</span></h2>
+          <p className="...">
             대한민국 공무원의 소신 있는 행정을 지원합니다.<br/>
             <span className="text-white">법령 해석, 면책 요건, 2025 우수사례</span>까지 실시간으로 상담하세요.
           </p>
         </div>
 
+           <div className="mb-12 overflow-hidden whitespace-nowrap border-y border-white/5 py-6 bg-white/[0.01]">
+          <div className="animate-marquee">
+            {[...rollingQA, ...rollingQA].map((qa, i) => (
+              <div key={i} className="inline-flex items-center gap-3 px-8 py-3 mx-4 rounded-full bg-[#0D1425] border border-white/10 text-slate-400 text-sm hover:border-blue-500/50 transition-colors cursor-pointer group">
+                <Zap className="w-3 h-3 text-blue-500 group-hover:animate-pulse" />
+                <span>{qa}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+{/* ---------------------------------------------------------- */}
+
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6"> 
+  {/* 그 뒤로 좌측 대시보드가 이어집니다 */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* 3. 좌측 대시보드 (통계 & 실시간 이슈) */}
           <div className="lg:col-span-3 space-y-6">
