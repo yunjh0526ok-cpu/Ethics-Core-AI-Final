@@ -157,6 +157,7 @@ try {
     } finally {
       setIsTyping(false);
     }
+    };
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
