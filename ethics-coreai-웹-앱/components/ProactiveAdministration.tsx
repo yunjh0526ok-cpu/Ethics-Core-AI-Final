@@ -76,10 +76,10 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = apiKey ? new GoogleGenAI(apiKey) : null;
-const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
-  
+ const ai = process.env.NEXT_PUBLIC_APIKEY 
+  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
+  : null;
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -116,7 +116,7 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: text,
         config: {
             systemInstruction: `
