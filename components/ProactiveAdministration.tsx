@@ -64,6 +64,10 @@ const renderStyledText = (text: string) => {
   });
 };
 
+ const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+ const ai = apiKey ? new GoogleGenAI(apiKey) : null;
+ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
+
 const ProactiveAdministration: React.FC = () => {
   const INITIAL_MESSAGE = "반갑습니다! 대한민국 적극행정 지킴이, AI 상담관 '든든이'입니다.\n\n**2025년 적극행정 우수사례 경진대회 수상작(NEW)** 데이터와 **주양순 전문강사의 AI 기반 강의 정보**가 업데이트되었습니다.\n\n**최신 우수사례, 심사 배점 기준, 면책 제도, 강사단 모집** 등 무엇이든 물어보시면, 공직자 여러분께 힘이 되는 **정확한 팩트**만 답변해 드립니다.";
 
@@ -76,9 +80,6 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
- const ai = process.env.NEXT_PUBLIC_APIKEY 
-  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
-  : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
