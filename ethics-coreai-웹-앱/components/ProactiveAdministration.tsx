@@ -26,10 +26,6 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = apiKey ? new GoogleGenAI(apiKey) : null;
-const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
-
 const KEYWORDS = [
   { text: "적극행정 면책", count: 85 },
   { text: "사전컨설팅", count: 72 },
@@ -80,6 +76,10 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
+ const ai = process.env.NEXT_PUBLIC_APIKEY 
+  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
+  : null;
+
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -100,17 +100,26 @@ const ProactiveAdministration: React.FC = () => {
     setInput('');
   };
 
-const handleSend = async (text: string = input) => {
-    if (!text.trim() || !ai || isTyping) return;
-    
+  const handleSend = async (text: string = input) => {
+    if (!text.trim()) return;
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsTyping(true);
-  
-try {
-     const model = ai.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        systemInstruction: `
+
+    if (!ai) {
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
+        setIsTyping(false);
+      }, 1000);
+      return;
+    }
+
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: text,
+        config: {
+            systemInstruction: `
                 당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
                 [페르소나]
                 - 이름: 든든이
@@ -135,24 +144,16 @@ try {
                 [금지 사항]
                 - 허위 사실이나 추측성 답변 금지.
             `
-        });
-  const result = await model.generateContent(text);
-      const response = await result.response;
-      const responseText = response.text();
-      
-      setMessages(prev => [...prev, { role: 'ai', text: cleanText(responseText) }]);
+        }
+      });
+      setMessages(prev => [...prev, { role: 'ai', text: response.text || "답변 불가" }]);
     } catch (error) {
-      const is429 = error?.message?.includes('429') || error?.message?.includes('quota');
-      setMessages(prev => [...prev, {
-        role: 'ai',
-        text: is429
-          ? "현재 AI 요청이 많아 잠시 후 다시 시도해주세요. (1~2분 후 재시도)"
-          : "네트워크 연결이 불안정합니다."
-      }]);
+      setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
     } finally {
       setIsTyping(false);
     }
   };
+
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
@@ -435,11 +436,10 @@ try {
                   </h3>
                   <p className="text-slate-400 text-sm mt-1">청탁금지법, 이해충돌방지법, 행동강령 등 부패 심층상담</p>
               </div>
-         </button>
-        </motion.div>
-      </div>
+          </button>
+      </motion.div>
     </section>
-  ); 
-}; 
+  );
+};
 
 export default ProactiveAdministration;
