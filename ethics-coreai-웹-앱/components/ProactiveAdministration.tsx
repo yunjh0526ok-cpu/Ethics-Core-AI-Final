@@ -116,9 +116,8 @@ const ProactiveAdministration: React.FC = () => {
     }
 
     try {
-      // 🌟 사용자님이 지정하신 Gemini 3 모델로 호출합니다.
-      const model = ai.getGenerativeModel({ 
-        model: "gemini-3-flash", // 또는 "gemini-3-pro"
+        const model = ai.getGenerativeModel({ 
+        model:"gemini-1.5-flash", // 또는 "gemini-3-pro"
         systemInstruction: `
                 당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
                 [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
