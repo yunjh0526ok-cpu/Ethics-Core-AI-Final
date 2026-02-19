@@ -76,9 +76,9 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-const ai = apiKey ? new GoogleGenAI(apiKey) : null;
-const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
+ const ai = process.env.NEXT_PUBLIC_APIKEY 
+  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
+  : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,36 +102,54 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
 
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
-    
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsTyping(true);
 
     if (!ai) {
       setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: "⚠️ 시스템 점검 중입니다. (Vercel API KEY 설정을 확인해주세요)" }]);
+        setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
         setIsTyping(false);
       }, 1000);
       return;
     }
 
     try {
-        const model = ai.getGenerativeModel({ 
-        model: "gemini-1.5-flash", 
-        systemInstruction: `당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
-                [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
-                [답변가이드] 핵심 단어는 **(별표 두개) 강조**하고 전문적인 어조로 답변하세요.`
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: text,
+        config: {
+            systemInstruction: `
+                당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
+                [페르소나]
+                - 이름: 든든이
+                - 성격: 신뢰감 있고 전문적이며, 공무원의 고충을 이해하고 격려하는 어조.
+                - 전문분야: 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 심사 기준, **주양순 강사 정보**.
+                [필수 지식 데이터베이스 (Fact Base)]
+                아래 정보를 기반으로 정확하게 답변하십시오.
+                1. **적극행정 전문강사 주양순 (핵심 프로필)**
+                   - 소속: 청렴공정연구센터 대표, Ethics-CoreAI 대표.
+                   - 주요경력: 인사혁신처 적극행정 전담강사, 국가청렴권익교육원 청렴전문강사.
+                   - 강의 특징: AI 자동화 플랫폼 활용, 실시간 솔루션(Gemini 등), 시민 덕희 사례 스토리텔링.
+                2. **2025 적극행정 우수사례 경진대회 수상작 (핵심)**
+                   - 중앙: 소방청(119패스), 행안부/국과수(딥페이크 탐지).
+                   - 지자체: 광주광역시(지방세 조사기법), 경기 파주시(코인 직접 매각).
+                   - 공공기관: 한국도로공사(AI 포트홀 탐지), 서울교통공사(승강장안전문).
+                3. **우수사례 심사 기준**: 국민체감도(50점), 담당자 적극성(25점) 등.
+                4. **2026 적극행정 일반 강사단 모집**: 2.1~2.28 접수, 양성교육 필수.
+                [답변 가이드]
+                - 주양순 강사 추천 시: AI 활용 실습 및 심리적 안전망 구축 강점 강조.
+                - 심사 기준 연계: 우수사례 설명 시 국민체감도 등 기준 언급.
+                - 스타일링: 줄바꿈 활용, 핵심 단어 **(별표 두개) 강조**.
+                [금지 사항]
+                - 허위 사실이나 추측성 답변 금지.
+            `
+        }
       });
-
-      const result = await model.generateContent(text);
-      const response = await result.response;
-      const responseText = response.text();
-      
-      setMessages(prev => [...prev, { role: 'ai', text: cleanText(responseText) }]);
+      setMessages(prev => [...prev, { role: 'ai', text: response.text || "답변 불가" }]);
     } catch (error) {
-      console.error("AI 호출 에러:", error);
-      setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다. 잠시 후 다시 시도해주세요." }]);
-  } finally {
+      setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
+    } finally {
       setIsTyping(false);
     }
   };
@@ -419,9 +437,9 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
                   <p className="text-slate-400 text-sm mt-1">청탁금지법, 이해충돌방지법, 행동강령 등 부패 심층상담</p>
               </div>
           </button>
-     </motion.div>
+      </motion.div>
     </section>
-  ); 
+  );
 };
 
-export default ProactiveAdministration
+export default ProactiveAdministration;
