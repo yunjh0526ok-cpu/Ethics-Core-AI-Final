@@ -453,5 +453,5 @@ const ProactiveAdministration: React.FC = () => {
     </section>
   );
 };
-
+};
 export default ProactiveAdministration;
