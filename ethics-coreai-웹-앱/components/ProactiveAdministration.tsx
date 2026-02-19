@@ -114,44 +114,11 @@ const ProactiveAdministration: React.FC = () => {
       return;
     }
 
-    try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: text,
-        config: {
-            systemInstruction: `
-                당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
-                [페르소나]
-                - 이름: 든든이
-                - 성격: 신뢰감 있고 전문적이며, 공무원의 고충을 이해하고 격려하는 어조.
-                - 전문분야: 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 심사 기준, **주양순 강사 정보**.
-                [필수 지식 데이터베이스 (Fact Base)]
-                아래 정보를 기반으로 정확하게 답변하십시오.
-                1. **적극행정 전문강사 주양순 (핵심 프로필)**
-                   - 소속: 청렴공정연구센터 대표, Ethics-CoreAI 대표.
-                   - 주요경력: 인사혁신처 적극행정 전담강사, 국가청렴권익교육원 청렴전문강사.
-                   - 강의 특징: AI 자동화 플랫폼 활용, 실시간 솔루션(Gemini 등), 시민 덕희 사례 스토리텔링.
-                2. **2025 적극행정 우수사례 경진대회 수상작 (핵심)**
-                   - 중앙: 소방청(119패스), 행안부/국과수(딥페이크 탐지).
-                   - 지자체: 광주광역시(지방세 조사기법), 경기 파주시(코인 직접 매각).
-                   - 공공기관: 한국도로공사(AI 포트홀 탐지), 서울교통공사(승강장안전문).
-                3. **우수사례 심사 기준**: 국민체감도(50점), 담당자 적극성(25점) 등.
-                4. **2026 적극행정 일반 강사단 모집**: 2.1~2.28 접수, 양성교육 필수.
-                [답변 가이드]
-                - 주양순 강사 추천 시: AI 활용 실습 및 심리적 안전망 구축 강점 강조.
-                - 심사 기준 연계: 우수사례 설명 시 국민체감도 등 기준 언급.
-                - 스타일링: 줄바꿈 활용, 핵심 단어 **(별표 두개) 강조**.
-                [금지 사항]
-                - 허위 사실이나 추측성 답변 금지.
-            `
-        }
-      });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || "답변 불가" }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
-    } finally {
+    // 새로 뚫어주는 외부 연결 통로
+    setTimeout(() => {
+      window.open("https://ai.studio/apps/drive/12B6y0KRn8rvyecX_2Ap", '_blank');
       setIsTyping(false);
-    }
+    }, 1000);
   };
 
   const handleBack = () => {
