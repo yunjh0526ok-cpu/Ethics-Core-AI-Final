@@ -32,38 +32,35 @@ const ProactiveAdministration: React.FC = () => {
  const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
 
-    // 1. 사용자 질문 표시
+    // 1. 일단 사용자가 보낸 질문을 화면에 띄웁니다.
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsTyping(true);
 
     setTimeout(() => {
-      // 2. 글자 하나 안 틀리고 똑같은 질문이 있는지 확인
+      // 2. 질문 문구에서 'Q. ' 같은 불필요한 글자를 제거하고 깨끗하게 만듭니다.
       const cleanText = text.replace("Q. ", "").trim();
-      let answer = qaAnswers[text] || qaAnswers[cleanText];
+      
+      // 3. 주머니(qaAnswers)를 뒤져서 비슷한 질문이 있는지 찾습니다.
+      const foundKey = Object.keys(qaAnswers).find(key => 
+        cleanText.includes(key.substring(0, 10)) || // 앞 10글자만 같아도 정답 인정
+        key.includes(cleanText.substring(0, 10)) ||
+        (text.includes("면책") && key.includes("면책")) ||
+        (text.includes("119") && key.includes("119"))
+      );
 
-      // 3. 똑같은 게 없다면 키워드(면책, 119, 강사 등)가 포함되었는지 확인
-      if (!answer) {
-        const foundKey = Object.keys(qaAnswers).find(key => 
-          (text.includes("면책") && key.includes("면책")) || 
-          (text.includes("119") && key.includes("119")) ||
-          (text.includes("사전컨설팅") && key.includes("사전컨설팅")) ||
-          (text.includes("강사") && key.includes("강사")) ||
-          (text.includes("수상작") && key.includes("수상작"))
-        );
-        
-        if (foundKey) answer = qaAnswers[foundKey];
-      }
+      const answer = qaAnswers[text] || qaAnswers[cleanText] || (foundKey ? qaAnswers[foundKey] : null);
 
-      // 4. 답변이 있으면 출력, 없으면 외부 상담소 팝업
       if (answer) {
+        // 답변이 있으면 즉시 출력
         setMessages(prev => [...prev, { role: 'ai', text: answer }]);
         setIsTyping(false);
       } else {
+        // 정말 아예 모르는 내용일 때만 팝업
         setIsTyping(false);
         setShowBridge(true);
       }
-    }, 800);
+    }, 600); // 응답 속도도 더 빠르게 조절했습니다.
   };
 
   const startExternalChat = () => {
