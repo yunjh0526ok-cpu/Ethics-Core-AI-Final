@@ -270,7 +270,7 @@ return (
               <p className="text-sm font-black tracking-tight">공공재정환수법 상담소 이동</p>
             </div>
           </button>
-        </div>
+      </div> {/* grid 닫기 */}
       </main>
     </div>
   );
