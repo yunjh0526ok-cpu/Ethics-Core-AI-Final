@@ -99,10 +99,7 @@ return (
         </div>
 {/* ---------------------------------------------------------- */}
 
-<div className="grid grid-cols-1 lg:grid-cols-12 gap-6"> 
-  {/* 그 뒤로 좌측 대시보드가 이어집니다 */}
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+<div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* 3. 좌측 대시보드 (통계 & 실시간 이슈) */}
           <div className="lg:col-span-3 space-y-6">
             <div className="flex gap-4">
@@ -127,150 +124,91 @@ return (
                   <LayoutGrid className="w-4 h-4 text-blue-500" />
                   <h3 className="text-sm font-black text-white uppercase tracking-wider">실시간 주요 이슈</h3>
                 </div>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-                  <div className="w-1 h-1 bg-blue-500 rounded-full animate-pulse" />
-                  <span className="text-[8px] font-black text-blue-400 uppercase tracking-tighter">Live</span>
-                </div>
               </div>
               <div className="space-y-6">
                 {[
                   { tag: '적극행정 면책', val: 85 },
                   { tag: '사전컨설팅', val: 72 },
-                  { tag: '2025 우수사례', val: 68 },
-                  { tag: '주양순 강사', val: 55 },
-                  { tag: '규제 혁신', val: 35 },
-                  { tag: '강사단 모집', val: 28 }
+                  { tag: '2025 우수사례', val: 68 }
                 ].map((item, idx) => (
-                  <div key={idx} className="group cursor-default">
+                  <div key={idx} className="group">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-bold text-slate-400 group-hover:text-blue-400 transition-colors">#{item.tag}</span>
-                      <span className="text-[10px] font-mono text-slate-600 font-bold tracking-widest">{item.val}</span>
+                      <span className="text-xs font-bold text-slate-400">#{item.tag}</span>
+                      <span className="text-[10px] font-mono text-slate-600 font-bold">{item.val}</span>
                     </div>
                     <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${item.val}%` }} className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.3)]" />
+                      <div style={{ width: `${item.val}%` }} className="h-full bg-blue-600 rounded-full" />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div onClick={handleBack} className="p-6 rounded-3xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-between cursor-pointer hover:bg-blue-600/20 transition-all group">
-               <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform"><Briefcase className="w-5 h-5 text-white" /></div>
-                 <div>
-                   <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-0.5">Special Support</p>
-                   <p className="text-xs font-black text-white">적극행정 우수공무원 선발</p>
-                 </div>
-               </div>
-               <ArrowLeft className="w-4 h-4 text-white rotate-180" />
-            </div>
           </div>
 
-          {/* 4. 중앙 메인 채팅창 (상담관 든든이) */}
+          {/* 4. 중앙 메인 채팅창 */}
           <div className="lg:col-span-9 relative flex flex-col h-[750px]">
             <div className="bg-[#0D1425] rounded-[2.5rem] border border-white/10 shadow-3xl flex flex-col h-full overflow-hidden relative">
-              {/* 채팅 헤더 */}
-              <div className="px-8 py-6 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/20 relative">
-                    <ShieldCheck className="w-6 h-6 text-white" />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#050A15] rounded-full flex items-center justify-center border border-white/10">
-                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-white tracking-tight">상담관 든든이</h3>
-                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Proactive Admin AI Partner</p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-400 hover:text-white transition-all"><Search className="w-3 h-3" /> 법령 기준</button>
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-400 hover:text-white transition-all"><Star className="w-3 h-3" /> 면책 지원</button>
-                  <button onClick={handleBack} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black text-slate-400 hover:text-white transition-all"><LayoutGrid className="w-3 h-3" /> 처음으로</button>
-                </div>
-              </div>
-
-              {/* 메시지 영역 */}
               <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
                 {messages.map((msg, i) => (
                   <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} items-end gap-3`}>
-                    {msg.role === 'ai' && <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0"><Info className="w-4 h-4 text-blue-500" /></div>}
-                    <div className={`max-w-[80%] p-6 rounded-[2rem] text-[15px] leading-relaxed shadow-xl whitespace-pre-wrap ${
-                      msg.role === 'user' 
-                        ? 'bg-blue-600 text-white rounded-br-none' 
-                        : 'bg-[#161D2F] text-slate-200 rounded-bl-none border border-white/5'
+                    <div className={`max-w-[80%] p-6 rounded-[2rem] text-[15px] leading-relaxed shadow-xl ${
+                      msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-[#161D2F] text-slate-200 rounded-bl-none border border-white/5'
                     }`}>
-                      {msg.role === 'ai' && <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-3 flex items-center gap-1.5 animation-pulse"><div className="w-1 h-1 bg-blue-500 rounded-full" /> 든든이의 답변</div>}
                       {msg.text}
                     </div>
                   </div>
                 ))}
-                {isTyping && (
-                  <div className="flex justify-start items-center gap-4 px-6 py-4 bg-blue-500/5 rounded-full w-fit border border-blue-500/10">
-                    <div className="flex gap-1.5"><span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" /><span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]" /></div>
-                    <span className="text-[10px] font-black text-blue-400 tracking-[0.2em] uppercase">AI Analyzing...</span>
-                  </div>
-                )}
+                {isTyping && <div className="p-4 bg-blue-500/10 rounded-full w-fit animate-pulse text-[10px] font-black text-blue-400 uppercase tracking-widest">AI Analyzing...</div>}
                 <div ref={scrollRef} />
               </div>
 
-              {/* 하단 추천 질문 & 입력부 */}
-              <div className="p-8 bg-white/[0.01] border-t border-white/5 space-y-6">
-                <div className="flex flex-wrap gap-2">
-                   {[
-                     "적극행정 면책 요건(고의/중과실)은?",
-                     "2026년 전문강사단 지원 자격 및 기간?",
-                     "사전컨설팅 감사 신청 절차는?",
-                     "소방청 '119패스' 사례 설명해줘"
-                   ].map((q, idx) => (
-                     <button key={idx} onClick={() => handleSend(q)} className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-[11px] font-bold text-slate-500 hover:text-white hover:border-blue-500/50 hover:bg-blue-500/10 transition-all tracking-tight">
-                       Q. {q}
-                     </button>
-                   ))}
-                </div>
+              <div className="p-8 bg-white/[0.01] border-t border-white/5">
                 <div className="relative flex items-center gap-4">
-                  <div className="flex-1 relative group">
-                    <input 
-                      type="text" 
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder="적극행정 관련 궁금한 점을 입력하세요..."
-                      className="w-full bg-[#161D2F] border border-white/10 rounded-2xl px-8 py-5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 transition-all text-sm font-medium shadow-inner"
-                    />
-                    <div className="absolute inset-0 rounded-2xl bg-blue-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none" />
-                  </div>
-                  <button 
-                    onClick={() => handleSend()}
-                    className="p-5 bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-2xl text-white transition-all shadow-xl shadow-blue-600/20 group"
-                  >
-                    <Send className="w-6 h-6 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                  <input 
+                    type="text" 
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder="궁금한 내용을 입력하세요..."
+                    className="flex-1 bg-[#161D2F] border border-white/10 rounded-2xl px-8 py-5 text-white focus:outline-none"
+                  />
+                  <button onClick={() => handleSend()} className="p-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white shadow-xl transition-all">
+                    <Send className="w-6 h-6" />
                   </button>
                 </div>
               </div>
+
+              {/* 브릿지 팝업 로직 */}
+              <AnimatePresence>
+                {showBridge && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 bg-[#050A15]/95 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center p-8">
+                    <div className="max-w-md w-full text-center">
+                      <div className="w-20 h-20 bg-blue-600/20 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-blue-500/30">
+                        <ShieldCheck className="w-10 h-10 text-blue-500" />
+                      </div>
+                      <h3 className="text-2xl font-black text-white mb-4">적극행정 AI 상담관 연결</h3>
+                      <p className="mb-10 text-slate-400 text-sm leading-relaxed p-6 bg-white/5 rounded-3xl">주양순 전문강사의 최신 데이터가 탑재된<br/>전문 상담 모드로 이동합니다.</p>
+                      <button onClick={startExternalChat} className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg flex items-center justify-center gap-3">상담 시작하기 <ExternalLink className="w-5 h-5" /></button>
+                      <button onClick={() => setShowBridge(false)} className="w-full py-4 text-slate-500 font-bold hover:text-white transition-colors">돌아가기</button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
 
-        {/* 5. 하단 버튼 (부패/환수법 상담소 이동) */}
+        {/* 5. 하단 이동 버튼 */}
         <div className="mt-12 flex justify-center gap-6">
-          <button onClick={goToCorruption} className="flex items-center gap-4 px-10 py-5 rounded-[2rem] bg-[#0D1425] border border-white/10 text-slate-400 hover:text-red-400 hover:border-red-900/30 transition-all group shadow-2xl overflow-hidden relative">
-            <div className="absolute inset-0 bg-red-500/0 group-hover:bg-red-500/5 transition-all" />
-            <AlertTriangle className="w-6 h-6 text-red-600 group-hover:scale-110 transition-transform" />
-            <div className="text-left relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-0.5">Anti-Corruption</p>
-              <p className="text-sm font-black tracking-tight">부패상담관 이동</p>
-            </div>
+          <button onClick={goToCorruption} className="flex items-center gap-4 px-10 py-5 rounded-[2rem] bg-[#0D1425] border border-white/10 text-slate-400 hover:text-red-400 transition-all">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+            <div className="text-left"><p className="text-[10px] font-black uppercase opacity-50">Anti-Corruption</p><p className="text-sm font-black">부패상담관 이동</p></div>
           </button>
-          <button onClick={goToRecovery} className="flex items-center gap-4 px-10 py-5 rounded-[2rem] bg-[#0D1425] border border-white/10 text-slate-400 hover:text-emerald-400 hover:border-emerald-900/30 transition-all group shadow-2xl overflow-hidden relative">
-            <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 transition-all" />
-            <Coins className="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" />
-            <div className="text-left relative z-10">
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-50 mb-0.5">Recovery Law</p>
-              <p className="text-sm font-black tracking-tight">공공재정환수법 상담소 이동</p>
-            </div>
+          <button onClick={goToRecovery} className="flex items-center gap-4 px-10 py-5 rounded-[2rem] bg-[#0D1425] border border-white/10 text-slate-400 hover:text-emerald-400 transition-all">
+            <Coins className="w-6 h-6 text-emerald-600" />
+            <div className="text-left"><p className="text-[10px] font-black uppercase opacity-50">Recovery Law</p><p className="text-sm font-black">공공재정환수법 상담소 이동</p></div>
           </button>
-      </div> {/* grid 닫기 */}
+        </div>
       </main>
     </div>
   );
