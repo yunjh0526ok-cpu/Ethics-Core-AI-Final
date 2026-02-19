@@ -113,7 +113,7 @@ const ProactiveAdministration: React.FC = () => {
       return;
     }
 
-    try {
+try {
       const response = await genAI.models.generateContent({
         model: "gemini-1.5-flash",
         contents: text,
@@ -145,17 +145,18 @@ const ProactiveAdministration: React.FC = () => {
             `
         }
       });
-     setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
-  } catch (error: any) {
-  const is429 = error?.message?.includes('429') || error?.message?.includes('quota');
-  setMessages(prev => [...prev, { 
-    role: 'ai', 
-    text: is429 
-      ? "현재 AI 요청이 많아 잠시 후 다시 시도해주세요. (1~2분 후 재시도)" 
-      : "네트워크 연결이 불안정합니다." 
-  }]);
-}
-
+      setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
+    } catch (error: any) {
+      const is429 = error?.message?.includes('429') || error?.message?.includes('quota');
+      setMessages(prev => [...prev, {
+        role: 'ai',
+        text: is429
+          ? "현재 AI 요청이 많아 잠시 후 다시 시도해주세요. (1~2분 후 재시도)"
+          : "네트워크 연결이 불안정합니다."
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
