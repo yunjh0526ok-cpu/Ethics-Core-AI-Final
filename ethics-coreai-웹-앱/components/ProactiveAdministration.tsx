@@ -434,9 +434,11 @@ try {
                   <p className="text-slate-400 text-sm mt-1">청탁금지법, 이해충돌방지법, 행동강령 등 부패 심층상담</p>
               </div>
           </button>
-      </motion.div>
+     // ... (이전 UI 코드들)
+        </motion.div>
+      </div>
     </section>
   );
 };
 
-export default ProactiveAdministration;
+export default ProactiveAdministration; 
