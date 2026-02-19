@@ -8,11 +8,29 @@ const ProactiveAdministration: React.FC = () => {
   const [messages, setMessages] = useState([{ role: 'ai', text: INITIAL_MESSAGE }]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [todayCount, setTodayCount] = useState(143);
+  const [processingRate, setProcessingRate] = useState(98.6);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTodayCount(prev => prev + Math.floor(Math.random() * 2));
+      setProcessingRate(prev => {
+        const change = (Math.random() - 0.5) * 0.1;
+        return Math.min(100, Math.max(95, prev + change));
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleReset = () => {
+    setMessages([{ role: 'ai', text: INITIAL_MESSAGE }]);
+    setInput('');
+  };
 
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
@@ -21,6 +39,7 @@ const ProactiveAdministration: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
+    // [핵심 수정] 에러 덩어리는 빼고, 주양순 강사 데이터가 이미 세팅된 AI 스튜디오로 연결만 합니다.
     setTimeout(() => {
       window.open("https://ai.studio/apps/drive/12B6y0KRn8rvyecX_2Ap", '_blank');
       setIsTyping(false);
@@ -47,6 +66,7 @@ const ProactiveAdministration: React.FC = () => {
 
   return (
     <section id="proactive-admin" className="relative z-10 py-24 px-4 w-full max-w-7xl mx-auto scroll-mt-24">
+      {/* 상단 버튼부 */}
       <div className="mb-6 w-full max-w-7xl mx-auto px-4">
         <button 
           onClick={handleBack}
@@ -59,6 +79,7 @@ const ProactiveAdministration: React.FC = () => {
         </button>
       </div>
 
+      {/* 헤더 섹션 */}
       <div className="text-center mb-12">
         <span className="text-blue-400 font-tech tracking-widest text-xs uppercase mb-2 block">Government Innovation</span>
         <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
@@ -70,12 +91,22 @@ const ProactiveAdministration: React.FC = () => {
         </p>
       </div>
 
+      {/* 메인 레이아웃 */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* 왼쪽 대시보드 (사용자님의 디테일) */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-8 rounded-[2.5rem] bg-slate-900/80 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-              <ShieldCheck className="w-24 h-24 text-blue-500" />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
+              <p className="text-slate-500 text-xs mb-1">오늘의 상담</p>
+              <p className="text-2xl font-black text-white">{todayCount} <span className="text-blue-500 text-sm">▲12%</span></p>
             </div>
+            <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800">
+              <p className="text-slate-500 text-xs mb-1">해결률</p>
+              <p className="text-2xl font-black text-white">{processingRate.toFixed(1)}%</p>
+            </div>
+          </div>
+
+          <div className="p-8 rounded-[2.5rem] bg-slate-900/80 border border-slate-800 backdrop-blur-xl relative overflow-hidden group">
             <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <ShieldCheck className="w-6 h-6 text-blue-400" />
               상담 안내
@@ -84,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
               {[
                 { label: '실시간 상담', value: '24/7 AI 가동' },
                 { label: '최신 데이터', value: '2025 우수사례 반영' },
-                { label: '전문 분야', value: '적극행정 법령/면책' }
+                { label: '전문 강사', value: '주양순 대표 정보 포함' }
               ].map((item, i) => (
                 <li key={i} className="flex justify-between items-center p-3 rounded-xl bg-slate-950/50 border border-slate-800/50">
                   <span className="text-slate-400 text-sm">{item.label}</span>
@@ -95,6 +126,7 @@ const ProactiveAdministration: React.FC = () => {
           </div>
         </div>
 
+        {/* 오른쪽 채팅창 (사용자님의 디테일) */}
         <div className="lg:col-span-8 relative">
           <div className="bg-slate-900/50 rounded-[2.5rem] border border-slate-800 backdrop-blur-xl h-[600px] flex flex-col overflow-hidden shadow-2xl">
             <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
@@ -122,6 +154,7 @@ const ProactiveAdministration: React.FC = () => {
               <div ref={scrollRef} />
             </div>
 
+            {/* 하단 입력바 (사용자님의 디테일) */}
             <div className="p-6 bg-slate-900/80 border-t border-slate-800">
               <div className="relative flex items-center gap-3">
                 <input 
