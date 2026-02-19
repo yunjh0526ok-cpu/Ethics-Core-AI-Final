@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI({ apiKey: apiKey ?? "" });
+
 const KEYWORDS = [
   { text: "적극행정 면책", count: 85 },
   { text: "사전컨설팅", count: 72 },
@@ -75,10 +78,6 @@ const ProactiveAdministration: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
-
- const ai = process.env.NEXT_PUBLIC_APIKEY 
-  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
-  : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
