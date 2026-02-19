@@ -99,29 +99,20 @@ const ProactiveAdministration: React.FC = () => {
     setMessages([{ role: 'ai', text: INITIAL_MESSAGE }]);
     setInput('');
   };
-
+  
   const handleSend = async (text: string = input) => {
     if (!text.trim()) return;
+
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsTyping(true);
 
-    if (!ai) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
-        setIsTyping(false);
-      }, 1000);
-      return;
-    }
-
-    // 새로 뚫어주는 외부 연결 통로
     setTimeout(() => {
       window.open("https://ai.studio/apps/drive/12B6y0KRn8rvyecX_2Ap", '_blank');
       setIsTyping(false);
     }, 1000);
   };
-
-  const handleBack = () => {
+   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
     window.dispatchEvent(event);
