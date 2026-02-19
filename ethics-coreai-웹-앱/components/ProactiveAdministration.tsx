@@ -76,9 +76,16 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-  const ai = process.env.NEXT_PUBLIC_APIKEY 
-  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
-  : null;
+  const handleSend = async (text: string = input) => {
+  if (!text.trim()) return;
+
+  setMessages(prev => [...prev, { role: 'user', text }]);
+  setInput('');
+
+  setTimeout(() => {
+    window.open("https://ai.studio/apps/drive/12B6y0KRn8rvyecX_2Ap", '_blank');
+  }, 1000);
+};
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
