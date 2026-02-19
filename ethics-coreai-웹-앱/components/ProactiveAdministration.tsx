@@ -76,9 +76,9 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
- // Vite 환경 변수 호출 방식 및 보안 설정
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-  const ai = apiKey ? new GoogleGenAI(apiKey) : null;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const ai = apiKey ? new GoogleGenAI(apiKey) : null;
+const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -116,15 +116,13 @@ const ProactiveAdministration: React.FC = () => {
     }
 
     try {
-        const model = ai.getGenerativeModel({ 
-        model:"gemini-1.5-flash", // 또는 "gemini-3-pro"
-        systemInstruction: `
-                당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
-                [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
-                [답변가이드] 핵심 단어는 **(별표 두개) 강조**하고 전문적인 어조로 답변하세요.
-            `
-      });
-
+       // handleSend 함수 안쪽
+const model = ai.getGenerativeModel({ 
+  model: "gemini-1.5-flash", // 🌟 gemini-3-flash 대신 이걸로 써야 시동이 걸립니다.
+  systemInstruction: "당신은 대한민국 적극행정 AI 전문 상담관 '든든이'입니다. [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
+                [답변가이드] 핵심 단어는 **(별표 두개) 강조**하고 전문적인 어조로 답변하세요." 
+});
+    
       const result = await model.generateContent(text);
       const response = await result.response;
       
@@ -425,7 +423,7 @@ const ProactiveAdministration: React.FC = () => {
           </button>
       </motion.div>
     </section>
-  );
-};
+ ); // return 문을 닫는 괄호
+}; // ProactiveAdministration 함수를 닫는 괄호
 
-export default ProactiveAdministration;
+export default ProactiveAdministration; // 마지막 내보내기
