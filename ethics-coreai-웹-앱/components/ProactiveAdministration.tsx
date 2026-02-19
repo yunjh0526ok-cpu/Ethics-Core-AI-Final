@@ -115,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
 
     try {
       const response = await genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.0-flash",
         contents: text,
         config: {
             systemInstruction: `
@@ -145,7 +145,7 @@ const ProactiveAdministration: React.FC = () => {
             `
         }
       });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || "답변 불가" }]);
+     setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
     } finally {
