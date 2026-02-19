@@ -137,18 +137,20 @@ const ProactiveAdministration: React.FC = () => {
         </div>
 
         {/* 3. 흘러가는 Q&A (Marquee) */}
-        <div className="mb-12 overflow-hidden whitespace-nowrap border-y border-white/5 py-6 bg-white/[0.01]">
+       <div className="mb-12 overflow-hidden whitespace-nowrap border-y border-white/5 py-6 bg-white/[0.01]">
           <div className="animate-marquee">
             {[...rollingQA, ...rollingQA].map((qa, i) => (
-              <div key={i} onClick={() => handleSend(qa)}  // 👈 딱 이 자리에 이 글자를 복사해서 넣으세요!
-           className="inline-flex items-center gap-3 px-8 py-3 mx-4 rounded-full bg-[#0D1425] border border-white/10 text-slate-400 text-sm hover:border-blue-500/50 transition-colors cursor-pointer group"
-      >
-        <Zap className="w-3 h-3 text-blue-500" />
-        <span>{qa}</span>
-      </div>
-    ))}
-  </div>
-</div>
+              <div 
+                key={i} 
+                onClick={() => handleSend(qa)}
+                className="inline-flex items-center gap-3 px-8 py-3 mx-4 rounded-full bg-[#0D1425] border border-white/10 text-slate-400 text-sm hover:border-blue-500/50 transition-colors cursor-pointer group"
+              >
+                <Zap className="w-3 h-3 text-blue-500" />
+                <span>{qa}</span>
+              </div>
+            ))}
+          </div>
+        </div>
         className="inline-flex items-center gap-3 px-8 py-3 mx-4 rounded-full bg-[#0D1425] border border-white/10 text-slate-400 text-sm hover:border-blue-500/50 transition-colors cursor-pointer group">
                 <Zap className="w-3 h-3 text-blue-500" />
                 <span>{qa}</span>
