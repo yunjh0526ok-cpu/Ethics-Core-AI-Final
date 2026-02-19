@@ -115,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
 
     try {
       const response = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-1.5-flash",
         contents: text,
         config: {
             systemInstruction: `
@@ -146,12 +146,15 @@ const ProactiveAdministration: React.FC = () => {
         }
       });
      setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
-   } catch (error: any) {
-     setMessages(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
-    } finally {
-      setIsTyping(false);
-    }
-  };
+  } catch (error: any) {
+  const is429 = error?.message?.includes('429') || error?.message?.includes('quota');
+  setMessages(prev => [...prev, { 
+    role: 'ai', 
+    text: is429 
+      ? "현재 AI 요청이 많아 잠시 후 다시 시도해주세요. (1~2분 후 재시도)" 
+      : "네트워크 연결이 불안정합니다." 
+  }]);
+}
 
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
