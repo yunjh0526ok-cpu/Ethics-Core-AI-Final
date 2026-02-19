@@ -106,12 +106,11 @@ const handleSend = async (text: string = input) => {
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setIsTyping(true);
+  
 try {
-      const response = await genAI.models.generateContent({
+     const model = ai.getGenerativeModel({ 
         model: "gemini-1.5-flash",
-        contents: text,
-        config: {
-            systemInstruction: `
+        systemInstruction: `
                 당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
                 [페르소나]
                 - 이름: 든든이
@@ -136,10 +135,13 @@ try {
                 [금지 사항]
                 - 허위 사실이나 추측성 답변 금지.
             `
-        }
-      });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
-    } catch (error: any) {
+        });
+  const result = await model.generateContent(text);
+      const response = await result.response;
+      const responseText = response.text();
+      
+      setMessages(prev => [...prev, { role: 'ai', text: cleanText(responseText) }]);
+    } catch (error) {
       const is429 = error?.message?.includes('429') || error?.message?.includes('quota');
       setMessages(prev => [...prev, {
         role: 'ai',
@@ -150,7 +152,7 @@ try {
     } finally {
       setIsTyping(false);
     }
-  
+  };
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
@@ -433,12 +435,11 @@ try {
                   </h3>
                   <p className="text-slate-400 text-sm mt-1">청탁금지법, 이해충돌방지법, 행동강령 등 부패 심층상담</p>
               </div>
-          </button>
-     // ... (이전 UI 코드들)
+         </button>
         </motion.div>
       </div>
     </section>
-  );
-};
+  ); 
+}; 
 
-export default ProactiveAdministration; 
+export default ProactiveAdministration;
