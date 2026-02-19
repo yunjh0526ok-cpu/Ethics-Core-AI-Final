@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
 const KEYWORDS = [
   { text: "적극행정 면책", count: 85 },
   { text: "사전컨설팅", count: 72 },
@@ -76,9 +79,6 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI({ apiKey: apiKey ?? "" });
-
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -105,7 +105,7 @@ const genAI = new GoogleGenerativeAI({ apiKey: apiKey ?? "" });
     setInput('');
     setIsTyping(true);
 
-    if (!ai) {
+   if (!genAI) {
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
         setIsTyping(false);
@@ -114,7 +114,7 @@ const genAI = new GoogleGenerativeAI({ apiKey: apiKey ?? "" });
     }
 
     try {
-      const response = await ai.models.generateContent({
+      const response = await genAI.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: text,
         config: {
