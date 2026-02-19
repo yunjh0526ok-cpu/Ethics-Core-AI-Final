@@ -116,20 +116,18 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
     }
 
     try {
-       // handleSend 함수 안쪽
-const model = ai.getGenerativeModel({ 
-  model: "gemini-1.5-flash", // 🌟 gemini-3-flash 대신 이걸로 써야 시동이 걸립니다.
-  systemInstruction: "당신은 대한민국 적극행정 AI 전문 상담관 '든든이'입니다. [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
-                [답변가이드] 핵심 단어는 **(별표 두개) 강조**하고 전문적인 어조로 답변하세요." 
-`
-});
-    
+        const model = ai.getGenerativeModel({ 
+        model: "gemini-1.5-flash", 
+        systemInstruction: `당신은 대한민국 공무원을 위한 **적극행정 AI 전문 상담관 '든든이'**입니다.
+                [전문분야] 적극행정 법령, 면책 제도, 2025년 최신 우수사례, 주양순 강사 정보 등.
+                [답변가이드] 핵심 단어는 **(별표 두개) 강조**하고 전문적인 어조로 답변하세요.`
+      });
+
       const result = await model.generateContent(text);
       const response = await result.response;
+      const responseText = response.text();
       
-      const responseText = typeof cleanText === 'function' ? cleanText(response.text()) : response.text();
-      
-     setMessages(prev => [...prev, { role: 'ai', text: cleanText(responseText) }]);
+      setMessages(prev => [...prev, { role: 'ai', text: cleanText(responseText) }]);
     } catch (error) {
       console.error("AI 호출 에러:", error);
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다. 잠시 후 다시 시도해주세요." }]);
