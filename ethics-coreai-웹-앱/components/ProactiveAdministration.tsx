@@ -76,7 +76,9 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
+  const ai = process.env.NEXT_PUBLIC_APIKEY 
+  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
+  : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
