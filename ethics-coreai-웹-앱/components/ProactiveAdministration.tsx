@@ -131,9 +131,10 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
     } catch (error) {
       console.error("AI 호출 에러:", error);
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다. 잠시 후 다시 시도해주세요." }]);
-    } finally {
+  } finally {
       setIsTyping(false);
     }
+  };
 
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
@@ -418,9 +419,9 @@ const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '')
                   <p className="text-slate-400 text-sm mt-1">청탁금지법, 이해충돌방지법, 행동강령 등 부패 심층상담</p>
               </div>
           </button>
-      </motion.div>
+     </motion.div>
     </section>
- ); // return 문을 닫는 괄호
-}; // ProactiveAdministration 함수를 닫는 괄호
+  ); 
+};
 
-export default ProactiveAdministration; // 마지막 내보내기
+export default ProactiveAdministration
