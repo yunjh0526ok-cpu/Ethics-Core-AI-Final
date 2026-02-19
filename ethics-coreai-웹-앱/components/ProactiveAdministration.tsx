@@ -63,7 +63,23 @@ const renderStyledText = (text: string) => {
     return <span key={index}>{part}</span>;
   });
 };
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
+const ai = apiKey ? new GoogleGenAI(apiKey) : null;
+const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
 
+const ProactiveAdministration: React.FC = () => {
+  // 🌟 [진단용 코드 추가] 열쇠가 잘 배달됐는지 화면에 몰래 띄워봅니다.
+  console.log("현재 연결된 키 상태:", apiKey ? "열쇠 있음(앞 4자리: " + apiKey.substring(0, 4) + ")" : "열쇠 없음");
+
+  const [messages, setMessages] = useState<Message[]>([
+    { 
+      role: 'ai', 
+      content: apiKey 
+        ? "안녕하세요! 적극행정 상담관 든든이입니다. 무엇을 도와드릴까요?" 
+        : "⚠️ [연결 오류] Vercel에서 API 키를 읽지 못하고 있습니다. 환경 변수 이름을 확인해주세요."
+    }
+  ]);
+  
 const ProactiveAdministration: React.FC = () => {
   const INITIAL_MESSAGE = "반갑습니다! 대한민국 적극행정 지킴이, AI 상담관 '든든이'입니다.\n\n**2025년 적극행정 우수사례 경진대회 수상작(NEW)** 데이터와 **주양순 전문강사의 AI 기반 강의 정보**가 업데이트되었습니다.\n\n**최신 우수사례, 심사 배점 기준, 면책 제도, 강사단 모집** 등 무엇이든 물어보시면, 공직자 여러분께 힘이 되는 **정확한 팩트**만 답변해 드립니다.";
 
@@ -75,10 +91,6 @@ const ProactiveAdministration: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
-
- const ai = process.env.NEXT_PUBLIC_APIKEY 
-  ? new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_APIKEY }) 
-  : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
