@@ -80,22 +80,6 @@ const ProactiveAdministration: React.FC = () => {
     }
   ]);
   
-const ProactiveAdministration: React.FC = () => {
-  const INITIAL_MESSAGE = "반갑습니다! 대한민국 적극행정 지킴이, AI 상담관 '든든이'입니다.\n\n**2025년 적극행정 우수사례 경진대회 수상작(NEW)** 데이터와 **주양순 전문강사의 AI 기반 강의 정보**가 업데이트되었습니다.\n\n**최신 우수사례, 심사 배점 기준, 면책 제도, 강사단 모집** 등 무엇이든 물어보시면, 공직자 여러분께 힘이 되는 **정확한 팩트**만 답변해 드립니다.";
-
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
-    { role: 'ai', text: INITIAL_MESSAGE }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [todayCount, setTodayCount] = useState(142);
-  const [processingRate, setProcessingRate] = useState(98.5);
-
-  useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
-
   useEffect(() => {
     const interval = setInterval(() => {
       setTodayCount(prev => prev + Math.floor(Math.random() * 2));
