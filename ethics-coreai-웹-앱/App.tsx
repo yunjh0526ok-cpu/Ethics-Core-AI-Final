@@ -161,7 +161,8 @@ const App: React.FC = () => {
 
         {currentView === 'counseling_center' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <IntegratedCounseling />
+            {/* 여기를 아래 글자로 교체! */}
+            <ProactiveAdministration />
           </div>
         )}
 
