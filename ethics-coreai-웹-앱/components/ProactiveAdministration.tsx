@@ -76,16 +76,7 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
- const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || "");
- const model = genAI.getGenerativeModel({ 
-  model: "gemini-1.5-flash",
-  safetySettings: [
-    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-  ]
-});
+  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
