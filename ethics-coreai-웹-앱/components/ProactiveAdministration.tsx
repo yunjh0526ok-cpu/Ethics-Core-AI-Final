@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
 const KEYWORDS = [
   { text: "적극행정 면책", count: 85 },
   { text: "사전컨설팅", count: 72 },
@@ -76,8 +79,6 @@ const ProactiveAdministration: React.FC = () => {
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
 
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
-
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -104,7 +105,7 @@ const ProactiveAdministration: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    if (!ai) {
+    if (!genAI) {
       setTimeout(() => {
         setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
         setIsTyping(false);
@@ -114,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash"
         contents: text,
         config: {
             systemInstruction: `
@@ -144,7 +145,7 @@ const ProactiveAdministration: React.FC = () => {
             `
         }
       });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text || "답변 불가" }]);
+      setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
     } finally {
