@@ -11,6 +11,9 @@ import {
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
 // --- TYPE DEFINITIONS ---
 interface ChatMessage {
     role: 'user' | 'ai';
@@ -261,8 +264,6 @@ const Diagnostics: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
-
   // Initial Greeting for Law Tab
   useEffect(() => {
     if (activeTab === 'law' && chatLog.length === 0) {
@@ -320,7 +321,7 @@ const Diagnostics: React.FC = () => {
     setChatInput('');
     setIsTyping(true);
 
-    if (!ai) {
+   if (!genAI) {  // ai → genAI
         setTimeout(() => {
             setChatLog(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API Key Error)" }]);
             setIsTyping(false);
@@ -348,16 +349,17 @@ const Diagnostics: React.FC = () => {
     }
 
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+        const response = await genAI.models .generateContent({
+            model: "gemini-2.5-flash",
             contents: msg,
             config: { systemInstruction }
         });
-        setChatLog(prev => [...prev, { role: 'ai', text: response.text || "답변을 생성할 수 없습니다." }]);
-    } catch (e) {
-        setChatLog(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
+      const responseText = response.text;
+      setChatLog(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
+    } catch (error: any) {
+      setChatLog(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
     } finally {
-        setIsTyping(false);
+      setIsTyping(false);
     }
   };
 
