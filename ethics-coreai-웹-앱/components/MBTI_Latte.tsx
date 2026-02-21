@@ -389,7 +389,7 @@ const MBTI_Latte: React.FC = () => {
         const promptContent = `Translate this Latte speak: "${latteInput}"`;
 
         const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Request timed out")), 8000)
+            setTimeout(() => reject(new Error("Request timed out")), 15000)
         );
         const apiPromise = genAI.models.generateContent({
             model: "gemini-2.5-flash",
@@ -420,13 +420,15 @@ const MBTI_Latte: React.FC = () => {
         });
 
     } catch (e: any) {
-    console.warn("Switching to Offline Fallback Mode", e?.message);
-    const fallback = getSafeFallback(latteInput);
-    setTranslatedText(e?.message || fallback.translatedText);
-    setActionPlan({ manager: fallback.managerTip, junior: fallback.juniorTip });
-    setUsingFallback(true);
-}
-};
+        console.warn("Switching to Offline Fallback Mode", e?.message);
+        const fallback = getSafeFallback(latteInput);
+        setTranslatedText(e?.message || fallback.translatedText);
+        setActionPlan({ manager: fallback.managerTip, junior: fallback.juniorTip });
+        setUsingFallback(true);
+    } finally {
+        setIsTranslating(false);
+    }
+  };
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
