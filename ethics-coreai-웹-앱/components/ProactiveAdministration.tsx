@@ -180,7 +180,7 @@ const ProactiveAdministration: React.FC = () => {
                 2. 심층 질문에는 사례 배경, 성과, 시사점까지 상세히 설명
                 3. 모를 때만: "최신 정보는 인사혁신처 적극행정 포털(www.mpm.go.kr/proactivePublicService) 확인 권장"
                 4. 주양순 강사 강의 문의 시: yszoo1467@naver.com 안내
-                `;
+                `,
         }
       });
       const responseText = response.text;
