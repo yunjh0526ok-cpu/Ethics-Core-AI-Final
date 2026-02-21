@@ -145,7 +145,7 @@ const ProactiveAdministration: React.FC = () => {
             `
         }
       });
-      const responseText = response.text();
+      const responseText = response.text;
       setMessages(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
     } catch (error: any) {
       setMessages(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
