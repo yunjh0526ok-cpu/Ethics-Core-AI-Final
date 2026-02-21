@@ -266,13 +266,14 @@ const Diagnostics: React.FC = () => {
 
   // Initial Greeting for Law Tab
   useEffect(() => {
-    if (activeTab === 'law' && chatLog.length === 0) {
+    setChatLog([]); // 탭 바뀔 때 채팅 초기화
+    if (activeTab === 'law') {
         setChatLog([{
             role: 'ai',
             text: `안녕하십니까. 주양순 대표가 설계한 **에코AI 전문 부패상담관**입니다.\n\n귀하의 제보는 **철저히 익명이 보장**되며, 모든 답변은 **「청탁금지법」**, **「이해충돌방지법」** 등 관계 법령에 근거하여 정밀 분석을 제공합니다.\n\n분석을 원하시는 사안을 말씀해 주시거나, 상단의 **퀵 메뉴**를 선택해 주세요.`
-        }]);
+       }]);
     }
-  }, [activeTab]);
+}, [activeTab]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -614,7 +615,7 @@ const Diagnostics: React.FC = () => {
                       </div>
                       {activeTab === 'counseling' && (
                           <div className="mt-4 flex justify-end">
-                              <button className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 font-bold underline decoration-red-400/50 underline-offset-4">
+                              <button onClick={() => handleChatSend("정식 신고 절차를 안내해주세요")} className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 font-bold underline decoration-red-400/50 underline-offset-4">
                                   <AlertTriangle className="w-3 h-3" /> 정식 신고 절차 안내받기
                               </button>
                           </div>
