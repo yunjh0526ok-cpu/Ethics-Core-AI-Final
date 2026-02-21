@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, Sparkles, FileText, CheckCircle2, Cpu, ChevronRight, ExternalLink, Download, MessageSquare } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
 const SUGGESTED_QUESTIONS = [
   "우리 기관 맞춤형 커스터마이징이 가능한가요?",
   "강의 의뢰 및 컨설팅 신청 절차는?",
@@ -50,9 +53,6 @@ const ProposalChatbot: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Initialize API
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
-
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -74,7 +74,7 @@ const ProposalChatbot: React.FC = () => {
 
     try {
       const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: text,
         config: {
           systemInstruction: PROPOSAL_CONTEXT,
@@ -239,19 +239,19 @@ const ProposalChatbot: React.FC = () => {
             </div>
 
             {/* Quick Chips */}
-            <div className="px-4 py-3 bg-[#0b1120]/80 border-t border-slate-800 backdrop-blur-sm overflow-x-auto whitespace-nowrap custom-scrollbar shrink-0">
-                <div className="flex gap-2">
-                    {SUGGESTED_QUESTIONS.map((q, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleSend(q)}
-                            className="px-4 py-2 rounded-full bg-slate-800 border border-slate-600 hover:border-blue-500 hover:text-white text-slate-400 text-xs font-medium transition-colors"
-                        >
-                            {q}
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <div className="px-4 py-3 bg-[#0b1120]/80 border-t border-slate-800 backdrop-blur-sm overflow-hidden shrink-0">
+                  <div className="flex w-max gap-2 animate-marquee px-4">
+                      {[...SUGGESTED_QUESTIONS, ...SUGGESTED_QUESTIONS].map((q, i) => (
+                          <button
+                              key={i}
+                              onClick={() => handleSend(q)}
+                              className="px-4 py-2 rounded-full bg-slate-800 border border-slate-600 hover:border-blue-500 hover:text-white text-slate-400 text-xs font-medium transition-colors shrink-0"
+                          >
+                              {q}
+                          </button>
+                      ))}
+                  </div>
+              </div>
 
             {/* Input Area */}
             <div className="p-4 bg-[#13132b] border-t border-slate-700 shrink-0">
