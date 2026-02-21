@@ -5,7 +5,7 @@ import { Sparkles, RefreshCw, Zap, Quote, Coffee, ArrowRight, Heart, UserCog, Br
 import { GoogleGenAI, Type } from "@google/genai";
 
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
 // ... (Existing Interfaces and Data - Keep as is, omitted for brevity)
 interface MBTIProfile {
