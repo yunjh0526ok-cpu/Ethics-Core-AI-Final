@@ -375,7 +375,7 @@ const MBTI_Latte: React.FC = () => {
     });
 
     try {
-        if (!ai) throw new Error("API Key missing");
+        if (!genAI) throw new Error("API Key missing");
         
         const systemInstruction = `
             당신은 유머러스하고 통찰력 있는 '꼰대어 번역기'이자 '소통 코치'입니다.
@@ -391,7 +391,7 @@ const MBTI_Latte: React.FC = () => {
         const timeoutPromise = new Promise((_, reject) => 
             setTimeout(() => reject(new Error("Request timed out")), 8000)
         );
-        const apiPromise = ai.models.generateContent({
+        const apiPromise = genAI.models.generateContent({
             model: "gemini-2.5-flash",
             contents: promptContent,
             config: {
@@ -408,7 +408,7 @@ const MBTI_Latte: React.FC = () => {
             }
         });
         const response = await Promise.race([apiPromise, timeoutPromise]) as any;
-        const jsonStr = response.text() || "{}";  // text() 함수 호출로 변경
+        const jsonStr = response.text || "{}";  // text() 함수 호출로 변경
         const cleanJsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
         const json = JSON.parse(cleanJsonStr);
         setTranslatedText(cleanText(json.translatedText || "번역 실패"));
