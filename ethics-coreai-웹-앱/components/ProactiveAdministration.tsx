@@ -477,5 +477,5 @@ const ProactiveAdministration: React.FC = () => {
       </motion.div>
     </section>
   );
-
+};
 export default ProactiveAdministration;
