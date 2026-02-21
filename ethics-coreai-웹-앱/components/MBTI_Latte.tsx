@@ -426,7 +426,7 @@ const MBTI_Latte: React.FC = () => {
     setActionPlan({ manager: fallback.managerTip, junior: fallback.juniorTip });
     setUsingFallback(true);
 }
-
+};
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
     const event = new CustomEvent('navigate', { detail: 'home' });
