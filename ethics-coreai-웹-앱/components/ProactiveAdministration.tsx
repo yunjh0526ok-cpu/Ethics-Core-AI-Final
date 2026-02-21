@@ -115,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
 
     try {
       const response = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.0-flash-lite",
         contents: text,
         config: {
             systemInstruction: `
@@ -145,8 +145,9 @@ const ProactiveAdministration: React.FC = () => {
             `
         }
       });
-      setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
-   } catch (error: any) {
+      const responseText = response.text();
+      setMessages(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
+    } catch (error: any) {
       setMessages(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
     } finally {
       setIsTyping(false);
