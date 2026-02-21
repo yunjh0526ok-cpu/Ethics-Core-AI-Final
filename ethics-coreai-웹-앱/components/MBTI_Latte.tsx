@@ -392,7 +392,7 @@ const MBTI_Latte: React.FC = () => {
             setTimeout(() => reject(new Error("Request timed out")), 8000)
         );
         const apiPromise = ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             contents: promptContent,
             config: {
                 systemInstruction: systemInstruction,
