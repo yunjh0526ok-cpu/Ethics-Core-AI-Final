@@ -115,7 +115,7 @@ const ProactiveAdministration: React.FC = () => {
 
     try {
       const response = await genAI.models.generateContent({
-        model: "gemini-2.0-flash-lite",
+        model: "gemini-2.5-flash-preview-04-17",
         contents: text,
         config: {
             systemInstruction: `
