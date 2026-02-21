@@ -146,8 +146,9 @@ const ProactiveAdministration: React.FC = () => {
         }
       });
       setMessages(prev => [...prev, { role: 'ai', text: response.text() || "답변 불가" }]);
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 불안정합니다." }]);
+    } catch (error: any) {
+  setMessages(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
+}
     } finally {
       setIsTyping(false);
     }
