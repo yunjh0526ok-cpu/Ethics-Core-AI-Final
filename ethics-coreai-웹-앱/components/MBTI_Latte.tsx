@@ -419,16 +419,13 @@ const MBTI_Latte: React.FC = () => {
             junior: cleanText(json.juniorTip || defaultJunior) 
         });
 
-    } catch (e) {
-        console.warn("Switching to Offline Fallback Mode");
-        const fallback = getSafeFallback(latteInput);
-        setTranslatedText(fallback.translatedText);
-        setActionPlan({ manager: fallback.managerTip, junior: fallback.juniorTip });
-        setUsingFallback(true);
-    } finally {
-        setIsTranslating(false);
-    }
-  };
+    } catch (e: any) {
+    console.warn("Switching to Offline Fallback Mode", e?.message);
+    const fallback = getSafeFallback(latteInput);
+    setTranslatedText(e?.message || fallback.translatedText);
+    setActionPlan({ manager: fallback.managerTip, junior: fallback.juniorTip });
+    setUsingFallback(true);
+}
 
   const handleBack = () => {
     sessionStorage.setItem('hero_view_mode', 'consulting');
