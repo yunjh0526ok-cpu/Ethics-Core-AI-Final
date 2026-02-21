@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, RefreshCw, Zap, Quote, Coffee, ArrowRight, Heart, UserCog, Briefcase, Repeat, Stethoscope, CheckCircle2, Loader2, AlertTriangle, WifiOff, ArrowLeft } from 'lucide-react';
 import { GoogleGenAI, Type } from "@google/genai";
 
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
 // ... (Existing Interfaces and Data - Keep as is, omitted for brevity)
 interface MBTIProfile {
   nickname: string;
@@ -340,7 +343,6 @@ const MBTI_Latte: React.FC = () => {
     junior: "설명하려 하지 말고 요약하세요. '그래서 결론은 이렇습니다'가 구구절절한 변명보다 100배 더 프로답습니다."
   });
 
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
   const cleanText = (text: string) => text.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '');
 
   const handleQuizSelect = (value: string) => {
@@ -390,7 +392,7 @@ const MBTI_Latte: React.FC = () => {
             setTimeout(() => reject(new Error("Request timed out")), 8000)
         );
         const apiPromise = ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-1.5-flash",
             contents: promptContent,
             config: {
                 systemInstruction: systemInstruction,
@@ -406,7 +408,7 @@ const MBTI_Latte: React.FC = () => {
             }
         });
         const response = await Promise.race([apiPromise, timeoutPromise]) as any;
-        const jsonStr = response.text || "{}";
+        const jsonStr = response.text() || "{}";  // text() 함수 호출로 변경
         const cleanJsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
         const json = JSON.parse(cleanJsonStr);
         setTranslatedText(cleanText(json.translatedText || "번역 실패"));
