@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,13 +13,11 @@ import { GoogleGenAI } from "@google/genai";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
-// --- TYPE DEFINITIONS ---
 interface ChatMessage {
     role: 'user' | 'ai';
     text: string;
 }
 
-// --- MOCK DATA FOR IMMEDIATE DISPLAY ---
 const MOCK_LEGAL_ADVICE = `
 **[에코AI 부패 정밀 진단 결과]**
 귀하가 질의하신 사안은 「공무원 행동강령」 상 **사적 이해관계 신고 의무** 위반 소지가 다분합니다.
@@ -46,26 +43,23 @@ const LEGAL_QUICK_MENU = [
     { label: "이해충돌방지법", icon: Scale, prompt: "이해충돌방지법에 따른 '사적 이해관계자 신고' 의무와 '직무상 비밀 이용' 금지 조항에 대해 구체적인 예시를 들어 설명해 줘." }
 ];
 
+// 모바일 최적화된 renderStyledText
 const renderStyledText = (text: string) => {
     return text.split('\n').map((line, i) => {
-        // Handle Blockquotes for Laws
         if (line.trim().startsWith('>')) {
             return (
-                <div key={i} className="my-2 p-3 bg-slate-900/80 border-l-4 border-cyber-accent rounded-r-lg text-slate-300 text-sm italic font-serif">
+                <div key={i} className="my-3 p-3 md:p-4 bg-slate-900/80 border-l-4 border-cyber-accent rounded-r-lg text-slate-300 text-sm md:text-sm leading-loose break-keep font-serif italic">
                     {line.replace('>', '').trim()}
                 </div>
             );
         }
-        
-        // Handle bolding and highlights
         return (
-            <p key={i} className="mb-2 leading-relaxed">
+            <p key={i} className="mb-3 leading-loose text-sm md:text-sm break-keep">
                 {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
                     if (part.startsWith('**') && part.endsWith('**')) {
                         const content = part.slice(2, -2);
-                        // Quantitative Analysis Highlight
                         if (content.includes('%')) {
-                            return <strong key={j} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1">{content}</strong>;
+                            return <strong key={j} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>;
                         }
                         return <strong key={j} className="text-cyber-accent font-bold">{content}</strong>;
                     }
@@ -76,7 +70,6 @@ const renderStyledText = (text: string) => {
     });
 };
 
-// --- DATA: 3대 진단 카테고리 (질문지 30개 100% 보존) ---
 const DIAGNOSIS_CATEGORIES = [
   { 
     id: 'corruption', 
@@ -146,7 +139,6 @@ const DIAGNOSIS_CATEGORIES = [
   }
 ];
 
-// --- HELPER COMPONENT: RADAR CHART ---
 const RadarChart = ({ data, color }: { data: number[], color: string }) => {
   const size = 200;
   const center = size / 2;
@@ -173,17 +165,7 @@ const RadarChart = ({ data, color }: { data: number[], color: string }) => {
     <div className="relative w-full h-full flex items-center justify-center">
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="overflow-visible">
         {[0.2, 0.4, 0.6, 0.8, 1].map((level, i) => (
-          <polygon 
-            key={i}
-            points={axes.map((_, j) => {
-              const {x, y} = getCoords(level, j);
-              return `${x},${y}`;
-            }).join(" ")}
-            fill="none"
-            stroke="#334155"
-            strokeWidth="1"
-            className="opacity-50"
-          />
+          <polygon key={i} points={axes.map((_, j) => { const {x, y} = getCoords(level, j); return `${x},${y}`; }).join(" ")} fill="none" stroke="#334155" strokeWidth="1" className="opacity-50" />
         ))}
         {axes.map((axis, i) => {
           const {x, y} = getCoords(1.15, i);
@@ -194,37 +176,16 @@ const RadarChart = ({ data, color }: { data: number[], color: string }) => {
             </g>
           );
         })}
-        <motion.polygon
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          points={pathData}
-          fill={strokeColor}
-          fillOpacity="0.4"
-          stroke={strokeColor}
-          strokeWidth="2"
-        />
+        <motion.polygon initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} points={pathData} fill={strokeColor} fillOpacity="0.4" stroke={strokeColor} strokeWidth="2" />
         {data.map((d, i) => {
             const {x, y} = getCoords(d, i);
-            return (
-                <motion.circle 
-                    key={i}
-                    cx={x} 
-                    cy={y} 
-                    r="3" 
-                    fill="#fff"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.5 + i * 0.1 }}
-                />
-            );
+            return <motion.circle key={i} cx={x} cy={y} r="3" fill="#fff" initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5 + i * 0.1 }} />;
         })}
       </svg>
     </div>
   );
 };
 
-// --- RISK GAUGE COMPONENT ---
 const RiskGauge = ({ score, color }: { score: number, color: string }) => {
     const size = 180;
     const strokeWidth = 15;
@@ -238,12 +199,7 @@ const RiskGauge = ({ score, color }: { score: number, color: string }) => {
         <div className="relative flex items-center justify-center">
             <svg width={size} height={size} className="transform -rotate-90">
                 <circle cx={center} cy={center} r={radius} stroke="#1e293b" strokeWidth={strokeWidth} fill="none" />
-                <motion.circle
-                    initial={{ strokeDashoffset: circumference }}
-                    animate={{ strokeDashoffset: offset }}
-                    transition={{ duration: 1.5, ease: "easeOut" }}
-                    cx={center} cy={center} r={radius} stroke={strokeColor} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeLinecap="round"
-                />
+                <motion.circle initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1.5, ease: "easeOut" }} cx={center} cy={center} r={radius} stroke={strokeColor} strokeWidth={strokeWidth} fill="none" strokeDasharray={circumference} strokeLinecap="round" />
             </svg>
             <div className="absolute flex flex-col items-center">
                 <span className="text-4xl font-black text-white">{score}</span>
@@ -253,7 +209,6 @@ const RiskGauge = ({ score, color }: { score: number, color: string }) => {
     );
 };
 
-// --- MAIN COMPONENT ---
 const Diagnostics: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'diagnosis' | 'counseling' | 'law'>('diagnosis');
   const [diagCategory, setDiagCategory] = useState<string | null>(null);
@@ -264,16 +219,15 @@ const Diagnostics: React.FC = () => {
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Initial Greeting for Law Tab
   useEffect(() => {
-    setChatLog([]); // 탭 바뀔 때 채팅 초기화
+    setChatLog([]);
     if (activeTab === 'law') {
         setChatLog([{
             role: 'ai',
             text: `안녕하십니까. 주양순 대표가 설계한 **에코AI 전문 부패상담관**입니다.\n\n귀하의 제보는 **철저히 익명이 보장**되며, 모든 답변은 **「청탁금지법」**, **「이해충돌방지법」** 등 관계 법령에 근거하여 정밀 분석을 제공합니다.\n\n분석을 원하시는 사안을 말씀해 주시거나, 상단의 **퀵 메뉴**를 선택해 주세요.`
        }]);
     }
-}, [activeTab]);
+  }, [activeTab]);
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -306,11 +260,11 @@ const Diagnostics: React.FC = () => {
   const getRadarData = () => {
     let scores = [0.2, 0.2, 0.2, 0.2, 0.2];
     checkedItems.forEach(idx => {
-       if ([0, 3].includes(idx)) scores[0] += 0.3; // Law
-       if ([4, 5, 9].includes(idx)) scores[1] += 0.25; // Org
-       if ([2, 8].includes(idx)) scores[2] += 0.4; // Honor
-       if ([1, 6].includes(idx)) scores[3] += 0.4; // Money
-       if ([7].includes(idx)) scores[4] += 0.4; // Intent
+       if ([0, 3].includes(idx)) scores[0] += 0.3;
+       if ([4, 5, 9].includes(idx)) scores[1] += 0.25;
+       if ([2, 8].includes(idx)) scores[2] += 0.4;
+       if ([1, 6].includes(idx)) scores[3] += 0.4;
+       if ([7].includes(idx)) scores[4] += 0.4;
     });
     return scores.map(s => Math.min(1, s)); 
   };
@@ -322,7 +276,7 @@ const Diagnostics: React.FC = () => {
     setChatInput('');
     setIsTyping(true);
 
-   if (!genAI) {  // ai → genAI
+    if (!genAI) {
         setTimeout(() => {
             setChatLog(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API Key Error)" }]);
             setIsTyping(false);
@@ -330,7 +284,6 @@ const Diagnostics: React.FC = () => {
         return;
     }
 
-    // Persona & Instruction Selection
     let systemInstruction = "";
     if (activeTab === 'law') {
         systemInstruction = `
@@ -344,15 +297,18 @@ const Diagnostics: React.FC = () => {
             - 기프티콘·모바일상품권·용역상품권: 유가증권이라도 선물 범위로 흡수 적용
             - 지도·단속 대상자로부터 수수: 금액 무관 원칙적 금지
             - 출처: 국가법령정보센터(law.go.kr) 청탁금지법 시행령 최신본 기준
+
             [판례 검색 원칙]
             - 법령 조문만 인용하지 말고 반드시 관련 판례, 행정심판례, 권익위 결정례까지 함께 제시
             - 예) "대법원 20XX다XXXXX", "국민권익위원회 결정 제20XX-X호" 형식으로 구체적 판례 인용
             - 판례가 없을 경우 "유사 행정심판례" 또는 "권익위 유권해석" 기준으로 답변
+
             [분석 가이드]
             1. **어조**: 냉철하고 공정하며 신뢰감 있는 '수석 감사관' 톤을 유지하십시오. ("~입니다", "~판단됩니다")
             2. **구조화된 출력**:
                - **[위반 가능성 진단]**: 확률(%)과 위험도(고위험/중위험/저위험)를 명시하십시오. (예: **85% (고위험)**)
                - **[관련 법령]**: 위반 소지가 있는 법 조항을 인용하십시오. (박스 처리 유도: > 기호 사용)
+               - **[관련 판례]**: 대법원 판례, 권익위 결정례, 행정심판례를 구체적 사건번호와 함께 인용하십시오.
                - **[감사관의 조언]**: 구체적인 대응 방안(자진 신고, 증거 확보 등)을 제시하십시오.
             3. **신종 부패 연계**: '신종 부패 10대 유형'(출장비 횡령, 모바일 향응 수수, 사적 노무 동원 등)과 연관된 경우 이를 명시하십시오.
         `;
@@ -361,17 +317,17 @@ const Diagnostics: React.FC = () => {
     }
 
     try {
-        const response = await genAI.models .generateContent({
+        const response = await genAI.models.generateContent({
             model: "gemini-2.5-flash",
             contents: msg,
             config: { systemInstruction }
         });
-      const responseText = response.text;
-      setChatLog(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
+        const responseText = response.text;
+        setChatLog(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
     } catch (error: any) {
-      setChatLog(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
+        setChatLog(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);
     } finally {
-      setIsTyping(false);
+        setIsTyping(false);
     }
   };
 
@@ -390,28 +346,28 @@ const Diagnostics: React.FC = () => {
       </div>
 
       <div className="text-left w-full max-w-7xl mb-12">
-        <h1 className="text-5xl md:text-7xl font-black text-white mb-2 tracking-tight">ECHO AI INTELLIGENCE</h1>
-        <p className="text-cyber-accent text-lg md:text-xl font-mono tracking-widest">Echo AI Digital Platform</p>
+        <h1 className="text-4xl md:text-7xl font-black text-white mb-2 tracking-tight">ECHO AI INTELLIGENCE</h1>
+        <p className="text-cyber-accent text-base md:text-xl font-mono tracking-widest">Echo AI Digital Platform</p>
       </div>
 
       <div className="w-full max-w-7xl mb-8">
           <div className="flex flex-col md:flex-row border border-slate-700 rounded-lg overflow-hidden">
-              <button onClick={() => setActiveTab('diagnosis')} className={`flex-1 py-6 px-4 text-center font-bold text-lg transition-all border-b-4 md:border-b-0 md:border-r border-slate-700 hover:bg-slate-800/50 ${activeTab === 'diagnosis' ? 'bg-[#0f172a] text-white border-b-cyber-accent md:border-r-slate-700' : 'bg-[#0a0a12] text-slate-500'}`}>
+              <button onClick={() => setActiveTab('diagnosis')} className={`flex-1 py-5 md:py-6 px-4 text-center font-bold text-base md:text-lg transition-all border-b-4 md:border-b-0 md:border-r border-slate-700 hover:bg-slate-800/50 ${activeTab === 'diagnosis' ? 'bg-[#0f172a] text-white border-b-cyber-accent md:border-r-slate-700' : 'bg-[#0a0a12] text-slate-500'}`}>
                   <div className="flex flex-col items-center justify-center gap-2"><LayoutDashboard className={`w-6 h-6 ${activeTab === 'diagnosis' ? 'text-cyber-accent' : 'text-slate-600'}`} /> 에코AI 진단</div>
-                  <span className="text-xs font-normal mt-1 block text-slate-500">30가지 행동 강령 위반 유형 정밀 진단</span>
+                  <span className="text-xs font-normal mt-1 block text-slate-500 hidden md:block">30가지 행동 강령 위반 유형 정밀 진단</span>
               </button>
-              <button onClick={() => setActiveTab('counseling')} className={`flex-1 py-6 px-4 text-center font-bold text-lg transition-all border-b-4 md:border-b-0 md:border-r border-slate-700 hover:bg-slate-800/50 ${activeTab === 'counseling' ? 'bg-[#0f172a] text-white border-b-amber-500 md:border-r-slate-700' : 'bg-[#0a0a12] text-slate-500'}`}>
+              <button onClick={() => setActiveTab('counseling')} className={`flex-1 py-5 md:py-6 px-4 text-center font-bold text-base md:text-lg transition-all border-b-4 md:border-b-0 md:border-r border-slate-700 hover:bg-slate-800/50 ${activeTab === 'counseling' ? 'bg-[#0f172a] text-white border-b-amber-500 md:border-r-slate-700' : 'bg-[#0a0a12] text-slate-500'}`}>
                   <div className="flex flex-col items-center justify-center gap-2"><HeartHandshake className={`w-6 h-6 ${activeTab === 'counseling' ? 'text-amber-500' : 'text-slate-600'}`} /> 에코AI 마음치유</div>
-                  <span className="text-xs font-normal mt-1 block text-slate-500">심리 보호 및 신고서 자동 작성 가이드</span>
+                  <span className="text-xs font-normal mt-1 block text-slate-500 hidden md:block">심리 보호 및 신고서 자동 작성 가이드</span>
               </button>
-              <button onClick={() => setActiveTab('law')} className={`flex-1 py-6 px-4 text-center font-bold text-lg transition-all hover:bg-slate-800/50 ${activeTab === 'law' ? 'bg-[#0f172a] text-white border-b-4 border-cyber-accent' : 'bg-[#0a0a12] text-slate-500'}`}>
+              <button onClick={() => setActiveTab('law')} className={`flex-1 py-5 md:py-6 px-4 text-center font-bold text-base md:text-lg transition-all hover:bg-slate-800/50 ${activeTab === 'law' ? 'bg-[#0f172a] text-white border-b-4 border-cyber-accent' : 'bg-[#0a0a12] text-slate-500'}`}>
                   <div className="flex flex-col items-center justify-center gap-2"><Gavel className={`w-6 h-6 ${activeTab === 'law' ? 'text-cyber-accent' : 'text-slate-600'}`} /> 에코AI 부패상담관</div>
-                  <span className="text-xs font-normal mt-1 block text-slate-500">실시간 법률 팩트체크 및 분석 리포트</span>
+                  <span className="text-xs font-normal mt-1 block text-slate-500 hidden md:block">실시간 법률 팩트체크 및 분석 리포트</span>
               </button>
           </div>
       </div>
 
-      <div className={`w-full max-w-7xl bg-[#0b1120] border border-slate-800 rounded-[2rem] p-8 md:p-12 min-h-[600px] relative shadow-2xl transition-colors duration-500 ${activeTab === 'counseling' ? 'border-amber-900/50 shadow-amber-900/20' : ''}`}>
+      <div className={`w-full max-w-7xl bg-[#0b1120] border border-slate-800 rounded-[2rem] p-5 md:p-12 min-h-[600px] relative shadow-2xl transition-colors duration-500 ${activeTab === 'counseling' ? 'border-amber-900/50 shadow-amber-900/20' : ''}`}>
           <AnimatePresence mode="wait">
               {activeTab === 'diagnosis' && (
                   <motion.div key="diagnosis" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full">
@@ -436,18 +392,19 @@ const Diagnostics: React.FC = () => {
                           <div className="max-w-4xl mx-auto">
                               <div className="flex items-center justify-between mb-8 border-b border-slate-700 pb-4">
                                   <button onClick={() => setDiagStep('select')} className="text-slate-400 hover:text-white flex items-center gap-2"><ArrowLeft className="w-4 h-4" /> 뒤로가기</button>
-                                  <h3 className={`text-2xl font-bold ${currentCategoryData.color}`}>{currentCategoryData.label} 체크리스트</h3>
+                                  <h3 className={`text-lg md:text-2xl font-bold ${currentCategoryData.color}`}>{currentCategoryData.label} 체크리스트</h3>
                               </div>
                               <div className="space-y-4 mb-10">
                                   {currentCategoryData.checklist.map((item, idx) => (
-                                      <div key={idx} onClick={() => toggleCheck(idx)} className={`p-5 rounded-xl border cursor-pointer transition-all flex items-start gap-4 ${checkedItems.includes(idx) ? `bg-slate-800 ${currentCategoryData.border} border-opacity-50` : 'bg-[#0f172a] border-slate-700 hover:bg-slate-800'}`}>
+                                      <div key={idx} onClick={() => toggleCheck(idx)} className={`p-4 md:p-5 rounded-xl border cursor-pointer transition-all flex items-start gap-4 ${checkedItems.includes(idx) ? `bg-slate-800 ${currentCategoryData.border} border-opacity-50` : 'bg-[#0f172a] border-slate-700 hover:bg-slate-800'}`}>
                                           <div className={`mt-1 w-6 h-6 rounded border flex items-center justify-center shrink-0 ${checkedItems.includes(idx) ? `${currentCategoryData.bg} border-transparent text-black` : 'border-slate-600 text-transparent'}`}><CheckSquare className="w-4 h-4" /></div>
-                                          <span className={`text-base ${checkedItems.includes(idx) ? 'text-white font-bold' : 'text-slate-400'}`}>{item}</span>
+                                          {/* 모바일 폰트 최적화 */}
+                                          <span className={`text-sm md:text-base leading-relaxed break-keep ${checkedItems.includes(idx) ? 'text-white font-bold' : 'text-slate-400'}`}>{item}</span>
                                       </div>
                                   ))}
                               </div>
                               <div className="flex justify-center">
-                                  <button onClick={() => setDiagStep('result')} className={`px-16 py-4 rounded-full font-bold text-lg text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all hover:scale-105 flex items-center gap-3 ${currentCategoryData.bg.replace('bg-', 'bg-')}`} style={{backgroundColor: currentCategoryData.color.includes('yellow') ? '#eab308' : currentCategoryData.color.includes('purple') ? '#8b5cf6' : '#ff6e1e'}}>
+                                  <button onClick={() => setDiagStep('result')} className={`px-10 md:px-16 py-4 rounded-full font-bold text-base md:text-lg text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] transition-all hover:scale-105 flex items-center gap-3`} style={{backgroundColor: currentCategoryData.color.includes('yellow') ? '#eab308' : currentCategoryData.color.includes('purple') ? '#8b5cf6' : '#ff6e1e'}}>
                                       결과 분석하기 <Radar className="w-5 h-5" />
                                   </button>
                               </div>
@@ -496,12 +453,8 @@ const Diagnostics: React.FC = () => {
               {(activeTab === 'counseling' || activeTab === 'law') && (
                   <motion.div key="chat-interface" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="h-full flex flex-col">
                       
-                      {/* === IMMEDIATE DATA DISPLAY SECTIONS === */}
-                      
-                      {/* LAW TAB: QUICK MENU & LEGAL REPORT */}
                       {activeTab === 'law' && (
                           <div className="mb-6 space-y-4">
-                              {/* Quick Menu */}
                               <div className="flex gap-2 overflow-x-auto custom-scrollbar pb-2">
                                   {LEGAL_QUICK_MENU.map((item, idx) => (
                                       <button 
@@ -515,11 +468,10 @@ const Diagnostics: React.FC = () => {
                                   ))}
                               </div>
 
-                              {/* Static Report (If user just arrived, optional context) */}
-                              <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="p-6 bg-slate-900/60 border border-slate-700 rounded-2xl shadow-xl">
+                              <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="p-4 md:p-6 bg-slate-900/60 border border-slate-700 rounded-2xl shadow-xl">
                                   <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
                                       <FileText className="w-5 h-5 text-cyber-accent" />
-                                      <h4 className="text-white font-bold text-lg">AI 부패 분석 샘플</h4>
+                                      <h4 className="text-white font-bold text-base md:text-lg">AI 부패 분석 샘플</h4>
                                       <span className="text-[10px] bg-red-900/50 text-red-400 px-2 py-0.5 rounded border border-red-500/20">TEST MODE</span>
                                   </div>
                                   <div className="text-slate-300 text-sm">
@@ -529,42 +481,38 @@ const Diagnostics: React.FC = () => {
                           </div>
                       )}
 
-                      {/* COUNSELING TAB: STRATEGIC ROADMAP */}
                       {activeTab === 'counseling' && (
                           <motion.div initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-6">
                               <div className="flex items-center gap-2 mb-4">
                                   <Bot className="w-5 h-5 text-amber-500" />
-                                  <h4 className="text-white font-bold text-lg">에코AI 심리 치유 로드맵</h4>
+                                  <h4 className="text-white font-bold text-base md:text-lg">에코AI 심리 치유 로드맵</h4>
                               </div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                                   {STRATEGIC_ROADMAP.map((step, idx) => (
-                                      <div key={idx} className="bg-gradient-to-br from-amber-900/20 to-orange-900/10 border border-amber-900/30 p-4 rounded-xl flex flex-col items-center text-center">
+                                      <div key={idx} className="bg-gradient-to-br from-amber-900/20 to-orange-900/10 border border-amber-900/30 p-3 md:p-4 rounded-xl flex flex-col items-center text-center">
                                           <div className="w-10 h-10 rounded-full bg-amber-900/40 flex items-center justify-center mb-3 text-amber-300">
                                               {React.createElement(step.icon, { className: "w-5 h-5" })}
                                           </div>
                                           <span className="text-xs text-amber-500/80 font-bold mb-1">STEP {step.step}</span>
-                                          <h5 className="text-white font-bold text-sm mb-1">{step.title}</h5>
-                                          <p className="text-[10px] text-amber-200/60">{step.desc}</p>
+                                          <h5 className="text-white font-bold text-xs md:text-sm mb-1">{step.title}</h5>
+                                          <p className="text-[10px] text-amber-200/60 hidden md:block">{step.desc}</p>
                                       </div>
                                   ))}
                               </div>
                           </motion.div>
                       )}
 
-                      <div className={`flex-grow rounded-2xl border p-6 mb-6 overflow-y-auto custom-scrollbar min-h-[300px] max-h-[500px] transition-colors duration-500 ${activeTab === 'counseling' ? 'bg-gradient-to-b from-slate-900/80 to-amber-950/20 border-amber-900/30' : 'bg-[#0f172a] border-slate-800'}`}>
+                      {/* 채팅 영역 - 모바일 폰트/여백 최적화 */}
+                      <div className={`flex-grow rounded-2xl border p-4 md:p-6 mb-4 md:mb-6 overflow-y-auto custom-scrollbar min-h-[300px] max-h-[500px] transition-colors duration-500 ${activeTab === 'counseling' ? 'bg-gradient-to-b from-slate-900/80 to-amber-950/20 border-amber-900/30' : 'bg-[#0f172a] border-slate-800'}`}>
                           {chatLog.length === 0 && (
                               <div className="flex flex-col items-center justify-center h-full text-slate-500">
                                   {activeTab === 'counseling' ? (
-                                      <motion.div 
-                                        initial={{ opacity: 0, scale: 0.9 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className="bg-gradient-to-br from-amber-900/40 to-orange-950/40 border border-amber-700/30 p-8 rounded-3xl text-center max-w-lg shadow-[0_0_40px_rgba(245,158,11,0.1)]"
-                                      >
+                                      <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-gradient-to-br from-amber-900/40 to-orange-950/40 border border-amber-700/30 p-6 md:p-8 rounded-3xl text-center max-w-lg shadow-[0_0_40px_rgba(245,158,11,0.1)]">
                                           <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6 animate-pulse">
                                               <Sparkles className="w-8 h-8 text-amber-300" />
                                           </div>
-                                          <h3 className="text-xl font-bold text-white mb-4">에코AI 마음치유 상담소</h3>
-                                          <p className="text-amber-100/90 text-sm leading-relaxed whitespace-pre-wrap break-keep font-medium">
+                                          <h3 className="text-lg md:text-xl font-bold text-white mb-4">에코AI 마음치유 상담소</h3>
+                                          <p className="text-amber-100/90 text-sm leading-loose whitespace-pre-wrap break-keep font-medium">
                                               "안녕하십니까. 주양순 대표가 설계한 <strong className="text-amber-300">'에코AI'</strong> 마음치유 상담소입니다.<br/><br/>
                                               당신의 울림(Echo)에 귀를 기울이겠습니다.<br/>
                                               불안하고 답답한 마음, 저에게 털어놓으셔도 됩니다."
@@ -575,8 +523,8 @@ const Diagnostics: React.FC = () => {
                                         <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-blue-900/30">
                                             <Gavel className="w-10 h-10 text-blue-400" />
                                         </div>
-                                        <p className="text-lg font-bold text-slate-300 mb-2">에코AI 전문 부패상담관 연결됨</p>
-                                        <p className="text-sm max-w-md text-center leading-relaxed text-slate-400">
+                                        <p className="text-base md:text-lg font-bold text-slate-300 mb-2">에코AI 전문 부패상담관 연결됨</p>
+                                        <p className="text-sm max-w-md text-center leading-loose text-slate-400 break-keep">
                                             "귀하의 제보는 철저히 익명이 보장되며,<br/>
                                             관계 법령에 근거하여 정밀 분석을 제공합니다."
                                         </p>
@@ -585,22 +533,23 @@ const Diagnostics: React.FC = () => {
                               </div>
                           )}
                           {chatLog.map((msg, idx) => (
-                              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-6`}>
-                                  <div className={`flex max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-4`}>
-                                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-cyber-600' : 'bg-slate-700'}`}>
-                                          {msg.role === 'user' ? <UserCheck className="w-5 h-5 text-white" /> : <Bot className="w-5 h-5 text-white" />}
+                              <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} mb-4 md:mb-6`}>
+                                  <div className={`flex max-w-[90%] md:max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'} gap-3 md:gap-4`}>
+                                      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? 'bg-cyber-600' : 'bg-slate-700'}`}>
+                                          {msg.role === 'user' ? <UserCheck className="w-4 h-4 md:w-5 md:h-5 text-white" /> : <Bot className="w-4 h-4 md:w-5 md:h-5 text-white" />}
                                       </div>
-                                      <div className={`p-5 rounded-2xl text-sm leading-relaxed shadow-lg whitespace-pre-wrap ${msg.role === 'user' ? 'bg-cyber-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
+                                      {/* 핵심: 모바일 폰트 text-sm, leading-loose, break-keep */}
+                                      <div className={`p-4 md:p-5 rounded-2xl text-sm leading-loose break-keep shadow-lg ${msg.role === 'user' ? 'bg-cyber-600 text-white rounded-tr-none' : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
                                           {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
                                       </div>
                                   </div>
                               </div>
                           ))}
                           {isTyping && (
-                              <div className="flex justify-start mb-6">
-                                  <div className="flex gap-4">
-                                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><Bot className="w-5 h-5 text-white" /></div>
-                                      <div className="bg-slate-800 border border-slate-700 p-5 rounded-2xl rounded-tl-none flex gap-2 items-center">
+                              <div className="flex justify-start mb-4">
+                                  <div className="flex gap-3">
+                                      <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center shrink-0"><Bot className="w-4 h-4 text-white" /></div>
+                                      <div className="bg-slate-800 border border-slate-700 p-4 rounded-2xl rounded-tl-none flex gap-2 items-center">
                                           <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
                                           <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-75" />
                                           <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce delay-150" />
@@ -611,6 +560,7 @@ const Diagnostics: React.FC = () => {
                           <div ref={scrollRef} />
                       </div>
                       
+                      {/* 입력창 - 모바일 최적화 */}
                       <div className="relative">
                           <input
                             type="text"
@@ -618,9 +568,9 @@ const Diagnostics: React.FC = () => {
                             onChange={(e) => setChatInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleChatSend()}
                             placeholder={activeTab === 'law' ? "부패 의심 사례나 법령 질의 내용을 입력하세요..." : "상담 내용을 입력하세요..."}
-                            className={`w-full bg-[#0f172a] border rounded-full pl-6 pr-14 py-4 text-white focus:outline-none transition-all shadow-lg placeholder:text-slate-600 ${activeTab === 'counseling' ? 'border-amber-900/50 focus:border-amber-500 focus:ring-1 focus:ring-amber-500' : 'border-slate-700 focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent'}`}
+                            className={`w-full bg-[#0f172a] border rounded-full pl-5 pr-14 py-4 text-base md:text-sm text-white focus:outline-none transition-all shadow-lg placeholder:text-slate-600 placeholder:text-sm ${activeTab === 'counseling' ? 'border-amber-900/50 focus:border-amber-500 focus:ring-1 focus:ring-amber-500' : 'border-slate-700 focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent'}`}
                           />
-                          <button onClick={() => handleChatSend()} disabled={!chatInput.trim() || isTyping} className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white transition-colors disabled:opacity-50 shadow-md ${activeTab === 'counseling' ? 'bg-amber-600 hover:bg-amber-500 disabled:hover:bg-amber-600' : 'bg-cyber-600 hover:bg-cyber-500 disabled:hover:bg-cyber-600'}`}>
+                          <button onClick={() => handleChatSend()} disabled={!chatInput.trim() || isTyping} className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white transition-colors disabled:opacity-50 shadow-md ${activeTab === 'counseling' ? 'bg-amber-600 hover:bg-amber-500' : 'bg-cyber-600 hover:bg-cyber-500'}`}>
                               <Send className="w-5 h-5" />
                           </button>
                       </div>
