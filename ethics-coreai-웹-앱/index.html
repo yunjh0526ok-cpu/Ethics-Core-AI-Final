@@ -84,6 +84,14 @@
       .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
       .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+       html, body {
+          height: 100%;
+          height: -webkit-fill-available;
+       }
+       #root {
+          height: 100%;
+          height: -webkit-fill-available;
+      }
     </style>
 <script type="importmap">
 {
@@ -102,8 +110,8 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body oncontextmenu="return false" ondragstart="return false" onselectstart="return false">
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+<body class="h-screen overflow-hidden selection:bg-cyan-500 selection:text-white">
+  <div id="root" class="h-full"></div>
+  <script type="module" src="./index.tsx"></script>
 </body>
 </html>
