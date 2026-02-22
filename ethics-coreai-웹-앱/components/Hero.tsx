@@ -206,7 +206,7 @@ const Hero: React.FC = () => {
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 }}
-                className="w-full max-w-[440px] h-[750px] bg-slate-900/80 backdrop-blur-xl border border-cyber-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col hover:border-cyber-500 transition-colors duration-500 shrink-1"
+                className="w-full max-w-[440px] h-auto max-h-[75vh] md:h-[750px] md:max-h-none bg-slate-900/80 ... shrink-1"
               >
                 <div className="bg-gradient-to-r from-blue-600 to-cyber-purple p-8 flex items-center gap-5 relative overflow-hidden shrink-0 h-[140px]">
                   <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-12 -mt-12 blur-3xl"></div>
@@ -263,7 +263,7 @@ const Hero: React.FC = () => {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
-                className="w-full max-w-[440px] h-[750px] bg-slate-900/80 backdrop-blur-xl border border-cyber-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col hover:border-cyber-500 transition-colors duration-500 shrink-1"
+                className="w-full max-w-[440px] h-auto max-h-[75vh] md:h-[750px] md:max-h-none bg-slate-900/80 ... shrink-1"
               >
                 <div className="bg-gradient-to-r from-blue-600 to-cyber-purple p-8 flex items-center gap-5 relative overflow-hidden shrink-0 h-[140px]">
                   <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-12 -mt-12 blur-3xl"></div>
@@ -345,7 +345,7 @@ const Hero: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.85, y: 30 }}
               transition={{ duration: 0.3 }}
-              className="bg-[#0f172a] border border-slate-700 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden"
+              className="bg-[#0f172a] border border-slate-700 rounded-3xl w-full max-w-lg max-h-[88vh] overflow-y-auto shadow-2xl"
               onClick={e => e.stopPropagation()}
             >
               {/* 모달 헤더 */}
