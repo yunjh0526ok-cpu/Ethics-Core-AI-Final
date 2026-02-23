@@ -518,7 +518,7 @@ const EcaCorruptionCounselor: React.FC = () => {
       >
         <div 
          className="flex gap-4 animate-marquee whitespace-nowrap"
-         style={{ animationDuration: '20s' }} 
+         style={{ animationDuration: '15s' }} 
       >
           {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
             <button
@@ -526,11 +526,11 @@ const EcaCorruptionCounselor: React.FC = () => {
               onClick={() => handleSend(q.replace('Q. ', ''))}
               className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full border transition-all ${marqueeClass}`}
             >
-              {q}
-            </button>
-          ))}
-        </div>
-      </div>
+             {q}
+           </button>
+         ))}
+       </div>
+     </div>
 
       {/* 입력창 */}
       <div className="relative">
