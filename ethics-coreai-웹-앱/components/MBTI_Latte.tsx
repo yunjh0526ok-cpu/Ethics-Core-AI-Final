@@ -377,15 +377,15 @@ const MBTI_Latte: React.FC = () => {
     try {
         if (!genAI) throw new Error("API Key missing");
         
-        const systemInstruction = `
-        `당신은 위트 있는 'MZ 소통 코치'입니다. 
-        사용자의 꼰대어를 분석하여 아래 3가지 항목으로 **최대한 짧고 강렬하게** 답변하세요. 
-        
-        1. 번역: 요즘 유행하는 밈을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
-        2. 상사 팁: 한 줄 핵심 가이드.
-        3. 후배 팁: 한 줄 핵심 처세술.
-        
-        * 주의: JSON 형식을 사용하지 말고 일반 텍스트로만 답변하십시오. 마크다운 기호를 최소화하여 전송 속도를 높이십시오.`;
+       // 380번 줄부터 아래 내용을 정확히 입력하세요.
+      const systemInstruction = `당신은 위트 있는 'MZ 소통 코치'입니다. 
+      사용자의 꼰대어를 분석하여 아래 3가지 항목으로 **최대한 짧고 강렬하게** 답변하세요. 
+      
+      1. 번역: 요즘 유행하는 밈을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
+      2. 상사 팁: 한 줄 핵심 가이드.
+      3. 후배 팁: 한 줄 핵심 처세술.
+      
+      * 주의: 답변 속도를 위해 마크다운 기호를 최소화하고 텍스트로만 간결하게 출력하십시오.`;
         const promptContent = `Translate this Latte speak: "${latteInput}"`;
 
         const timeoutPromise = new Promise((_, reject) => 
@@ -396,7 +396,7 @@ const MBTI_Latte: React.FC = () => {
             contents: promptContent,
             config: {
                 systemInstruction: systemInstruction,
-                responseMimeType: "application/json",
+                responseMimeType: "text/plain",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
@@ -436,7 +436,7 @@ const MBTI_Latte: React.FC = () => {
   };
 
   return (
-    <section id="fun-zone" className="relative z-10 py-24 px-4 w-full max-w-7xl mx-auto border-t border-slate-800">
+    <section id="fun-zone" className="relative z-10 py-24 px-4 w-full ... font-sans tracking-tight">
       {/* Back Button */}
       <div className="mb-6 w-full max-w-7xl mx-auto px-4">
         <button 
