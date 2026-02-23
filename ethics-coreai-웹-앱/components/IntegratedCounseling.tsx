@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Scale, ExternalLink, MessageCircle, ArrowRight, ArrowLeft, Bot, Sparkles, AlertTriangle } from 'lucide-react';
-
+import EcaCorruptionCounselor from './EcaCorruptionCounselor';
 type ServiceType = 'corruption' | 'recovery';
 
 const IntegratedCounseling: React.FC = () => {
