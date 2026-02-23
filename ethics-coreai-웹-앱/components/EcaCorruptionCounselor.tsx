@@ -56,12 +56,10 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
    - 최신 이슈 속 공직자 행동강령 및 조직문화 개선
    - 영상 속 갑질 및 직장내 괴롭힘, 세대 간, 남녀 간 청렴 소통법
 3. 강점: 풍부한 현장 사례와 법령 해석을 바탕으로 영화, 영상, AI 참여형 속마음 퀴즈 등 미래트렌드 반영한 공공기관과 민간 기업에 딱 맞는 맞춤형 청렴 강의를 제공해.
-4. 강의 신청 안내 (아래 링크를 클릭하면 바로 연결됨): 
-   - 문의: yszoo1467@naver.com / 010-6667-1467
-   - [강의 의뢰 신청 폼 바로가기](https://bit.ly/4hV5p2i) 를 클릭해 주세요
-   - [전문 강사 정보 확인] [👉 국가청렴권익교육원 강사풀 바로가기](https://bit.ly/3QzW9Yc) 를 클릭해 주세요
-   - 메일: yszoo1467@naver.com / 전화: 010-6667-1467
-   - 사용자가 글자만 클릭해도 바로 이동할 수 있게 해. 별도의 URL 주소를 텍스트로 중복 노출하지 마.
+4. 강의 신청 안내 - 강의 문의가 오면 반드시 아래 두 링크를 마크다운 형식으로 출력해. URL 주소를 텍스트로 중복 노출하지 마:
+   [👉 강의 의뢰 신청 폼 바로가기](https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true)
+   [👉 국가청렴권익교육원 강사풀 바로가기](https://edu.acrc.go.kr/0302/lecturer/yEYijtPPTsxXYRUcAPed/view.do?_search=true&keyword=%C1%D6%BE%E7%BC%F8)
+   전화: 010-6667-1467 / 이메일: yszoo1467@naver.com
    
 5. 답변 원칙: 대표님 강의나 근황에 대한 질문은 "제 업무가 아닙니다"라고 하지 말고, 위 정보와 인터넷 최신 보도자료를 검색해 자부심을 가지고 상세히 답변해.
 
@@ -137,7 +135,6 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 - 강의 특징: Ethics-CoreAI 활용 AI 실시간 실습, Mentimeter,Canva 인터랙티브 참여형 교육
 - 문의: yszoo1467@naver.com / 010-6667-1467
 
-
 [답변 구조]
 - **[실제 사례 진단]**: 유사 실제 사건 2~3개를 구체적으로 제시 (사건 개요, 처분 결과)
 - **[징계·처벌 수위]**: 실제 적용된 징계 종류와 수위를 명시
@@ -212,7 +209,8 @@ const GREETINGS: Record<ModeType, string> = {
   recovery: `안녕하십니까. 주양순 대표가 설계한 **에코AI 공공재정 환수법 전문 상담관**입니다.\n\n공공재정 부정 수급, 환수 절차, 제재부가금, 이의신청 등 **「공공재정환수법」** 관련 전문 자문을 제공합니다.\n\n상단 퀵 메뉴를 선택하거나 직접 질의해 주세요.`
 };
 
-const renderStyledText = (text: string) => {
+// ✅ 핵심 수정: 마크다운 링크 [텍스트](url) + **볼드** + 일반URL 모두 처리
+const renderStyledText = (text: string): React.ReactNode[] => {
   return text.split('\n').map((line, i) => {
     if (line.trim().startsWith('>')) {
       return (
@@ -221,18 +219,52 @@ const renderStyledText = (text: string) => {
         </div>
       );
     }
+
+    const parseLine = (raw: string): React.ReactNode[] => {
+      const nodes: React.ReactNode[] = [];
+      // 마크다운 링크 [텍스트](url) > **볼드** > 일반 URL 순서로 파싱
+      const regex = /(\[([^\]]+)\]\((https?:\/\/[^)]+)\))|(\*\*(.+?)\*\*)|(https?:\/\/\S+)/g;
+      let last = 0;
+      let match;
+      let k = 0;
+      while ((match = regex.exec(raw)) !== null) {
+        if (match.index > last) {
+          nodes.push(<span key={k++}>{raw.slice(last, match.index)}</span>);
+        }
+        if (match[1]) {
+          // 마크다운 링크
+          nodes.push(
+            <a key={k++} href={match[3]} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-cyan-400 underline font-bold hover:text-cyan-300 transition-colors cursor-pointer">
+              {match[2]}
+            </a>
+          );
+        } else if (match[4]) {
+          // **볼드**
+          const content = match[5];
+          if (content.includes('%')) {
+            nodes.push(<strong key={k++} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>);
+          } else {
+            nodes.push(<strong key={k++} className="text-cyan-400 font-bold">{content}</strong>);
+          }
+        } else if (match[6]) {
+          // 일반 URL (텍스트로 노출된 URL)
+          nodes.push(
+            <a key={k++} href={match[6]} target="_blank" rel="noopener noreferrer"
+              className="text-blue-400 underline break-all font-bold hover:text-blue-300 cursor-pointer">
+              {match[6]}
+            </a>
+          );
+        }
+        last = match.index + match[0].length;
+      }
+      if (last < raw.length) nodes.push(<span key={k++}>{raw.slice(last)}</span>);
+      return nodes;
+    };
+
     return (
       <p key={i} className="mb-2 leading-loose text-sm break-keep">
-        {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            const content = part.slice(2, -2);
-            if (content.includes('%')) {
-              return <strong key={j} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>;
-            }
-            return <strong key={j} className="text-cyan-400 font-bold">{content}</strong>;
-          }
-          return part;
-        })}
+        {parseLine(line)}
       </p>
     );
   });
@@ -506,28 +538,9 @@ const EcaCorruptionCounselor: React.FC = () => {
               <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? accentBg : 'bg-slate-700'}`}>
                 {msg.role === 'user' ? <UserCheck className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
               </div>
+              {/* ✅ 핵심: renderStyledText로 통일 - 마크다운 링크 클릭 가능 */}
               <div className={`p-4 rounded-2xl text-sm leading-loose break-keep shadow-lg ${msg.role === 'user' ? `${accentBg} text-white rounded-tr-none` : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
-               {msg.role === 'ai' ? (
-                <div className="whitespace-pre-wrap">
-                  {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
-                    part.match(/^https?:\/\//) 
-                      ? (
-                        <a 
-                          key={i} 
-                          href={part} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-blue-400 underline break-all font-bold hover:text-blue-300"
-                        >
-                          {/* 링크 주소에 따라 문구 자동 지정 */}
-                          {part.includes('4hV5p2i') ? '👉 강의 의뢰 신청 폼 바로가기' : 
-                           part.includes('3QzW9Yc') ? '👉 국가청렴권익교육원 강사풀 바로가기' : '링크 열기'}
-                        </a>
-                      )
-                      : renderStyledText(part)
-                  )}
-                </div>
-              ) : msg.text}
+                {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
               </div>
             </div>
           </div>
@@ -549,17 +562,12 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* 흘러가는 Q&A 마퀴 - 30초 속도 버전 */}
+      {/* 흘러가는 Q&A 마퀴 - 입력창 바로 위 */}
       <div className="overflow-hidden relative h-10">
-        <div 
+        <div
           className="flex gap-8 absolute whitespace-nowrap animate-marquee"
-          style={{ 
-            animationDuration: '30s', // 사용자님이 정하신 최적의 속도!
-            display: 'flex',
-            width: 'max-content'
-          }}
-      >
-          {/* 중요: 데이터를 2배로 복제해야 12번 질문 뒤에 바로 1번이 붙어서 나옵니다 */}
+          style={{ animationDuration: '30s', display: 'flex', width: 'max-content' }}
+        >
           {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
             <button
               key={idx}
@@ -570,11 +578,10 @@ const EcaCorruptionCounselor: React.FC = () => {
             </button>
           ))}
         </div>
-
         <style>{`
           @keyframes marquee {
             0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } /* 데이터가 2배이므로 딱 절반(-50%)만 이동 */
+            100% { transform: translateX(-50%); }
           }
           .animate-marquee {
             animation: marquee linear infinite;
