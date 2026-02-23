@@ -505,7 +505,15 @@ const EcaCorruptionCounselor: React.FC = () => {
                 {msg.role === 'user' ? <UserCheck className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
               </div>
               <div className={`p-4 rounded-2xl text-sm leading-loose break-keep shadow-lg ${msg.role === 'user' ? `${accentBg} text-white rounded-tr-none` : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
-                {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
+               {msg.role === 'ai' ? (
+                <div className="whitespace-pre-wrap">
+                  {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
+                    part.match(/^https?:\/\//) 
+                      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all font-bold">강의 의뢰 신청 폼 바로가기</a>
+                      : renderStyledText(part)
+                  )}
+                </div>
+              ) : msg.text}
               </div>
             </div>
           </div>
