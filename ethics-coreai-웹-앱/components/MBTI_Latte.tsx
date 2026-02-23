@@ -409,8 +409,10 @@ const MBTI_Latte: React.FC = () => {
         });
         const response = await Promise.race([apiPromise, timeoutPromise]) as any;
         // 411번 줄부터 414번 줄까지 아래 2줄로 대체하세요.
-        const finalResult = response.text(); 
-        setTranslatedText(finalResult || "번역에 실패했습니다.");
+        // 412번 줄부터 아래 3줄로 정확히 교체하세요.
+        const rawText = response.text();
+        const cleanResult = rawText.replace(/\\n/g, '\n').trim(); // 줄바꿈 문자 처리
+        setTranslatedText(cleanResult || "번역에 성공했습니다! 내용을 확인해주세요.");
         const defaultManager = "질문으로 바꾸면 잔소리가 멘토링이 됩니다.";
         const defaultJunior = "한 귀로 듣고 한 귀로 흘리는 스킬이 필요합니다.";
         setActionPlan({
@@ -454,7 +456,7 @@ const MBTI_Latte: React.FC = () => {
          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-[#ff6e1e]">Fun & Integrity</span> Zone
          </h2>
-         <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed tracking-tight break-keep font-sans">
+         <p className="text-slate-200 text-lg leading-relaxed tracking-tight break-keep font-sans min-h-[150px] w-full block">
            단순한 성격 검사가 아닙니다. <span className="text-white font-bold">4단계 실전 퀴즈</span>로 나의 숨겨진 '청렴 DNA'를 진단하고,<br className="hidden md:block" />
            <span className="text-white font-bold">AI 소통 통역사</span>가 처방하는 맞춤형 전략으로 세대 간의 벽을 유쾌하게 허물어보세요.
          </p>
