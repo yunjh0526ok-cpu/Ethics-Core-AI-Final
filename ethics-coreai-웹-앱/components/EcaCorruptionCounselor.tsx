@@ -58,8 +58,8 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 3. 강점: 풍부한 현장 사례와 법령 해석을 바탕으로 영화, 영상, AI 참여형 속마음 퀴즈 등 미래트렌드 반영한 공공기관과 민간 기업에 딱 맞는 맞춤형 청렴 강의를 제공해.
 4. 강의 신청 안내 (아래 링크를 클릭하면 바로 연결됨): 
    - 문의: yszoo1467@naver.com / 010-6667-1467
-   - 강의 신청은 **[강의 의뢰 신청 폼 바로가기](https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true)** 를 클릭해 주세요
-   - 국가청렴권익교육원 강사 정보 시스템 [국가청렴권익교육원 강사풀](https://edu.acrc.go.kr/0302/lecturer/yEYijtPPTsxXYRUcAPed/view.do?_search=true&keyword=%C1%D6%BE%E7%BC%F8)** 를 클릭해 주세요
+   - [강의 의뢰 신청 폼 바로가기](https://bit.ly/4hV5p2i) 를 클릭해 주세요
+   - [전문 강사 정보 확인] [👉 국가청렴권익교육원 강사풀 바로가기](https://bit.ly/3QzW9Yc) 를 클릭해 주세요
    - 메일: yszoo1467@naver.com / 전화: 010-6667-1467
    - 사용자가 글자만 클릭해도 바로 이동할 수 있게 해. 별도의 URL 주소를 텍스트로 중복 노출하지 마.
    
@@ -136,7 +136,7 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 - 활동: 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관 출강
 - 강의 특징: Ethics-CoreAI 활용 AI 실시간 실습, Mentimeter,Canva 인터랙티브 참여형 교육
 - 문의: yszoo1467@naver.com / 010-6667-1467
-- 강의 의뢰 시 기관명, 교육 인원, 희망 날짜, 교육 주제를 메일로 송부
+
 
 [답변 구조]
 - **[실제 사례 진단]**: 유사 실제 사건 2~3개를 구체적으로 제시 (사건 개요, 처분 결과)
@@ -511,7 +511,19 @@ const EcaCorruptionCounselor: React.FC = () => {
                 <div className="whitespace-pre-wrap">
                   {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
                     part.match(/^https?:\/\//) 
-                      ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all font-bold">강의 의뢰 신청 폼 바로가기</a>
+                      ? (
+                        <a 
+                          key={i} 
+                          href={part} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-400 underline break-all font-bold hover:text-blue-300"
+                        >
+                          {/* 링크 주소에 따라 문구 자동 지정 */}
+                          {part.includes('4hV5p2i') ? '👉 강의 의뢰 신청 폼 바로가기' : 
+                           part.includes('3QzW9Yc') ? '👉 국가청렴권익교육원 강사풀 바로가기' : '링크 열기'}
+                        </a>
+                      )
                       : renderStyledText(part)
                   )}
                 </div>
