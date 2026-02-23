@@ -378,13 +378,14 @@ const MBTI_Latte: React.FC = () => {
         if (!genAI) throw new Error("API Key missing");
         
         const systemInstruction = `
-            당신은 유머러스하고 통찰력 있는 '꼰대어 번역기'이자 '소통 코치'입니다.
-            사용자가 입력한 '꼰대어(잔소리)'를 분석하여 다음 JSON 형식으로 출력하세요.
-            **중요: 출력 텍스트에 마크다운 기호(**, ## 등)를 절대 포함하지 마십시오.**
-            1. translatedText: 요즘 세대가 듣기 좋게 순화하거나 재치 있는 밈으로 번역. 괄호 안에 숨겨진 본심(애정/걱정)을 유머러스하게 추가.
-            2. managerTip: (필수) 입력된 잔소리 내용과 **직접적으로 연관된** 상사를 위한 구체적인 행동 가이드 (1줄).
-            3. juniorTip: (필수) 이 잔소리를 들었을 때 후배가 대처할 수 있는 **구체적인** 처세술 (1줄).
-            Tone: Witty, Insightful, Trendy.
+            const systemInstruction = `
+        당신은 위트 있는 'MZ 소통 코치'입니다. 입력된 꼰대어를 아래 형식으로 **최대한 짧고 강렬하게** 번역하세요. 
+        
+        1. 번역: 요즘 유행하는 밈(Meme)을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
+        2. 상사 팁: 한 줄로 핵심만.
+        3. 후배 팁: 한 줄로 핵심만.
+        
+        * 주의: 분석이 길어지면 타임아웃이 발생하니, 군더더기 없이 3초 이내에 답변할 수 있는 분량으로만 출력하십시오.
         `;
         const promptContent = `Translate this Latte speak: "${latteInput}"`;
 
