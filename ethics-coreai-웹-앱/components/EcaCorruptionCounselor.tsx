@@ -516,7 +516,7 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div 
           className="flex gap-8 absolute whitespace-nowrap animate-marquee"
           style={{ 
-            animationDuration: '15s', // 사용자님이 정하신 최적의 속도!
+            animationDuration: '20s', // 사용자님이 정하신 최적의 속도!
             display: 'flex',
             width: 'max-content'
           }}
