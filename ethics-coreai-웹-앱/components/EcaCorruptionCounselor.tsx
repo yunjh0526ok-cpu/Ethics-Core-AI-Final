@@ -29,19 +29,18 @@ const PUBLIC_ORG_TYPES = [
 
 // 법령 카테고리
 const LAW_CATEGORIES = [
-  { label: "청탁금지법", prompt: "청탁금지법(김영란법)의 주요 위반 사례와 2024년 개정 기준(음식물 5만원)을 판례와 함께 설명해줘." },
-  { label: "이해충돌방지법", prompt: "이해충돌방지법의 사적 이해관계자 신고 의무, 직무상 비밀 이용 금지 등 핵심 조항을 판례와 함께 설명해줘." },
-  { label: "행동강령", prompt: "공무원 행동강령의 주요 금지 행위와 위반 시 징계 기준을 구체적 사례와 함께 설명해줘." },
-  { label: "윤리강령", prompt: "공직자 윤리강령의 핵심 내용과 위반 사례, 처벌 기준을 설명해줘." },
-  { label: "근로기준법", prompt: "공직사회에서 발생하는 근로기준법 위반 사례와 갑질 관련 처벌 기준을 설명해줘." },
-  { label: "공익신고자보호법", prompt: "공익신고자 보호법에 따른 신고자 보호 범위, 불이익 조치 금지, 보호 신청 절차를 설명해줘." },
-  { label: "부패방지권익위법", prompt: "부패방지 및 국민권익위원회 설치에 관한 법률의 주요 내용과 부패 신고 절차를 설명해줘." },
+  { label: "청탁금지법", prompt: "청탁금지법(김영란법)의 주요 위반 사례와 2024년 개정 기준(음식물 5만원)을 실제 징계·처벌 판례 중심으로 설명해줘." },
+  { label: "이해충돌방지법", prompt: "이해충돌방지법의 사적 이해관계자 신고 의무, 직무상 비밀 이용 금지 등 핵심 조항을 실제 처벌 사례와 판례 중심으로 설명해줘." },
+  { label: "행동강령", prompt: "공무원 행동강령의 주요 금지 행위와 실제 위반 징계 사례(감봉·정직·파면 수위 포함)를 구체적으로 설명해줘." },
+  { label: "윤리강령", prompt: "공직자 윤리강령 위반 실제 사례와 처벌 결과를 구체적으로 설명해줘." },
+  { label: "근로기준법", prompt: "공직사회 근로기준법 위반 및 갑질 관련 실제 처벌 판례와 징계 사례를 설명해줘." },
+  { label: "공익신고자보호법", prompt: "공익신고자 보호법 위반으로 실제 처벌받은 판례와 신고자 보호 성공 사례를 구체적으로 설명해줘." },
+  { label: "부패방지권익위법", prompt: "부패방지 및 국민권익위원회법에 따른 부패 신고 절차와 실제 신고로 처리된 사례를 설명해줘." },
   { label: "공직자윤리법", prompt: "공직자윤리법의 재산등록·취업제한·선물신고 위반 실제 사례와 징계 처분 결과를 판례 중심으로 설명해줘." },
   { label: "공공재정환수법", prompt: "공공재정환수법에 따른 실제 환수 처분 사례와 제재부가금 부과 결과, 이의신청 성공 사례를 구체적으로 설명해줘." },
   { label: "청렴도평가", prompt: "국민권익위원회의 공공기관 청렴도 평가 기준과 실제 하위 기관의 처분 사례, 청렴도 향상 우수 사례를 설명해줘." },
   { label: "부패영향평가", prompt: "부패영향평가 제도의 목적, 절차, 실제 법령·정책에 적용된 사례와 개선된 사례를 구체적으로 설명해줘." },
   { label: "신고사례", prompt: "공직사회에서 실제 부패 신고로 처리된 대표 사례들을 신고 유형별(청탁금지법·이해충돌·갑질 등)로 구체적인 처리 결과와 함께 설명해줘." },
-  
 ];
 
 const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
@@ -385,19 +384,24 @@ const EcaCorruptionCounselor: React.FC = () => {
         </div>
       )}
 
-      {/* 법령 카테고리 (corruption 모드) */}
+      {/* 법령 카테고리 마퀴 (corruption 모드) */}
       {isCorruption && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {LAW_CATEGORIES.map((law, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSend(law.prompt)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-900/30 hover:bg-blue-600 border border-blue-500/30 hover:border-transparent rounded-full text-blue-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0"
-            >
-              <BookOpen className="w-3 h-3 shrink-0" />
-              {law.label}
-            </button>
-          ))}
+        <div
+          className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
+        >
+          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '35s' }}>
+            {[...LAW_CATEGORIES, ...LAW_CATEGORIES].map((law, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(law.prompt)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/30 hover:border-transparent rounded-full text-blue-300 hover:text-white transition-all text-xs font-bold"
+              >
+                <BookOpen className="w-3 h-3 shrink-0" />
+                {law.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
