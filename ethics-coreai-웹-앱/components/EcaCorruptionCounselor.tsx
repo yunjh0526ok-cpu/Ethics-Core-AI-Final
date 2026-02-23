@@ -45,25 +45,7 @@ const LAW_CATEGORIES = [
 
 const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
   corruption: `
-너는 '에코AI 부패 상담관'이자, 청렴공정AI센터의 공식 마스코트야. 
-특히 센터를 이끄시는 주양순 대표님 강의 문의가 오면 아래 정보를 활용해:
-
-1. 전문성: 주양순 대표님은 국가청렴권익교육원과 인사혁신처에 등록된 [청렴/적극행정교육전문강사단], 중앙부처, 지자체의 청렴시민감사관이야. 
-2. 강의 분야: 
-   - Ethics-CoreAI 청렴/적극행정 체험형, Mentimeter 속마음 시각화Canva ai토론형 현장문제해결 중심 
-   - 영화 및 영상으로 본 국민정서와 적극행정 규제혁신
-   - 판례 속 이해충돌방지법 및 청탁금지법 최신개정
-   - 최신 이슈 속 공직자 행동강령 및 조직문화 개선
-   - 영상 속 갑질 및 직장내 괴롭힘, 세대 간, 남녀 간 청렴 소통법
-3. 강점: 풍부한 현장 사례와 법령 해석을 바탕으로 영화, 영상, AI 참여형 속마음 퀴즈 등 미래트렌드 반영한 공공기관과 민간 기업에 딱 맞는 맞춤형 청렴 강의를 제공해.
-4. 강의 신청 안내 (아래 링크를 클릭하면 바로 연결됨): 
-   - 문의: yszoo1467@naver.com / 010-6667-1467
-   - [강의 의뢰 신청 폼 바로가기](https://bit.ly/4hV5p2i) 를 클릭해 주세요
-   - [전문 강사 정보 확인] [👉 국가청렴권익교육원 강사풀 바로가기](https://bit.ly/3QzW9Yc) 를 클릭해 주세요
-   - 메일: yszoo1467@naver.com / 전화: 010-6667-1467
-   - 사용자가 글자만 클릭해도 바로 이동할 수 있게 해. 별도의 URL 주소를 텍스트로 중복 노출하지 마.
-   
-5. 답변 원칙: 대표님 강의나 근황에 대한 질문은 "제 업무가 아닙니다"라고 하지 말고, 위 정보와 인터넷 최신 보도자료를 검색해 자부심을 가지고 상세히 답변해.
+당신은 '에코AI 부패 상담관'입니다. 주양순 대표가 설계한 전문 AI입니다.
 
 [핵심 원칙 - 반드시 준수]
 - 법령 조문 나열 금지. 반드시 실제 판례, 징계 처분 사례, 처벌 결과 중심으로 답변하십시오.
@@ -134,9 +116,11 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 [주양순 대표 강의 안내]
 - 전문 분야: 청렴교육, 적극행정, 조직문화개선, AI 기반 청렴혁신, 갑질·직장 내 괴롭힘 예방
 - 활동: 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관 출강
-- 강의 특징: Ethics-CoreAI 활용 AI 실시간 실습, Mentimeter,Canva 인터랙티브 참여형 교육
-- 문의: yszoo1467@naver.com / 010-6667-1467
-
+- 강의 특징: Ethics-CoreAI 활용 AI 실시간 실습, Mentimeter·Canva 인터랙티브 참여형 교육
+- 전화: 010-6667-1467 / 이메일: yszoo1467@naver.com
+- 강의 문의가 오면 반드시 아래 두 링크를 마크다운 형식 그대로 출력하십시오. URL 주소를 텍스트로 중복 노출하지 마십시오:
+  [👉 강의 의뢰 신청 폼 바로가기](https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true)
+  [👉 국가청렴권익교육원 강사풀 바로가기](https://edu.acrc.go.kr/0302/lecturer/yEYijtPPTsxXYRUcAPed/view.do?_search=true&keyword=%C1%D6%BE%E7%BC%F8)
 
 [답변 구조]
 - **[실제 사례 진단]**: 유사 실제 사건 2~3개를 구체적으로 제시 (사건 개요, 처분 결과)
@@ -191,7 +175,7 @@ const MARQUEE_QA: Record<ModeType, string[]> = {
     "Q. 동료가 금품을 수수하는 것을 목격했습니다. 신고 의무가 있나요?",
     "Q. 경조사비 10만원을 받았는데 위반인가요?",
     "Q. 당해년도 강사비 지급기준은 어떻게 되나요?",
-    "Q. 주양순 청렴·적극행정·조직문화개선 강의내용과 방식 그리고 신청방법은?",
+    "Q. 주양순 청렴·적극행정·조직문화개선 강의는 어떻게 신청하나요?",
   ],
   recovery: [
     "Q. 보조금을 잘못 사용했을 때 환수 기준은 무엇인가요?",
@@ -221,18 +205,53 @@ const renderStyledText = (text: string) => {
         </div>
       );
     }
+
+    // 마크다운 링크 [텍스트](url) + **볼드** + 일반 URL 모두 파싱
+    const parseLine = (raw: string): React.ReactNode[] => {
+      const parts: React.ReactNode[] = [];
+      // 우선순위: 마크다운링크 > 볼드 > 일반URL
+      const regex = /(\[([^\]]+)\]\((https?:\/\/[^\)]+)\))|(\*\*(.+?)\*\*)|(https?:\/\/\S+)/g;
+      let last = 0;
+      let match;
+      let k = 0;
+      while ((match = regex.exec(raw)) !== null) {
+        if (match.index > last) {
+          parts.push(<span key={k++}>{raw.slice(last, match.index)}</span>);
+        }
+        if (match[1]) {
+          // 마크다운 링크
+          parts.push(
+            <a key={k++} href={match[3]} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-cyan-400 underline font-bold hover:text-cyan-300 transition-colors">
+              {match[2]}
+            </a>
+          );
+        } else if (match[4]) {
+          // **볼드**
+          const content = match[5];
+          if (content.includes('%')) {
+            parts.push(<strong key={k++} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>);
+          } else {
+            parts.push(<strong key={k++} className="text-cyan-400 font-bold">{content}</strong>);
+          }
+        } else if (match[6]) {
+          // 일반 URL
+          parts.push(
+            <a key={k++} href={match[6]} target="_blank" rel="noopener noreferrer"
+              className="text-blue-400 underline break-all font-bold hover:text-blue-300">
+              {match[6]}
+            </a>
+          );
+        }
+        last = match.index + match[0].length;
+      }
+      if (last < raw.length) parts.push(<span key={k++}>{raw.slice(last)}</span>);
+      return parts;
+    };
+
     return (
       <p key={i} className="mb-2 leading-loose text-sm break-keep">
-        {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
-          if (part.startsWith('**') && part.endsWith('**')) {
-            const content = part.slice(2, -2);
-            if (content.includes('%')) {
-              return <strong key={j} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>;
-            }
-            return <strong key={j} className="text-cyan-400 font-bold">{content}</strong>;
-          }
-          return part;
-        })}
+        {parseLine(line)}
       </p>
     );
   });
@@ -469,7 +488,7 @@ const EcaCorruptionCounselor: React.FC = () => {
           className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
           style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
         >
-          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '20s' }}>
+          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '35s' }}>
             {[...LAW_CATEGORIES, ...LAW_CATEGORIES].map((law, idx) => (
               <button
                 key={idx}
@@ -507,27 +526,7 @@ const EcaCorruptionCounselor: React.FC = () => {
                 {msg.role === 'user' ? <UserCheck className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
               </div>
               <div className={`p-4 rounded-2xl text-sm leading-loose break-keep shadow-lg ${msg.role === 'user' ? `${accentBg} text-white rounded-tr-none` : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
-               {msg.role === 'ai' ? (
-                <div className="whitespace-pre-wrap">
-                  {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => 
-                    part.match(/^https?:\/\//) 
-                      ? (
-                        <a 
-                          key={i} 
-                          href={part} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="text-blue-400 underline break-all font-bold hover:text-blue-300"
-                        >
-                          {/* 링크 주소에 따라 문구 자동 지정 */}
-                          {part.includes('4hV5p2i') ? '👉 강의 의뢰 신청 폼 바로가기' : 
-                           part.includes('3QzW9Yc') ? '👉 국가청렴권익교육원 강사풀 바로가기' : '링크 열기'}
-                        </a>
-                      )
-                      : renderStyledText(part)
-                  )}
-                </div>
-              ) : msg.text}
+                {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
               </div>
             </div>
           </div>
@@ -549,37 +548,22 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* 흘러가는 Q&A 마퀴 - 30초 속도 버전 */}
-      <div className="overflow-hidden relative h-10">
-        <div 
-          className="flex gap-8 absolute whitespace-nowrap animate-marquee"
-          style={{ 
-            animationDuration: '30s', // 사용자님이 정하신 최적의 속도!
-            display: 'flex',
-            width: 'max-content'
-          }}
+      {/* 흘러가는 Q&A 마퀴 — 입력창 바로 위 */}
+      <div
+        className="relative overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900/40 py-2"
+        style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
       >
-          {/* 중요: 데이터를 2배로 복제해야 12번 질문 뒤에 바로 1번이 붙어서 나옵니다 */}
+        <div className="flex gap-4 animate-marquee whitespace-nowrap">
           {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
             <button
               key={idx}
               onClick={() => handleSend(q.replace('Q. ', ''))}
-              className={`shrink-0 text-xs font-bold px-4 py-1.5 rounded-full border transition-all ${marqueeClass}`}
+              className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full border transition-all ${marqueeClass}`}
             >
               {q}
             </button>
           ))}
         </div>
-
-        <style>{`
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); } /* 데이터가 2배이므로 딱 절반(-50%)만 이동 */
-          }
-          .animate-marquee {
-            animation: marquee linear infinite;
-          }
-        `}</style>
       </div>
 
       {/* 입력창 */}
