@@ -511,26 +511,38 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* 흘러가는 Q&A 마퀴 — 입력창 바로 위 */}
-      <div
-        className="relative overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900/40 py-2"
-        style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
-      >
+      {/* 흘러가는 Q&A 마퀴 - 15초 속도 버전 */}
+      <div className="overflow-hidden relative h-10">
         <div 
-         className="flex gap-4 animate-marquee whitespace-nowrap"
-         style={{ animationDuration: '15s' }} 
+          className="flex gap-8 absolute whitespace-nowrap animate-marquee"
+          style={{ 
+            animationDuration: '15s', // 사용자님이 정하신 최적의 속도!
+            display: 'flex',
+            width: 'max-content'
+          }}
       >
+          {/* 중요: 데이터를 2배로 복제해야 12번 질문 뒤에 바로 1번이 붙어서 나옵니다 */}
           {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
             <button
               key={idx}
               onClick={() => handleSend(q.replace('Q. ', ''))}
-              className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full border transition-all ${marqueeClass}`}
+              className={`shrink-0 text-xs font-bold px-4 py-1.5 rounded-full border transition-all ${marqueeClass}`}
             >
-             {q}
-           </button>
-         ))}
-       </div>
-     </div>
+              {q}
+            </button>
+          ))}
+        </div>
+
+        <style>{`
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); } /* 데이터가 2배이므로 딱 절반(-50%)만 이동 */
+          }
+          .animate-marquee {
+            animation: marquee linear infinite;
+          }
+        `}</style>
+      </div>
 
       {/* 입력창 */}
       <div className="relative">
