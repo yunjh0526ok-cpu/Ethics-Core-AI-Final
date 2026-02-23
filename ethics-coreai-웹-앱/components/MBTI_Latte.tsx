@@ -378,15 +378,14 @@ const MBTI_Latte: React.FC = () => {
         if (!genAI) throw new Error("API Key missing");
         
         const systemInstruction = `
-            const systemInstruction = `
-        당신은 위트 있는 'MZ 소통 코치'입니다. 입력된 꼰대어를 아래 형식으로 **최대한 짧고 강렬하게** 번역하세요. 
+        `당신은 위트 있는 'MZ 소통 코치'입니다. 
+        사용자의 꼰대어를 분석하여 아래 3가지 항목으로 **최대한 짧고 강렬하게** 답변하세요. 
         
-        1. 번역: 요즘 유행하는 밈(Meme)을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
-        2. 상사 팁: 한 줄로 핵심만.
-        3. 후배 팁: 한 줄로 핵심만.
+        1. 번역: 요즘 유행하는 밈을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
+        2. 상사 팁: 한 줄 핵심 가이드.
+        3. 후배 팁: 한 줄 핵심 처세술.
         
-        * 주의: 분석이 길어지면 타임아웃이 발생하니, 군더더기 없이 3초 이내에 답변할 수 있는 분량으로만 출력하십시오.
-        `;
+        * 주의: JSON 형식을 사용하지 말고 일반 텍스트로만 답변하십시오. 마크다운 기호를 최소화하여 전송 속도를 높이십시오.`;
         const promptContent = `Translate this Latte speak: "${latteInput}"`;
 
         const timeoutPromise = new Promise((_, reject) => 
