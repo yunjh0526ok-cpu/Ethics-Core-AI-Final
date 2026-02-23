@@ -511,12 +511,12 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* 흘러가는 Q&A 마퀴 - 25초 속도 버전 */}
+      {/* 흘러가는 Q&A 마퀴 - 30초 속도 버전 */}
       <div className="overflow-hidden relative h-10">
         <div 
           className="flex gap-8 absolute whitespace-nowrap animate-marquee"
           style={{ 
-            animationDuration: '25s', // 사용자님이 정하신 최적의 속도!
+            animationDuration: '30s', // 사용자님이 정하신 최적의 속도!
             display: 'flex',
             width: 'max-content'
           }}
