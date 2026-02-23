@@ -488,7 +488,7 @@ const EcaCorruptionCounselor: React.FC = () => {
           className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
           style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
         >
-          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '35s' }}>
+          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '30s' }}>
             {[...LAW_CATEGORIES, ...LAW_CATEGORIES].map((law, idx) => (
               <button
                 key={idx}
