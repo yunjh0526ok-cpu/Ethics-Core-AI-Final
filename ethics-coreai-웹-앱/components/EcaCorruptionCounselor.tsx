@@ -116,11 +116,9 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 [주양순 대표 강의 안내]
 - 전문 분야: 청렴교육, 적극행정, 조직문화개선, AI 기반 청렴혁신, 갑질·직장 내 괴롭힘 예방
 - 활동: 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관 출강
-- 강의 특징: Ethics-CoreAI 활용 AI 실시간 실습, Mentimeter·Canva 인터랙티브 참여형 교육
-- 전화: 010-6667-1467 / 이메일: yszoo1467@naver.com
-- 강의 문의가 오면 반드시 아래 두 링크를 마크다운 형식 그대로 출력하십시오. URL 주소를 텍스트로 중복 노출하지 마십시오:
-  [👉 강의 의뢰 신청 폼 바로가기](https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true)
-  [👉 국가청렴권익교육원 강사풀 바로가기](https://edu.acrc.go.kr/0302/lecturer/yEYijtPPTsxXYRUcAPed/view.do?_search=true&keyword=%C1%D6%BE%E7%BC%F8)
+- 강의 특징: Gemini·ChatGPT 활용 AI 실시간 실습, Mentimeter 인터랙티브 참여형 교육
+- 문의: yszoo1467@naver.com / 010-6667-1467
+- 강의 의뢰 시 기관명, 교육 인원, 희망 날짜, 교육 주제를 메일로 송부
 
 [답변 구조]
 - **[실제 사례 진단]**: 유사 실제 사건 2~3개를 구체적으로 제시 (사건 개요, 처분 결과)
@@ -205,53 +203,18 @@ const renderStyledText = (text: string) => {
         </div>
       );
     }
-
-    // 마크다운 링크 [텍스트](url) + **볼드** + 일반 URL 모두 파싱
-    const parseLine = (raw: string): React.ReactNode[] => {
-      const parts: React.ReactNode[] = [];
-      // 우선순위: 마크다운링크 > 볼드 > 일반URL
-      const regex = /(\[([^\]]+)\]\((https?:\/\/[^\)]+)\))|(\*\*(.+?)\*\*)|(https?:\/\/\S+)/g;
-      let last = 0;
-      let match;
-      let k = 0;
-      while ((match = regex.exec(raw)) !== null) {
-        if (match.index > last) {
-          parts.push(<span key={k++}>{raw.slice(last, match.index)}</span>);
-        }
-        if (match[1]) {
-          // 마크다운 링크
-          parts.push(
-            <a key={k++} href={match[3]} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-cyan-400 underline font-bold hover:text-cyan-300 transition-colors">
-              {match[2]}
-            </a>
-          );
-        } else if (match[4]) {
-          // **볼드**
-          const content = match[5];
-          if (content.includes('%')) {
-            parts.push(<strong key={k++} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>);
-          } else {
-            parts.push(<strong key={k++} className="text-cyan-400 font-bold">{content}</strong>);
-          }
-        } else if (match[6]) {
-          // 일반 URL
-          parts.push(
-            <a key={k++} href={match[6]} target="_blank" rel="noopener noreferrer"
-              className="text-blue-400 underline break-all font-bold hover:text-blue-300">
-              {match[6]}
-            </a>
-          );
-        }
-        last = match.index + match[0].length;
-      }
-      if (last < raw.length) parts.push(<span key={k++}>{raw.slice(last)}</span>);
-      return parts;
-    };
-
     return (
       <p key={i} className="mb-2 leading-loose text-sm break-keep">
-        {parseLine(line)}
+        {line.split(/(\*\*.*?\*\*)/).map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            const content = part.slice(2, -2);
+            if (content.includes('%')) {
+              return <strong key={j} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>;
+            }
+            return <strong key={j} className="text-cyan-400 font-bold">{content}</strong>;
+          }
+          return part;
+        })}
       </p>
     );
   });
@@ -488,7 +451,7 @@ const EcaCorruptionCounselor: React.FC = () => {
           className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
           style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
         >
-          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '35s' }}>
+          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '25s' }}>
             {[...LAW_CATEGORIES, ...LAW_CATEGORIES].map((law, idx) => (
               <button
                 key={idx}
