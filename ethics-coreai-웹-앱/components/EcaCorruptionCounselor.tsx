@@ -18,7 +18,7 @@ type ModeType = 'corruption' | 'recovery';
 
 const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
   corruption: `
-당신은 '에코AI 수석 부패 상담관'입니다. 주양순 대표가 설계한 전문 AI입니다.
+당신은 '에코AI 수석 부패 감사관'입니다. 주양순 대표가 설계한 전문 AI입니다.
 사용자의 질의를 공무원 행동강령, 청탁금지법, 이해충돌방지법, 공익신고자 보호법 등 관련 법령에 근거하여 엄격하고 정밀하게 분석하십시오.
 
 ⚠️ [청탁금지법 최신 개정 기준 - 2024년 시행령 적용 필수]
@@ -71,6 +71,33 @@ const QUICK_MENUS: Record<ModeType, { label: string; icon: any; prompt: string }
     { label: "이의신청 방법", icon: Gavel, prompt: "환수 결정에 불복하는 이의신청 절차, 기간, 준비 서류를 구체적으로 안내해줘." },
     { label: "보조금 환수", icon: AlertTriangle, prompt: "보조금 부정 수령 시 환수 기준과 법적 책임, 관련 판례를 설명해줘." },
     { label: "행정심판 신청", icon: BookOpen, prompt: "공공재정 환수 결정에 대한 행정심판 신청 방법과 승소 가능성을 높이는 전략을 알려줘." },
+  ]
+};
+
+const MARQUEE_QA: Record<ModeType, string[]> = {
+  corruption: [
+    "Q. 상급자가 부당한 업무 지시를 했어요. 어떻게 해야 하나요?",
+    "Q. 거래처에서 5만원 이하 선물을 받았는데 괜찮은가요?",
+    "Q. 공무원인데 지인이 민원 처리를 부탁합니다. 청탁금지법 위반인가요?",
+    "Q. 직무 관련 외부 강의료는 얼마까지 받을 수 있나요?",
+    "Q. 이해충돌방지법상 사적 이해관계자 신고를 안 하면 어떻게 되나요?",
+    "Q. 업무 중 알게 된 정보를 개인 투자에 활용해도 될까요?",
+    "Q. 퇴직 공무원이 전 직장 관련 업무를 수행해도 되나요?",
+    "Q. 익명으로 부패를 신고하면 신분이 보호되나요?",
+    "Q. 동료가 금품을 수수하는 것을 목격했습니다. 신고 의무가 있나요?",
+    "Q. 경조사비 10만원을 받았는데 위반인가요?",
+  ],
+  recovery: [
+    "Q. 보조금을 잘못 사용했을 때 환수 기준은 무엇인가요?",
+    "Q. 환수 결정을 받았는데 이의신청 기간이 얼마나 되나요?",
+    "Q. 제재부가금과 환수금은 어떻게 다른가요?",
+    "Q. 공공재정 부정 수급 시 형사처벌도 받나요?",
+    "Q. 환수 결정에 대한 행정심판 승소율을 높이는 방법은?",
+    "Q. 보조금 정산 서류를 허위로 제출했을 때 처벌은?",
+    "Q. 환수 통보를 받았는데 분할 납부가 가능한가요?",
+    "Q. 위탁기관의 부정 수급에 대해 위탁 기관도 책임지나요?",
+    "Q. 국고보조금 환수 처분 취소 소송 절차는 어떻게 되나요?",
+    "Q. 5년 전 보조금 사업에 대해 환수 통보가 왔어요. 소멸시효가 지나지 않았나요?",
   ]
 };
 
@@ -280,6 +307,22 @@ const EcaCorruptionCounselor: React.FC<EcaCorruptionCounselorProps> = ({ initial
           <p className={`text-xs ${accentText} font-bold`}>
             {isCorruption ? '청탁금지법 · 행동강령 · 이해충돌방지법' : '부정이익 환수 · 제재부가금 · 이의신청'}
           </p>
+        </div>
+      </div>
+
+      {/* 마퀴 Q&A 배너 */}
+      <div className="relative mb-4 overflow-hidden rounded-xl border border-slate-700/50 bg-slate-900/40 py-2"
+        style={{ maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
+        <div className="flex gap-6 animate-marquee whitespace-nowrap">
+          {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleSend(q.replace('Q. ', ''))}
+              className={`shrink-0 text-xs font-bold px-3 py-1 rounded-full border transition-all ${isCorruption ? 'text-blue-300 border-blue-500/30 hover:bg-blue-600 hover:text-white' : 'text-green-300 border-green-500/30 hover:bg-green-600 hover:text-white'}`}
+            >
+              {q}
+            </button>
+          ))}
         </div>
       </div>
 
