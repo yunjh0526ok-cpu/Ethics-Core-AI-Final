@@ -377,15 +377,15 @@ const MBTI_Latte: React.FC = () => {
     try {
         if (!genAI) throw new Error("API Key missing");
         
-       // 380번 줄부터 아래 내용을 정확히 입력하세요.
-      const systemInstruction = `당신은 위트 있는 'MZ 소통 코치'입니다. 
-      사용자의 꼰대어를 분석하여 아래 3가지 항목으로 **최대한 짧고 강렬하게** 답변하세요. 
-      
-      1. 번역: 요즘 유행하는 밈을 섞어 재치 있게 번역 (괄호 안에 본심 추가).
-      2. 상사 팁: 한 줄 핵심 가이드.
-      3. 후배 팁: 한 줄 핵심 처세술.
-      
-      * 주의: 답변 속도를 위해 마크다운 기호를 최소화하고 텍스트로만 간결하게 출력하십시오.`;
+        const systemInstruction = `
+            당신은 유머러스하고 통찰력 있는 '꼰대어 번역기'이자 '소통 코치'입니다.
+            사용자가 입력한 '꼰대어(잔소리)'를 분석하여 다음 JSON 형식으로 출력하세요.
+            **중요: 출력 텍스트에 마크다운 기호(**, ## 등)를 절대 포함하지 마십시오.**
+            1. translatedText: 요즘 세대가 듣기 좋게 순화하거나 재치 있는 밈으로 번역. 괄호 안에 숨겨진 본심(애정/걱정)을 유머러스하게 추가.
+            2. managerTip: (필수) 입력된 잔소리 내용과 **직접적으로 연관된** 상사를 위한 구체적인 행동 가이드 (1줄).
+            3. juniorTip: (필수) 이 잔소리를 들었을 때 후배가 대처할 수 있는 **구체적인** 처세술 (1줄).
+            Tone: Witty, Insightful, Trendy.
+        `;
         const promptContent = `Translate this Latte speak: "${latteInput}"`;
 
         const timeoutPromise = new Promise((_, reject) => 
@@ -396,7 +396,7 @@ const MBTI_Latte: React.FC = () => {
             contents: promptContent,
             config: {
                 systemInstruction: systemInstruction,
-                responseMimeType: "text/plain",
+                responseMimeType: "application/json",
                 responseSchema: {
                     type: Type.OBJECT,
                     properties: {
@@ -408,16 +408,15 @@ const MBTI_Latte: React.FC = () => {
             }
         });
         const response = await Promise.race([apiPromise, timeoutPromise]) as any;
-        // 411번 줄부터 414번 줄까지 아래 2줄로 대체하세요.
-        // 412번 줄부터 아래 3줄로 정확히 교체하세요.
-        const rawText = response.text();
-        const cleanResult = rawText.replace(/\\n/g, '\n').trim(); // 줄바꿈 문자 처리
-        setTranslatedText(cleanResult || "번역에 성공했습니다! 내용을 확인해주세요.");
+        const jsonStr = response.text || "{}";  // text() 함수 호출로 변경
+        const cleanJsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+        const json = JSON.parse(cleanJsonStr);
+        setTranslatedText(cleanText(json.translatedText || "번역 실패"));
         const defaultManager = "질문으로 바꾸면 잔소리가 멘토링이 됩니다.";
         const defaultJunior = "한 귀로 듣고 한 귀로 흘리는 스킬이 필요합니다.";
-        setActionPlan({
-          manager: defaultManager, // JSON 대신 기본 문구 사용
-          junior: defaultJunior    // JSON 대신 기본 문구 사용
+        setActionPlan({ 
+            manager: cleanText(json.managerTip || defaultManager), 
+            junior: cleanText(json.juniorTip || defaultJunior) 
         });
 
     } catch (e: any) {
@@ -437,7 +436,7 @@ const MBTI_Latte: React.FC = () => {
   };
 
   return (
-    <section id="fun-zone" className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed tracking-tight break-keep">
+    <section id="fun-zone" className="relative z-10 py-24 px-4 w-full max-w-7xl mx-auto border-t border-slate-800">
       {/* Back Button */}
       <div className="mb-6 w-full max-w-7xl mx-auto px-4">
         <button 
@@ -456,7 +455,7 @@ const MBTI_Latte: React.FC = () => {
          <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-[#ff6e1e]">Fun & Integrity</span> Zone
          </h2>
-         <p className="text-slate-200 text-lg leading-relaxed tracking-tight break-keep font-sans min-h-[150px] w-full block">
+         <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
            단순한 성격 검사가 아닙니다. <span className="text-white font-bold">4단계 실전 퀴즈</span>로 나의 숨겨진 '청렴 DNA'를 진단하고,<br className="hidden md:block" />
            <span className="text-white font-bold">AI 소통 통역사</span>가 처방하는 맞춤형 전략으로 세대 간의 벽을 유쾌하게 허물어보세요.
          </p>
