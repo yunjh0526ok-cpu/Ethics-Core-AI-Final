@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -22,7 +21,8 @@ import {
   Scale,        
   ShieldAlert, 
   ExternalLink,
-  ArrowLeft
+  ArrowLeft,
+  Copy
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -75,6 +75,7 @@ const ProactiveAdministration: React.FC = () => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [todayCount, setTodayCount] = useState(142);
   const [processingRate, setProcessingRate] = useState(98.5);
@@ -93,6 +94,13 @@ const ProactiveAdministration: React.FC = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleCopy = (text: string, index: number) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    });
+  };
 
   const handleReset = () => {
     setMessages([{ role: 'ai', text: INITIAL_MESSAGE }]);
@@ -390,8 +398,18 @@ const ProactiveAdministration: React.FC = () => {
                                 : 'bg-slate-800 border border-slate-700 text-slate-200 rounded-tl-none'
                             }`}>
                                 {msg.role === 'ai' && (
-                                    <div className="text-xs font-bold text-blue-400 mb-2 flex items-center gap-1">
-                                        <Bot className="w-3 h-3" /> 든든이의 답변
+                                    <div className="text-xs font-bold text-blue-400 mb-2 flex items-center justify-between gap-1">
+                                        <span className="flex items-center gap-1">
+                                            <Bot className="w-3 h-3" /> 든든이의 답변
+                                        </span>
+                                        <button
+                                            onClick={() => handleCopy(msg.text, idx)}
+                                            className="flex items-center gap-1 text-slate-500 hover:text-blue-400 transition-colors px-2 py-0.5 rounded hover:bg-slate-700/50"
+                                            title="답변 복사"
+                                        >
+                                            <Copy className="w-3 h-3" />
+                                            <span>{copiedIndex === idx ? '복사됨 ✓' : '복사'}</span>
+                                        </button>
                                     </div>
                                 )}
                                 {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
