@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import {
   ArrowLeft, Bot, Send, UserCheck, ShieldAlert, Scale, BookOpen,
   Siren, FileText, CheckCircle2, AlertTriangle, Gavel, Building2,
-  Landmark, GraduationCap, Users, BookMarked, Shield
+  Landmark, GraduationCap, Users, BookMarked, Shield, Calculator,
+  Search, MessageSquare
 } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -17,7 +18,6 @@ interface ChatMessage {
 
 type ModeType = 'corruption' | 'recovery';
 
-// 공공기관 유형
 const PUBLIC_ORG_TYPES = [
   { label: "중앙부처", icon: Landmark },
   { label: "지방자치단체", icon: Building2 },
@@ -27,7 +27,6 @@ const PUBLIC_ORG_TYPES = [
   { label: "국공립대학", icon: BookMarked },
 ];
 
-// 법령 카테고리
 const LAW_CATEGORIES = [
   { label: "청탁금지법", prompt: "청탁금지법(김영란법)의 주요 위반 사례와 2024년 개정 기준(음식물 5만원)을 실제 징계·처벌 판례 중심으로 설명해줘." },
   { label: "이해충돌방지법", prompt: "이해충돌방지법의 사적 이해관계자 신고 의무, 직무상 비밀 이용 금지 등 핵심 조항을 실제 처벌 사례와 판례 중심으로 설명해줘." },
@@ -43,6 +42,7 @@ const LAW_CATEGORIES = [
   { label: "신고사례", prompt: "공직사회에서 실제 부패 신고로 처리된 대표 사례들을 신고 유형별(청탁금지법·이해충돌·갑질 등)로 구체적인 처리 결과와 함께 설명해줘." },
 ];
 
+// ==================== SYSTEM INSTRUCTIONS ====================
 const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
   corruption: `
 너는 '에코AI 부패 상담관'이자, 청렴공정AI센터의 공식 마스코트야. 
@@ -100,35 +100,6 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 - ※ 강의료+원고료+출연료 등 모든 사례금 합산 적용
 - ※ 공직자는 소속기관장 사전 신고 필수
 
-■ 이동시간 보상수당
-- 1권역(대전·충북·충남·세종·광주·전북·전남): 미지급
-- 2권역(서울·인천·경기·강원·대구·경북·부산·울산·경남·제주): 지급
-  · 특1급 30만원 / 특2급 20만원 / 1급 12만원 / 2급 8만원 / 3급 5만원 / 4급 4만원 / 5급 3만원
-- ※ 공직자 등은 각급학교 교직원·학교법인 임직원·언론사 임직원에 한해 지급
-- ※ 재택강의 시 미지급
-
-■ 원고료 (민간 외래강사에 한함, 공직자 등 미지급 원칙)
-- A4 1면(13p, 줄간격 160%, 상하15·좌우25): 13,000원
-- PPT: 슬라이드 2면 = A4 1면 기준 → 2면당 13,000원
-- 강의 시간당 A4 6면까지 지급 / 1주(5일) 최대 40면
-- 기존 원고 30% 미만 수정: 미지급 / 30~70% 수정: 50% / 70% 이상: 100%
-
-■ 여비 (교통비·숙박비·식비)
-- 「공무원 여비규정」별표1 제2호 준용
-- 공직자가 소속기관에서 여비를 지급받지 못한 경우: 상한액 내에서 정액 일비 포함 가능
-- 상한액 초과 시 교통비 실비(증빙 제출) 별도 지급 가능
-- 숙박비·식비는 숙소 제공·식권 발행으로 대체 가능
-
-■ 수강인원 할증
-- 100인 이상~250인 미만: 강사수당 20% 할증
-- 250인 이상: 30% 할증 (이동시간 보상수당 제외한 총액 기준)
-
-■ 강의시간 산출기준
-- 1시간~1시간30분 미만 → 1시간 인정
-- 1시간30분~2시간30분 미만 → 2시간 인정
-- 30분 미만은 강의시간 미포함
-- ※ 타 기관은 본 기준 참고하되 기관장이 별도로 정할 수 있음
-
 [주양순 대표 강의 안내]
 - 전문 분야: 청렴교육, 적극행정, 조직문화개선, AI 기반 청렴혁신, 갑질·직장 내 괴롭힘 예방
 - 활동: 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관 출강
@@ -143,37 +114,216 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 - **[상담관의 조언]**: 자진 신고, 증거 확보 등 실질적 대응 방안
 - 어조: 냉철하고 실질적인 '부패 상담관' 톤 ("~입니다", "~처분을 받았습니다")
 `,
+
   recovery: `
-당신은 '에코AI 공공재정 환수법 전문 상담관'입니다. 주양순 대표가 설계한 전문 AI입니다.
+당신은 '에코AI 공공재정환수법 전문 상담관'입니다. 주양순 대표가 설계한 전문 AI입니다.
+청렴공정연구센터(Ethics-Core AI Smart Platform)의 공공재정환수법 마스터 클래스 전문가입니다.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 1. 법령 기본 체계 - 공공재정환수법 마스터 클래스 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 제정 목적 및 핵심 정의 (법 제1조, 제2조)
+- 공공재정 누수 방지를 위한 법적 근거
+- "공공재정지급금": 국가·지자체·공공기관이 지급하는 보조금, 보험금, 출연금, 용역비, 공사대금 등 모든 금전적 급부
+- "부정청구": 거짓·속임수·위계로 공공재정지급금을 청구하거나 수령하는 행위
+- "과다청구": 정당한 금액보다 많이 청구하는 행위
+- "목적 외 사용": 지급 목적과 다르게 사용하는 행위
+
+■ 다른 법률과의 관계 (적용 우선순위)
+- 공공재정환수법은 일반법으로, 개별 법률(보조금법, 국고금법 등)에 특별 규정이 있으면 개별법 우선 적용
+- 개별법에 규정 없는 사항은 공공재정환수법 적용 (보충적 적용)
+- "일반법"의 역할: 모든 공공재정 부정수급에 대한 최소한의 환수 근거 제공
+- 중요: 보조금법, 사회보장급여법, 국가연구개발혁신법 등 개별법이 있는 경우 해당 법 우선
+
+■ 환수 및 징벌적 제재부가금 (핵심!)
+- 환수금 = 부정수령액 전액 (원금)
+- 제재부가금 = 환수금에 추가로 부과하는 징벌적 금액
+  · 허위청구(거짓·위계): 환수금의 **최대 5배**
+  · 과다청구(금액 부풀리기): 환수금의 **최대 3배**
+  · 목적 외 사용(용도 위반): 환수금의 **최대 2배**
+- 법정이자: 국세기본법 시행령에 따른 이자율 적용 (구간별 적용)
+  · 2020.01.01~2020.03.12: 2.1%
+  · 2020.03.13~2021.03.15: 1.8%
+  · 2021.03.16~2023.03.19: 1.2%
+  · 2023.03.20~2024.03.21: 2.9%
+  · 2024.03.22~현재: 3.5%
+- 분할납부 가능 여부: 신청 시 기관 재량으로 허용 가능 (법령 별도 기준)
+
+■ 고액부정청구자 명단공표 (사회적 낙인)
+- 공표 대상: 1억원 이상 부정청구하여 환수결정이 확정된 자
+- 공표 내용: 기업명, 대표자 이름, 부정청구 금액, 위반 내용 → 대국민 공개
+- 공표 기간: 5년간 기관 홈페이지, 관보 게재
+- 사전통지 후 소명 기회 부여, 이의 없으면 공표 확정
+- 사회적 제재 효과: 향후 공공사업 입찰 배제, 금융기관 신용도 영향
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 2. 실전 사례 - 유형별 부정수급 판례 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 1) 지방의회/공직자 - 의정활동비, 여비 부정수급
+- [사례1] 출석부 도장만 찍고 '돈'?: 지방의원이 회의 불참 상태에서 출석부에만 날인하여 의정비를 수령한 사안. 환수 처분 + 제재부가금 3배 + 형사고발(사기죄 적용)
+- [사례2] 퇴근 후 다시 와서 '지문'만 콕!: 초과근무수당을 허위 청구한 공무원. 초과근무 미실시 사실이 CCTV 확인으로 입증. 환수 + 징계(정직 1개월) 처분
+- [판례] 가지 많은 출장비 청구 (허위청구): 실제 출장 없이 출장비를 청구한 사안에서 법원은 "출장의 실질이 없는 허위청구에 해당"한다고 판시. 환수금 5배 제재부가금 정당 인정
+
+■ 2) 창업벤처 부정수급 - 사업비 카드 사적 사용
+- [사례1] 사업비 카드로 명품 패딩/정장 구매: 창업지원금으로 지급된 법인카드를 대표가 개인 명품의류 구매에 사용. 환수 + 제재부가금 2배(목적외사용) + 지원 자격 3년 박탈
+- [사례2] 가족을 직원으로 허위 등록 (인건비 3,600만원): 실제 근무하지 않는 배우자를 직원으로 등록하여 인건비 수령. 허위청구에 해당 → 환수 + 5배 제재부가금
+- [판례] 허위 세금계산서로 1억 환수(Payback): 실제 용역 없이 허위 세금계산서를 발행하여 연구개발비를 수령한 스타트업. 법원 "허위 청구의 전형적 사례" 판시, 형사처벌(사기) 병과
+
+■ 3) R&D 연구개발비 부정수급
+- [사례1] 이미 개발된 기술로 과제 신청 (허위청구): 기존 보유 기술을 신규 개발인 것처럼 속여 R&D 과제 선정. 국가연구개발혁신법 + 공공재정환수법 중복 적용. 환수 + 5배 제재부가금
+- [사례2] 연구장비 4천만원 결제 후 1천만원 돌려받기 (장비 깡): 연구장비 구매 후 공급업체로부터 현금 환급받는 방식으로 연구비 유용. 환수 + 형사처벌
+- [판례] 학생 연구원 인건비 공동관리 (Pooling): 연구실에서 학생들 인건비를 교수가 통합 관리하며 유용한 사안. 대법원 "인건비 풀링은 목적 외 사용에 해당" 판시
+
+■ 4) 교통/지역 - 유가보조금, 체육회
+- [사례1] 화물차 유가보조금 '카드강' (허위 결제): 실제 주유 없이 주유소와 공모하여 유가보조금 허위 수령. 환수 + 5배 제재부가금 + 형사처벌(사기죄, 보조금법 위반)
+- [사례2] 운행하지 않은 버스에 유가보조금 청구: 폐차되거나 운행 중단된 차량에 유가보조금을 계속 청구. 환수 처분
+- [판례] 지역 체육회 훈련비 횡령: 체육회 보조금을 임원이 횡령한 사안. 환수 + 제재부가금 + 명단공표(1억 이상)
+
+■ 5) 교육/사회복지 시설 부정수급
+- [사례1] 유령 교사 등록 및 간식비 유용: 어린이집에서 실제 근무하지 않는 보조교사를 등록하여 인건비 수령. 환수 + 5배 제재부가금 + 운영 정지
+- [사례2] 방과후 수업 하지 않고 강사료 꿀꺽: 방과후 강사가 수업 미실시 후 강사료 청구. 환수 + 부정청구 사실 관할청 통보
+- [판례] 근무시간 조작형 보조금 편취: 요양보호사 근무시간을 허위 기재하여 요양급여 청구. 법원 "반복적·조직적 허위청구"로 5배 제재부가금 정당 인정
+
+■ 6) 개인복지 부정수급
+- [사례1] 외제차 타는 기초생활수급자 (소득 은닉): 고가 차량 보유·소득 은닉 상태에서 기초생활급여 수령. 수급 자격 박탈 + 전액 환수 + 제재부가금
+- [사례2] 위장 이혼하고 한집 살림 (맞벌이 혜택): 법적 이혼 상태를 유지하며 동거, 부양의무자 기준 회피. 환수 + 형사처벌(사기)
+- [판례] 사망한 모친 연금 2년간 수령: 사망 신고 지연 또는 고의 미신고로 유족이 2년간 연금 수령. 환수 + 제재부가금 2배(부정한 방법) 부과
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 3. 유권해석 - 주제별 2025년 최신 해석 사례 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 연구개발(R&D) 유권해석
+- Q: 연구과제 종료 후 잔액을 다음 과제에 사용해도 되나?
+  A: 불가. 잔액은 반납 의무. 무단 이월 사용 시 목적 외 사용에 해당 → 환수 대상
+- Q: 연구비로 해외 학회 참가 시 관광 포함하면?
+  A: 학회 공식 일정 외 관광비용은 목적 외 사용. 개인 부담 처리 필수
+
+■ 창업지원금 유권해석
+- Q: 창업지원금으로 대표자 급여 지급 가능?
+  A: 협약서에 명시된 경우만 가능. 미명시 시 목적 외 사용 → 환수
+- Q: 공동창업자 중 1인이 탈퇴하면 지원금 전액 환수?
+  A: 사업 지속 여부, 대체 인력 보완 여부에 따라 기관 재량. 즉시 신고가 핵심
+
+■ 공사/계약 유권해석
+- Q: 하도급 업체가 부정청구 시 원청도 책임지나?
+  A: 원청이 묵인 또는 지시한 경우 연대 책임. 단순 관리 소홀이면 원청은 환수 면제 가능하나 계약 위반 제재
+- Q: 공사비 예산 절감분을 다른 공종에 사용해도 되나?
+  A: 설계변경 절차를 거치지 않은 임의 전용은 목적 외 사용 → 환수 대상
+
+■ 복지/보조금 유권해석
+- Q: 보조금 정산 기한을 넘기면 바로 환수 처분?
+  A: 정당한 사유 없는 기한 초과 시 환수 가능하나, 기관이 사전 소명 기회 부여 후 처분. 즉시 소명 중요
+- Q: 자진신고 시 제재부가금 감면되나?
+  A: 법 제10조에 따라 자진신고 전 적발 전 전액 반환 시 제재부가금 면제 가능. 조사 개시 후 신고는 감면 폭 축소
+
+■ 일반운영비 유권해석
+- Q: 사업비로 노트북 구매? 사업계획서 미기재 시 불인정 및 환수 대상
+  A: 사업계획서에 명시된 품목만 집행 가능. 미기재 품목 구매는 목적 외 사용으로 환수
+- Q: 맹단공표 기준은?
+  A: 부정청구금액 1억원 이상 + 환수결정 확정 시 공표. 분할 부정청구도 합산하여 1억 초과 시 해당
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 4. 환수 계산 기준 - 이자율 적용 방법 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 법정이자 계산 원칙
+- 국세기본법 시행령 제43조의3에 따른 이자율을 구간별로 적용
+- 수령일부터 환수 처분일까지 구간 분할하여 계산
+- 단리 방식 적용 (복리 아님)
+- 이자 = 환수금 × 해당 구간 이자율 × (해당 구간 일수 / 365)
+
+■ 계산 예시 (1,000만원, 2023.12.01 수령, 2025.01.31 환수 통보 - 약 14개월)
+- 구간①: 2023.12.01 ~ 2024.03.21 (112일) → 1,000만원 × 2.9% × (112/365) = 약 88,986원
+- 구간②: 2024.03.22 ~ 2025.01.31 (316일) → 1,000만원 × 3.5% × (316/365) = 약 303,013원
+- 이자 합계: 약 391,999원
+- 총 납부액 (원금+이자만, 제재부가금 별도): 약 10,391,999원
+
+■ 위반 유형별 총 납부 추정액 (1,000만원 기준, 위 이자 포함)
+- 허위청구 (5배): 5,000만원 + 392만원 = 약 5,392만원
+- 과다청구 (3배): 3,000만원 + 392만원 = 약 3,392만원
+- 목적 외 사용 (2배): 2,000만원 + 392만원 = 약 2,392만원
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 5. 이의신청 및 행정심판 가이드 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+■ 이의신청 절차
+- 환수 처분 통보 수령 후 30일 이내 처분 기관에 이의신청
+- 이의신청서 구성: 처분 경위 요약 + 불복 이유 + 소명자료
+- 핵심 소명 포인트:
+  · 지출의 목적 적합성 증빙 (영수증, 계약서, 사업계획서 대조)
+  · 선의의 착오 또는 담당자 지도하 집행 여부
+  · 내부 승인 절차 준수 여부
+  · 자진신고 또는 조기 반환 사실
+
+■ 행정심판 신청
+- 이의신청 기각 후 90일 이내 행정심판위원회에 청구
+- 또는 처분일로부터 180일 이내 직접 청구 가능
+- 행정심판 승소 가능성 높은 케이스:
+  · 처분 기관이 소명 기회를 주지 않은 경우 (절차 하자)
+  · 제재부가금 배율 산정이 과도한 경우
+  · 유사 사례와 형평성에 현저히 어긋나는 경우
+  · 자진신고 감면 규정을 기관이 잘못 적용한 경우
+
+■ 행정소송
+- 행정심판 결과 수령 후 90일 이내 행정법원에 소 제기
+- 집행정지 신청: 소송 중 강제 징수 막을 수 있음
+
+■ 소멸시효
+- 환수 청구권 소멸시효: 5년 (안 날로부터 기산)
+- 단, 사기·위계 등 고의적 부정청구는 10년 적용 가능
+- 시효 완성 주장은 이의신청 단계부터 적극 제출
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【 6. 핵심 원칙 및 답변 구조 】
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [핵심 원칙]
-- 법령 조문 나열보다 실제 환수 처분 사례, 행정심판 결과, 판례 중심으로 답변하십시오.
-- 실제 환수 금액, 제재부가금 배율, 이의신청 성공/실패 사례를 구체적으로 제시하십시오.
+- 법령 조문 나열보다 실제 환수 처분 사례, 행정심판 결과, 판례 중심으로 답변
+- 실제 환수 금액, 제재부가금 배율, 이의신청 성공/실패 사례를 구체적으로 제시
+- 계산이 필요한 경우 구간별 이자율을 적용하여 추정 총액 제시
+- 자진신고 감면 혜택, 소멸시효 등 의뢰인에게 유리한 정보를 적극 안내
 
 [답변 구조]
-- **[환수 가능성 진단]**: 환수 해당 여부 및 위험도 명시
-- **[실제 처분 사례]**: 유사 사건의 환수 처분 결과
-- **[관련 판례]**: 행정심판례, 대법원 판례 인용
-- **[전문가 조언]**: 이의신청 기간, 절차, 준비서류 등 구체적 가이드
-- 어조: 전문적이고 신뢰감 있는 톤 유지
+- **[환수 가능성 진단]**: 위반 유형(허위/과다/목적외) 판단 + 위험도 명시 (예: **허위청구 90% 고위험**)
+- **[예상 환수액 계산]**: 원금 + 이자 + 제재부가금 배율별 시뮬레이션
+- **[실제 처분 사례]**: 유사 사건의 환수 처분 결과 2개 이상 제시
+- **[관련 판례·유권해석]**: 행정심판례, 대법원 판례, 기재부·권익위 유권해석 인용
+- **[전문가 조언]**: 자진신고 여부, 이의신청 기간·절차·준비서류 등 구체적 가이드
+- 어조: 전문적이고 신뢰감 있는 톤 ("~처분을 받을 수 있습니다", "~에 해당합니다")
 `
 };
 
+// ==================== QUICK MENUS ====================
 const QUICK_MENUS: Record<ModeType, { label: string; icon: any; prompt: string }[]> = {
   corruption: [
     { label: "신종 부패 10대 유형", icon: Siren, prompt: "최근 공직사회에서 실제 적발된 신종 부패 10대 유형을 구체적인 사건 사례, 징계 처분 결과, 관련 판례 위주로 설명해줘. 법령 조문보다 실제 처벌 사례 중심으로 알려줘." },
     { label: "공직 갑질 징계·처벌 판례", icon: ShieldAlert, prompt: "공직 갑질로 실제 징계·처벌받은 최신 판례와 사례를 구체적으로 알려줘. 어떤 행위가 몇 호봉 감봉, 정직, 파면 등으로 이어졌는지 실제 사례 중심으로 설명해줘." },
-    { label: "을질 판례", icon: Scale, prompt: "공직사회에서 발생한 '을질(하급자나 민원인에 의한 괴롭힘)' 관련 실제 판례와 처벌 사례를 구체적으로 설명해줘. 어떤 행위가 문제가 되었고 어떻게 처리되었는지 알려줘." },
-    { label: "직장 내 괴롭힘 판례", icon: AlertTriangle, prompt: "공직사회 직장 내 괴롭힘의 빈번한 사례 유형과 실제 징계·형사처벌 판례를 구체적으로 설명해줘. 어떤 행위가 어떤 처벌로 이어졌는지 사례 중심으로 알려줘." },
-    { label: "신고자보호 위반 판례", icon: CheckCircle2, prompt: "공익신고자 보호법 위반으로 실제 처벌받은 판례와 사례를 구체적으로 설명해줘. 신고자에게 불이익을 준 가해자가 어떤 처벌을 받았는지 실제 사건 중심으로 알려줘." },
+    { label: "을질 판례", icon: Scale, prompt: "공직사회에서 발생한 '을질(하급자나 민원인에 의한 괴롭힘)' 관련 실제 판례와 처벌 사례를 구체적으로 설명해줘." },
+    { label: "직장 내 괴롭힘 판례", icon: AlertTriangle, prompt: "공직사회 직장 내 괴롭힘의 빈번한 사례 유형과 실제 징계·형사처벌 판례를 구체적으로 설명해줘." },
+    { label: "신고자보호 위반 판례", icon: CheckCircle2, prompt: "공익신고자 보호법 위반으로 실제 처벌받은 판례와 사례를 구체적으로 설명해줘." },
   ],
   recovery: [
-    { label: "환수 절차 안내", icon: FileText, prompt: "공공재정환수법에 따른 부정이익 환수 절차와 제재부가금 부과 기준을 설명해줘." },
-    { label: "이의신청 방법", icon: Gavel, prompt: "환수 결정에 불복하는 이의신청 절차, 기간, 준비 서류를 구체적으로 안내해줘." },
-    { label: "보조금 환수", icon: AlertTriangle, prompt: "보조금 부정 수령 시 환수 기준과 법적 책임, 관련 판례를 설명해줘." },
-    { label: "행정심판 신청", icon: BookOpen, prompt: "공공재정 환수 결정에 대한 행정심판 신청 방법과 승소 가능성을 높이는 전략을 알려줘." },
+    { label: "실전 사례 보기", icon: FileText, prompt: "공공재정환수법 실전 사례를 유형별(지방의회/공직자, 창업벤처, R&D, 교통/지역, 교육/사회복지, 개인복지)로 대표 판례와 처분 결과를 구체적으로 설명해줘." },
+    { label: "법령 마스터 클래스", icon: BookOpen, prompt: "공공재정환수법의 핵심 내용을 설명해줘. 제정 목적, 환수 및 제재부가금 기준(허위5배·과다3배·목적외2배), 고액부정청구자 명단공표 제도, 다른 법률과의 관계까지 마스터 클래스 수준으로 정리해줘." },
+    { label: "환수금 계산 방법", icon: Calculator, prompt: "공공재정환수법에 따른 환수금 계산 방법을 설명해줘. 국세기본법 이자율 구간별 적용 방법, 제재부가금 배율, 실제 계산 예시를 포함해서 알려줘." },
+    { label: "유권해석 사례", icon: Search, prompt: "공공재정환수법 관련 2025년 최신 유권해석 사례를 주제별(R&D, 창업지원금, 공사/계약, 복지/보조금, 일반운영비)로 설명해줘. 실제 질의·회신 사례 중심으로 알려줘." },
+    { label: "이의신청 방법", icon: Gavel, prompt: "공공재정 환수 결정에 불복하는 이의신청 절차, 기간(30일), 준비 서류, 행정심판 전략을 구체적으로 안내해줘. 승소 가능성을 높이는 핵심 포인트도 알려줘." },
+    { label: "자진신고 감면", icon: MessageSquare, prompt: "공공재정환수법 제10조의 자진신고 감면 제도를 설명해줘. 조사 전 자진신고 시 제재부가금 면제 요건, 실제 감면 사례, 신고 절차를 구체적으로 알려줘." },
   ]
 };
+
+// ==================== 유권해석 주제 (recovery 전용) ====================
+const YUGEON_TOPICS = [
+  { label: "연구개발(R&D)", icon: "🔬", prompt: "R&D 연구개발비 관련 유권해석 사례를 구체적으로 설명해줘. 연구비 풀링, 장비 깡, 허위과제 신청 등 주요 위반 유형과 판례를 알려줘." },
+  { label: "창업지원금", icon: "🚀", prompt: "창업지원금 관련 유권해석 사례를 설명해줘. 사업비 카드 사적 사용, 허위 인건비, 대표자 급여 처리 등 주요 이슈와 판례를 알려줘." },
+  { label: "공사/계약", icon: "🏗️", prompt: "공사·계약 관련 유권해석 사례를 설명해줘. 하도급 부정청구, 예산 전용, 허위 세금계산서 등 주요 위반 유형과 판례를 알려줘." },
+  { label: "복지/보조금", icon: "💛", prompt: "복지급여·보조금 관련 유권해석 사례를 설명해줘. 소득 은닉, 위장 이혼, 유령 수급자 등 주요 부정수급 유형과 환수 판례를 알려줘." },
+  { label: "일반운영비", icon: "💰", prompt: "일반운영비·사업비 관련 유권해석 사례를 설명해줘. 노트북 구매, 회식비 처리, 잔액 이월 등 주요 이슈와 허용 기준을 판례 중심으로 알려줘." },
+];
 
 const MARQUEE_QA: Record<ModeType, string[]> = {
   corruption: [
@@ -201,15 +351,17 @@ const MARQUEE_QA: Record<ModeType, string[]> = {
     "Q. 위탁기관의 부정 수급에 대해 위탁 기관도 책임지나요?",
     "Q. 국고보조금 환수 처분 취소 소송 절차는 어떻게 되나요?",
     "Q. 5년 전 보조금 사업에 대해 환수 통보가 왔어요. 소멸시효가 지나지 않았나요?",
+    "Q. 자진신고 전 적발 전에 반환하면 제재부가금 면제되나요?",
+    "Q. 고액부정청구자 명단공표 기준 금액은 얼마인가요?",
   ]
 };
 
 const GREETINGS: Record<ModeType, string> = {
   corruption: `안녕하십니까. 주양순 대표가 설계한 **에코AI 부패 상담관**입니다.\n\n귀하의 제보는 **철저히 익명이 보장**되며, 모든 답변은 **「청탁금지법」**, **「이해충돌방지법」** 등 관계 법령과 최신 판례에 근거하여 정밀 분석을 제공합니다.\n\n공공기관 유형·법령 카테고리·퀵 메뉴를 선택하거나 직접 질의해 주세요.`,
-  recovery: `안녕하십니까. 주양순 대표가 설계한 **에코AI 공공재정 환수법 전문 상담관**입니다.\n\n공공재정 부정 수급, 환수 절차, 제재부가금, 이의신청 등 **「공공재정환수법」** 관련 전문 자문을 제공합니다.\n\n상단 퀵 메뉴를 선택하거나 직접 질의해 주세요.`
+  recovery: `안녕하십니까. 주양순 대표가 설계한 **에코AI 공공재정환수법 전문 상담관**입니다.\n\n**청렴공정연구센터 공공재정환수법 마스터 클래스** 기반으로 운영됩니다.\n\n✅ **실전 사례** (지방의회·창업벤처·R&D·교통·복지·개인)\n✅ **법령 마스터** (환수·제재부가금 5배·3배·2배·명단공표)\n✅ **환수 계산기** (구간별 이자율 시뮬레이션)\n✅ **유권해석** (R&D·창업·공사·복지·운영비)\n✅ **이의신청·행정심판** 가이드\n\n상단 퀵 메뉴를 선택하거나 직접 질의해 주세요.`
 };
 
-// ✅ 핵심 수정: 마크다운 링크 [텍스트](url) + **볼드** + 일반URL 모두 처리
+// ==================== 텍스트 렌더링 ====================
 const renderStyledText = (text: string): React.ReactNode[] => {
   return text.split('\n').map((line, i) => {
     if (line.trim().startsWith('>')) {
@@ -219,28 +371,17 @@ const renderStyledText = (text: string): React.ReactNode[] => {
         </div>
       );
     }
-
     const parseLine = (raw: string): React.ReactNode[] => {
       const nodes: React.ReactNode[] = [];
-      // 마크다운 링크 [텍스트](url) > **볼드** > 일반 URL 순서로 파싱
       const regex = /(\[([^\]]+)\]\((https?:\/\/[^)]+)\))|(\*\*(.+?)\*\*)|(https?:\/\/\S+)/g;
       let last = 0;
       let match;
       let k = 0;
       while ((match = regex.exec(raw)) !== null) {
-        if (match.index > last) {
-          nodes.push(<span key={k++}>{raw.slice(last, match.index)}</span>);
-        }
+        if (match.index > last) nodes.push(<span key={k++}>{raw.slice(last, match.index)}</span>);
         if (match[1]) {
-          // 마크다운 링크
-          nodes.push(
-            <a key={k++} href={match[3]} target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-cyan-400 underline font-bold hover:text-cyan-300 transition-colors cursor-pointer">
-              {match[2]}
-            </a>
-          );
+          nodes.push(<a key={k++} href={match[3]} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-cyan-400 underline font-bold hover:text-cyan-300 transition-colors cursor-pointer">{match[2]}</a>);
         } else if (match[4]) {
-          // **볼드**
           const content = match[5];
           if (content.includes('%')) {
             nodes.push(<strong key={k++} className="text-red-400 bg-red-900/20 px-1.5 py-0.5 rounded border border-red-500/30 mx-1 text-sm">{content}</strong>);
@@ -248,28 +389,18 @@ const renderStyledText = (text: string): React.ReactNode[] => {
             nodes.push(<strong key={k++} className="text-cyan-400 font-bold">{content}</strong>);
           }
         } else if (match[6]) {
-          // 일반 URL (텍스트로 노출된 URL)
-          nodes.push(
-            <a key={k++} href={match[6]} target="_blank" rel="noopener noreferrer"
-              className="text-blue-400 underline break-all font-bold hover:text-blue-300 cursor-pointer">
-              {match[6]}
-            </a>
-          );
+          nodes.push(<a key={k++} href={match[6]} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline break-all font-bold hover:text-blue-300 cursor-pointer">{match[6]}</a>);
         }
         last = match.index + match[0].length;
       }
       if (last < raw.length) nodes.push(<span key={k++}>{raw.slice(last)}</span>);
       return nodes;
     };
-
-    return (
-      <p key={i} className="mb-2 leading-loose text-sm break-keep">
-        {parseLine(line)}
-      </p>
-    );
+    return <p key={i} className="mb-2 leading-loose text-sm break-keep">{parseLine(line)}</p>;
   });
 };
 
+// ==================== 메인 컴포넌트 ====================
 const EcaCorruptionCounselor: React.FC = () => {
   const [mode, setMode] = useState<ModeType | null>(null);
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
@@ -279,19 +410,12 @@ const EcaCorruptionCounselor: React.FC = () => {
 
   useEffect(() => {
     const savedMode = sessionStorage.getItem('counseling_mode');
-    if (savedMode === 'corruption') {
-      setMode('corruption');
-      sessionStorage.removeItem('counseling_mode');
-    } else if (savedMode === 'recovery') {
-      setMode('recovery');
-      sessionStorage.removeItem('counseling_mode');
-    }
+    if (savedMode === 'corruption') { setMode('corruption'); sessionStorage.removeItem('counseling_mode'); }
+    else if (savedMode === 'recovery') { setMode('recovery'); sessionStorage.removeItem('counseling_mode'); }
   }, []);
 
   useEffect(() => {
-    if (mode) {
-      setChatLog([{ role: 'ai', text: GREETINGS[mode] }]);
-    }
+    if (mode) setChatLog([{ role: 'ai', text: GREETINGS[mode] }]);
   }, [mode]);
 
   useEffect(() => {
@@ -299,10 +423,8 @@ const EcaCorruptionCounselor: React.FC = () => {
   }, [chatLog, isTyping]);
 
   const handleBack = () => {
-    if (mode) {
-      setMode(null);
-      setChatLog([]);
-    } else {
+    if (mode) { setMode(null); setChatLog([]); }
+    else {
       sessionStorage.setItem('hero_view_mode', 'consulting');
       const event = new CustomEvent('navigate', { detail: 'home' });
       window.dispatchEvent(event);
@@ -314,15 +436,10 @@ const EcaCorruptionCounselor: React.FC = () => {
     setChatLog(prev => [...prev, { role: 'user', text }]);
     setChatInput('');
     setIsTyping(true);
-
     if (!genAI) {
-      setTimeout(() => {
-        setChatLog(prev => [...prev, { role: 'ai', text: 'API Key가 설정되지 않았습니다. 관리자에게 문의하세요.' }]);
-        setIsTyping(false);
-      }, 1000);
+      setTimeout(() => { setChatLog(prev => [...prev, { role: 'ai', text: 'API Key가 설정되지 않았습니다. 관리자에게 문의하세요.' }]); setIsTyping(false); }, 1000);
       return;
     }
-
     try {
       const response = await genAI.models.generateContent({
         model: 'gemini-2.5-flash',
@@ -349,7 +466,6 @@ const EcaCorruptionCounselor: React.FC = () => {
             <span className="font-bold text-sm">이전 화면으로</span>
           </button>
         </div>
-
         <div className="text-center mb-10">
           <span className="text-cyan-400 font-mono tracking-widest text-xs uppercase mb-3 block">Integrated AI Counseling</span>
           <h1 className="text-3xl md:text-5xl font-black text-white mb-4">6대 통합 상담센터</h1>
@@ -358,17 +474,10 @@ const EcaCorruptionCounselor: React.FC = () => {
             전문 AI 상담관이 기다리고 있습니다.
           </p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto w-full">
-
-          {/* ECA 부패상담관 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             onClick={() => setMode('corruption')}
-            className="group cursor-pointer bg-slate-900/80 border border-slate-700 hover:border-blue-500 rounded-3xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-1"
-          >
+            className="group cursor-pointer bg-slate-900/80 border border-slate-700 hover:border-blue-500 rounded-3xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all duration-300 hover:-translate-y-1">
             <div className="h-3 bg-gradient-to-r from-blue-600 to-indigo-600" />
             <div className="p-6 md:p-8">
               <div className="flex items-center gap-3 mb-5">
@@ -383,8 +492,6 @@ const EcaCorruptionCounselor: React.FC = () => {
                   <p className="text-xs text-blue-400 font-bold tracking-wider mt-0.5">청탁금지법 · 행동강령 · 이해충돌방지법</p>
                 </div>
               </div>
-
-              {/* 공공기관 유형 배지 */}
               <div className="grid grid-cols-3 gap-2 mb-5">
                 {PUBLIC_ORG_TYPES.map((org, idx) => (
                   <div key={idx} className="flex items-center gap-1.5 px-2 py-1.5 bg-slate-800/60 border border-slate-700 rounded-lg">
@@ -393,10 +500,7 @@ const EcaCorruptionCounselor: React.FC = () => {
                   </div>
                 ))}
               </div>
-
-              <p className="text-slate-400 text-sm leading-relaxed break-keep mb-5">
-                복잡한 법령 해석, 딜레마 판단. 최신 판례와 권익위 결정례 기반 정밀 분석.
-              </p>
+              <p className="text-slate-400 text-sm leading-relaxed break-keep mb-5">복잡한 법령 해석, 딜레마 판단. 최신 판례와 권익위 결정례 기반 정밀 분석.</p>
               <div className="flex items-center justify-between border-t border-slate-800 pt-4">
                 <span className="text-slate-300 text-sm font-bold group-hover:text-blue-400 transition-colors">상담 시작하기</span>
                 <div className="w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center group-hover:bg-blue-600 transition-colors">
@@ -406,31 +510,39 @@ const EcaCorruptionCounselor: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* 공공재정 환수법 */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             onClick={() => setMode('recovery')}
-            className="group cursor-pointer bg-slate-900/80 border border-slate-700 hover:border-green-500 rounded-3xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(22,163,74,0.3)] transition-all duration-300 hover:-translate-y-1"
-          >
+            className="group cursor-pointer bg-slate-900/80 border border-slate-700 hover:border-green-500 rounded-3xl overflow-hidden shadow-xl hover:shadow-[0_0_30px_rgba(22,163,74,0.3)] transition-all duration-300 hover:-translate-y-1">
             <div className="h-3 bg-gradient-to-r from-green-600 to-emerald-600" />
             <div className="p-6 md:p-8">
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-green-600/20 border border-green-500/30 flex items-center justify-center shrink-0">
                   <Scale className="w-6 h-6 text-green-400" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-lg font-black text-white">공공재정환수법 상담소</h3>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold">Gemini Pro</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-green-500/10 text-green-400 border border-green-500/20 font-bold">Master Class</span>
                   </div>
                   <p className="text-xs text-green-400 font-bold tracking-wider mt-0.5">부정이익 환수 · 제재부가금 · 이의신청</p>
                 </div>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed break-keep mb-5">
-                환수 절차 및 이의 신청 가이드. 행정심판례 기반 전문 법률 자문.
-              </p>
+              {/* 마스터 클래스 5대 기능 뱃지 */}
+              <div className="grid grid-cols-5 gap-1 mb-4">
+                {[
+                  { label: "실전사례", icon: "📋" },
+                  { label: "법령마스터", icon: "⚖️" },
+                  { label: "환수계산기", icon: "🧮" },
+                  { label: "유권해석", icon: "🔍" },
+                  { label: "AI상담소", icon: "🤖" },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex flex-col items-center gap-1 px-1 py-2 bg-green-900/20 border border-green-500/20 rounded-lg text-center">
+                    <span className="text-base">{item.icon}</span>
+                    <span className="text-[9px] text-green-300 font-bold leading-tight">{item.label}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed break-keep mb-5">환수 절차 및 이의 신청 가이드. 행정심판례 기반 전문 법률 자문.</p>
               <div className="flex items-center justify-between border-t border-slate-800 pt-4">
                 <span className="text-slate-300 text-sm font-bold group-hover:text-green-400 transition-colors">자문 구하기</span>
                 <div className="w-8 h-8 rounded-full bg-green-600/20 flex items-center justify-center group-hover:bg-green-600 transition-colors">
@@ -440,7 +552,6 @@ const EcaCorruptionCounselor: React.FC = () => {
             </div>
           </motion.div>
         </div>
-
         <div className="mt-12 flex justify-center">
           <button onClick={handleBack} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group px-6 py-3 rounded-full hover:bg-slate-800/50">
             <ArrowLeft className="w-4 h-4" />
@@ -462,7 +573,6 @@ const EcaCorruptionCounselor: React.FC = () => {
 
   return (
     <section className="relative z-10 py-6 px-4 w-full max-w-5xl mx-auto min-h-screen flex flex-col gap-3">
-
       {/* 헤더 */}
       <div className="flex items-center gap-4">
         <button onClick={handleBack} className="p-2 rounded-full bg-slate-800 border border-slate-700 hover:border-cyan-400 transition-all shrink-0">
@@ -474,7 +584,7 @@ const EcaCorruptionCounselor: React.FC = () => {
             {isCorruption ? 'ECA 부패상담관' : '공공재정환수법 상담소'}
           </h2>
           <p className={`text-xs ${accentText} font-bold truncate`}>
-            {isCorruption ? '청탁금지법 · 이해충돌방지법 · 행동강령 · 윤리강령 · 공익신고자보호법 · 부패방지권익위법' : '부정이익 환수 · 제재부가금 · 이의신청'}
+            {isCorruption ? '청탁금지법 · 이해충돌방지법 · 행동강령 · 윤리강령 · 공익신고자보호법' : '실전사례 · 법령마스터 · 환수계산기 · 유권해석 · AI상담소'}
           </p>
         </div>
       </div>
@@ -483,11 +593,9 @@ const EcaCorruptionCounselor: React.FC = () => {
       {isCorruption && (
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {PUBLIC_ORG_TYPES.map((org, idx) => (
-            <button
-              key={idx}
+            <button key={idx}
               onClick={() => handleSend(`${org.label} 소속 공직자로서 부패 관련 상담을 받고 싶습니다. ${org.label}에 적용되는 주요 청렴 법령과 유의사항을 안내해주세요.`)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0"
-            >
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-blue-600 border border-slate-700 hover:border-blue-500 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0">
               <org.icon className="w-3 h-3 shrink-0" />
               {org.label}
             </button>
@@ -495,19 +603,28 @@ const EcaCorruptionCounselor: React.FC = () => {
         </div>
       )}
 
+      {/* 유권해석 주제 (recovery 모드) */}
+      {!isCorruption && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {YUGEON_TOPICS.map((topic, idx) => (
+            <button key={idx}
+              onClick={() => handleSend(topic.prompt)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-green-600 border border-slate-700 hover:border-green-500 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0">
+              <span>{topic.icon}</span>
+              {topic.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 법령 카테고리 마퀴 (corruption 모드) */}
       {isCorruption && (
-        <div
-          className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
-          style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}
-        >
+        <div className="relative overflow-hidden rounded-xl border border-blue-500/20 bg-blue-900/10 py-2"
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 6%, black 94%, transparent)' }}>
           <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '20s' }}>
             {[...LAW_CATEGORIES, ...LAW_CATEGORIES].map((law, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSend(law.prompt)}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/30 hover:border-transparent rounded-full text-blue-300 hover:text-white transition-all text-xs font-bold"
-              >
+              <button key={idx} onClick={() => handleSend(law.prompt)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-blue-900/40 hover:bg-blue-600 border border-blue-500/30 hover:border-transparent rounded-full text-blue-300 hover:text-white transition-all text-xs font-bold">
                 <BookOpen className="w-3 h-3 shrink-0" />
                 {law.label}
               </button>
@@ -519,11 +636,8 @@ const EcaCorruptionCounselor: React.FC = () => {
       {/* 퀵 메뉴 */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {QUICK_MENUS[mode].map((item, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleSend(item.prompt)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0"
-          >
+          <button key={idx} onClick={() => handleSend(item.prompt)}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0">
             <item.icon className="w-3.5 h-3.5 shrink-0" />
             {item.label}
           </button>
@@ -538,7 +652,6 @@ const EcaCorruptionCounselor: React.FC = () => {
               <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user' ? accentBg : 'bg-slate-700'}`}>
                 {msg.role === 'user' ? <UserCheck className="w-4 h-4 text-white" /> : <Bot className="w-4 h-4 text-white" />}
               </div>
-              {/* ✅ 핵심: renderStyledText로 통일 - 마크다운 링크 클릭 가능 */}
               <div className={`p-4 rounded-2xl text-sm leading-loose break-keep shadow-lg ${msg.role === 'user' ? `${accentBg} text-white rounded-tr-none` : 'bg-slate-800 text-slate-200 border border-slate-700 rounded-tl-none'}`}>
                 {msg.role === 'ai' ? renderStyledText(msg.text) : msg.text}
               </div>
@@ -562,18 +675,12 @@ const EcaCorruptionCounselor: React.FC = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* 흘러가는 Q&A 마퀴 - 입력창 바로 위 */}
+      {/* 흘러가는 Q&A 마퀴 */}
       <div className="overflow-hidden relative h-10">
-        <div
-          className="flex gap-8 absolute whitespace-nowrap animate-marquee"
-          style={{ animationDuration: '30s', display: 'flex', width: 'max-content' }}
-        >
+        <div className="flex gap-8 absolute whitespace-nowrap animate-marquee" style={{ animationDuration: '30s', display: 'flex', width: 'max-content' }}>
           {[...MARQUEE_QA[mode], ...MARQUEE_QA[mode]].map((q, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleSend(q.replace('Q. ', ''))}
-              className={`shrink-0 text-xs font-bold px-4 py-1.5 rounded-full border transition-all ${marqueeClass}`}
-            >
+            <button key={idx} onClick={() => handleSend(q.replace('Q. ', ''))}
+              className={`shrink-0 text-xs font-bold px-4 py-1.5 rounded-full border transition-all ${marqueeClass}`}>
               {q}
             </button>
           ))}
@@ -583,9 +690,7 @@ const EcaCorruptionCounselor: React.FC = () => {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
           }
-          .animate-marquee {
-            animation: marquee linear infinite;
-          }
+          .animate-marquee { animation: marquee linear infinite; }
         `}</style>
       </div>
 
@@ -596,18 +701,14 @@ const EcaCorruptionCounselor: React.FC = () => {
           value={chatInput}
           onChange={e => setChatInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-          placeholder={isCorruption ? "부패 의심 사례나 법령 질의를 입력하세요..." : "환수 관련 질의를 입력하세요..."}
+          placeholder={isCorruption ? "부패 의심 사례나 법령 질의를 입력하세요..." : "환수금 계산, 이의신청, 사례 질의를 입력하세요..."}
           className={`w-full bg-slate-900 border ${accentBorder}/50 rounded-full pl-5 pr-14 py-4 text-base md:text-sm text-white focus:outline-none focus:ring-1 transition-all shadow-lg placeholder:text-slate-600`}
         />
-        <button
-          onClick={() => handleSend()}
-          disabled={!chatInput.trim() || isTyping}
-          className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white transition-all disabled:opacity-40 ${accentBg}`}
-        >
+        <button onClick={() => handleSend()} disabled={!chatInput.trim() || isTyping}
+          className={`absolute right-2 top-1/2 -translate-y-1/2 p-2.5 rounded-full text-white transition-all disabled:opacity-40 ${accentBg}`}>
           <Send className="w-5 h-5" />
         </button>
       </div>
-
     </section>
   );
 };
