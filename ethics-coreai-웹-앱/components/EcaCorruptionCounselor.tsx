@@ -335,6 +335,46 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 - Q: 맹단공표 기준은?
   A: 부정청구금액 1억원 이상 + 환수결정 확정 시 공표. 분할 부정청구도 합산하여 1억 초과 시 해당
 
+■ 고용·인건비 유권해석 (2024년 제재부가금 최다 부과 분야!)
+- Q: 허위 근로자 등록 후 고용촉진지원금 수령하면?
+  A: 허위청구에 해당 → 환수 + 제재부가금 5배 + 형사처벌(사기). 2024년 청년일자리창출지원금 허위청구로 71억원 제재부가금 부과(전체 최다)
+- Q: 이면계약으로 급여 일부를 사업주에게 돌려준 경우 근로자도 처벌받나?
+  A: 사업주는 허위청구 주범으로 5배 제재부가금 + 형사처벌. 근로자는 공모 여부에 따라 공범 가능. 자진신고 시 감면 가능
+- Q: 재직 요건(6개월 이상 고용 유지) 미충족 시 지원금 전액 환수?
+  A: 원칙적으로 전액 환수. 단, 사업주 귀책 없는 사정(근로자 자진 퇴사 등)은 소명 가능
+
+■ 농림·수산·축산 유권해석
+- Q: 실제 경작하지 않는 땅에 농업보조금을 받으면?
+  A: 허위청구 → 환수 + 5배 제재부가금. 위성·드론 영상, 농지원부 대조로 적발 증가 추세
+- Q: 어선 미운항 상태에서 유가보조금 계속 받으면?
+  A: 허위청구. 선박 AIS(자동위치발신장치) 데이터로 운항 여부 확인 후 환수 + 5배 제재부가금
+- Q: 축산 두수를 실제보다 많이 신고해 보조금 수령 시?
+  A: 과다청구 → 환수 + 3배 제재부가금. RFID 이표 전수조사로 두수 허위 신고 적발 증가
+
+■ 의료·요양급여 유권해석
+- Q: 요양보호사가 방문하지 않고 방문요양 청구 시?
+  A: 허위청구 → 환수 + 5배 제재부가금. GPS 기록, 수급자 진술로 입증. 반복·조직적 허위청구는 요양기관 지정취소
+- Q: 의사가 실제 진료 없이 진료비 청구 시?
+  A: 허위청구 + 의료법 위반 중복 적용. 요양급여비용 전액 환수 + 5배 제재부가금 + 면허정지·취소 가능
+- Q: 요양시설에서 입소자 기저귀·식품비를 별도 청구 시?
+  A: 이미 급여 내 포함된 항목 이중 청구 → 과다청구 → 환수 + 3배 제재부가금
+
+■ 문화·예술·체육 유권해석
+- Q: 체육회 보조금으로 친인척을 허위 운영요원으로 등록한 경우?
+  A: 허위청구 → 환수 + 5배 제재부가금 + 형사처벌. 2024년 실태점검에서 체육협회 다수 적발
+- Q: 문화예술 지원사업 결과물을 제출하지 않고 보조금 수령 시?
+  A: 목적 외 사용 또는 허위청구에 해당. 사업 미이행 비율에 따라 환수 + 2~5배 제재부가금
+- Q: 공연 관람객 수를 부풀려 보조금 신청 시?
+  A: 과다청구 → 환수 + 3배 제재부가금. 티켓 판매 내역, CCTV 대조로 입증
+
+■ 출연금·기금 유권해석
+- Q: 공익법인이 보조금으로 법인카드를 사적 용도로 사용하면?
+  A: 목적 외 사용 → 환수 + 2배 제재부가금. 이사장·대표자 개인 귀책 시 구상권 청구 가능
+- Q: 기금 적립금을 목적사업 외 투자에 운용하면?
+  A: 목적 외 사용 → 환수 + 2배 제재부가금. 투자 손실 발생 시 손실액도 환수 대상 가능
+- Q: 유사 사업 두 기관이 같은 사업 이중으로 보조금 신청 시?
+  A: 양 기관 모두 허위청구 또는 과다청구 해당. 전액 환수 + 5배 또는 3배 제재부가금
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 【 4. 환수 계산 기준 - 이자율 적용 방법 】
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -598,13 +638,13 @@ const QUICK_MENUS: Record<ModeType, { label: string; icon: any; prompt: string }
     { label: "신고자보호 위반 판례", icon: CheckCircle2, prompt: "공익신고자 보호법 위반으로 실제 처벌받은 판례와 사례를 구체적으로 설명해줘." },
   ],
   recovery: [
+    { label: "⚡ 개정사항 비교 확인", icon: AlertTriangle, prompt: "__AMENDMENT_PAGE__" },
     { label: "실전 사례 보기", icon: FileText, prompt: "공공재정환수법 실전 사례를 유형별(지방의회/공직자, 창업벤처, R&D, 교통/지역, 교육/사회복지, 개인복지)로 대표 판례와 처분 결과를 구체적으로 설명해줘." },
     { label: "법령 마스터 클래스", icon: BookOpen, prompt: "공공재정환수법의 핵심 내용을 설명해줘. 제정 목적, 환수 및 제재부가금 기준(허위5배·과다3배·목적외2배), 고액부정청구자 명단공표 제도, 다른 법률과의 관계까지 마스터 클래스 수준으로 정리해줘." },
     { label: "환수금 계산 방법", icon: Calculator, prompt: "공공재정환수법에 따른 환수금 계산 방법을 설명해줘. 국세기본법 이자율 구간별 적용 방법, 제재부가금 배율, 실제 계산 예시를 포함해서 알려줘." },
     { label: "유권해석 사례", icon: Search, prompt: "공공재정환수법 관련 2025년 최신 유권해석 사례를 주제별(R&D, 창업지원금, 공사/계약, 복지/보조금, 일반운영비)로 설명해줘. 실제 질의·회신 사례 중심으로 알려줘." },
     { label: "이의신청 방법", icon: Gavel, prompt: "공공재정 환수 결정에 불복하는 이의신청 절차, 기간(30일), 준비 서류, 행정심판 전략을 구체적으로 안내해줘. 승소 가능성을 높이는 핵심 포인트도 알려줘." },
     { label: "자진신고 감면", icon: MessageSquare, prompt: "공공재정환수법 제10조의 자진신고 감면 제도를 설명해줘. 조사 전 자진신고 시 제재부가금 면제 요건, 실제 감면 사례, 신고 절차를 구체적으로 알려줘." },
-    { label: "⚡ 개정사항 비교 확인", icon: AlertTriangle, prompt: "__AMENDMENT_PAGE__" },
     { label: "신고 포상·보상금", icon: CheckCircle2, prompt: "공공재정 부정청구 신고자가 받을 수 있는 포상금(최대 5억원)과 보상금(최대 30억원, 환수액의 30%) 제도를 설명해줘. 신청 절차, 지급 요건, 구조금 제도, 비실명 대리신고 방법까지 구체적으로 알려줘." },
     { label: "📚 강의 신청 안내", icon: GraduationCap, prompt: "__LECTURE_PAGE__" },
   ]
@@ -617,6 +657,11 @@ const YUGEON_TOPICS = [
   { label: "공사/계약", icon: "🏗️", prompt: "공사·계약 관련 유권해석 사례를 설명해줘. 하도급 부정청구, 예산 전용, 허위 세금계산서 등 주요 위반 유형과 판례를 알려줘." },
   { label: "복지/보조금", icon: "💛", prompt: "복지급여·보조금 관련 유권해석 사례를 설명해줘. 소득 은닉, 위장 이혼, 유령 수급자 등 주요 부정수급 유형과 환수 판례를 알려줘." },
   { label: "일반운영비", icon: "💰", prompt: "일반운영비·사업비 관련 유권해석 사례를 설명해줘. 노트북 구매, 회식비 처리, 잔액 이월 등 주요 이슈와 허용 기준을 판례 중심으로 알려줘." },
+  { label: "고용·인건비", icon: "👷", prompt: "고용보험·고용촉진지원금·청년일자리지원금 등 고용 관련 공공재정환수법 유권해석 사례를 설명해줘. 허위 근로자 등록, 이면계약 급여 환급, 재직 요건 미충족 수급 등 주요 부정수급 유형과 2024년 권익위 실태점검 결과(제재부가금 71억원 최다 부과)를 포함해 알려줘." },
+  { label: "농림·수산·축산", icon: "🌾", prompt: "농업보조금·수산업보조금·축산지원금 관련 공공재정환수법 유권해석 사례를 설명해줘. 유가보조금 카드깡, 실경작자 위장, 허위 두수 신고, 어선 미운항 청구 등 주요 위반 유형과 판례를 알려줘." },
+  { label: "의료·요양급여", icon: "🏥", prompt: "의료급여·요양급여·장기요양보험 관련 공공재정환수법 유권해석 사례를 설명해줘. 허위 진료청구, 요양보호사 근무시간 조작, 방문 미실시 청구, 의료기관 허위 등록 등 주요 위반 유형과 판례를 알려줘." },
+  { label: "문화·예술·체육", icon: "🎭", prompt: "문화예술지원금·체육회보조금·스포츠바우처 관련 공공재정환수법 유권해석 사례를 설명해줘. 친인척 허위 운영요원 등록, 훈련비 횡령, 행사비 부풀리기, 처우개선비 명목 횡령 등 주요 위반 유형과 판례를 알려줘." },
+  { label: "출연금·기금", icon: "🏦", prompt: "정부출연금·기금·공익법인 보조금 관련 공공재정환수법 유권해석 사례를 설명해줘. 법인카드 사적 사용, 유사단체 이중 청구, 목적사업 외 기금 유용, 적립금 불법 운용 등 주요 위반 유형과 판례를 알려줘." },
 ];
 
 const MARQUEE_QA: Record<ModeType, string[]> = {
@@ -1215,17 +1260,21 @@ const EcaCorruptionCounselor: React.FC = () => {
         </div>
       )}
 
-      {/* 유권해석 주제 (recovery 모드) */}
+      {/* 유권해석 주제 (recovery 모드) - 스크롤 가능 */}
       {!isCorruption && (
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {YUGEON_TOPICS.map((topic, idx) => (
-            <button key={idx}
-              onClick={() => handleSend(topic.prompt)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/80 hover:bg-green-600 border border-slate-700 hover:border-green-500 rounded-full text-slate-300 hover:text-white transition-all whitespace-nowrap text-xs font-bold shrink-0">
-              <span>{topic.icon}</span>
-              {topic.label}
-            </button>
-          ))}
+        <div
+          className="relative overflow-hidden rounded-xl border border-green-500/20 bg-green-900/10 py-2"
+          style={{ maskImage: 'linear-gradient(to right, transparent, black 4%, black 96%, transparent)' }}
+        >
+          <div className="flex gap-3 animate-marquee whitespace-nowrap" style={{ animationDuration: '28s' }}>
+            {[...YUGEON_TOPICS, ...YUGEON_TOPICS].map((topic, idx) => (
+              <button key={idx} onClick={() => handleSend(topic.prompt)}
+                className="shrink-0 flex items-center gap-1.5 px-3 py-1 bg-green-900/40 hover:bg-green-600 border border-green-500/30 hover:border-transparent rounded-full text-green-300 hover:text-white transition-all text-xs font-bold">
+                <span>{topic.icon}</span>
+                {topic.label}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
