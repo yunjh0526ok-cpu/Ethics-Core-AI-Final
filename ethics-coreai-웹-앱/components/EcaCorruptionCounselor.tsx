@@ -706,6 +706,7 @@ const EcaCorruptionCounselor: React.FC = () => {
   const [chatLog, setChatLog] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState('v3');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -761,7 +762,6 @@ const EcaCorruptionCounselor: React.FC = () => {
 
   // ==================== 개정사항 비교 페이지 ====================
   if (mode === 'amendment') {
-    const [selectedVersion, setSelectedVersion] = React.useState('v3');
     const selected = AMENDMENT_HISTORY.find(h => h.version === selectedVersion)!;
 
     return (
