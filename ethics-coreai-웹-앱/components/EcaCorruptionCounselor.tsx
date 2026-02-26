@@ -16,7 +16,117 @@ interface ChatMessage {
   text: string;
 }
 
-type ModeType = 'corruption' | 'recovery';
+type ModeType = 'corruption' | 'recovery' | 'lecture' | 'amendment';
+
+// ==================== 개정 이력 데이터 (새 개정 시 여기에만 추가!) ====================
+const AMENDMENT_HISTORY = [
+  {
+    version: "v3",
+    law: "법률 제20426호",
+    date: "2024.09.27",
+    label: "2024년 3차 개정",
+    badge: "최신",
+    badgeColor: "bg-red-500",
+    isLatest: true,
+    items: [
+      {
+        category: "형사처벌 신설",
+        icon: "⚖️",
+        tag: "강화",
+        tagColor: "bg-red-500/20 text-red-400 border-red-500/30",
+        before: "금전 제재(환수금·제재부가금)만 가능 — 형사처벌 근거 없음",
+        after: "허위청구: 3년 이하 징역 또는 3천만원 이하 벌금\n과다청구: 1년 이하 징역 또는 1천만원 이하 벌금\n※ 과다청구 알면서 지급한 공무원도 동일 처벌",
+        point: "이제 돈만 돌려줘도 끝이 아님 — 전과 기록까지 남음",
+      },
+      {
+        category: "이자 환수 합리화",
+        icon: "💰",
+        tag: "완화",
+        tagColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+        before: "귀책사유 없어도 이자 전액 환수 (불합리)",
+        after: "수급자의 귀책사유가 있는 경우에만 이자 환수\n※ 개별법에 이자 규정 없어도 본법으로 이자 환수 가능(명확화)",
+        point: "담당자 안내에 따라 집행한 경우 → 이자 면제 주장 가능",
+      },
+      {
+        category: "자진신고 감면 정밀화",
+        icon: "🙋",
+        tag: "변경",
+        tagColor: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+        before: "사전통지 전 자진신고 → 제재부가금 전액 무조건 면제",
+        after: "행정청 인지 전 신고 → 전액 면제 유지\n행정청 인지 후 신고 → 면제 또는 감경 (재량)",
+        point: "조사 착수 소문 나기 전에 즉시 신고하는 것이 최선",
+      },
+      {
+        category: "비실명 대리신고 도입",
+        icon: "🕵️",
+        tag: "신설",
+        tagColor: "bg-green-500/20 text-green-400 border-green-500/30",
+        before: "신고자 본인이 직접 실명으로 신고해야 함",
+        after: "변호사를 선임하여 신고자 인적사항 비공개로 대리 신고 가능\n권익위 자문변호사단 통해 무료 법률상담 및 대리신고 지원",
+        point: "신원 노출 두려움 없이 내부고발 가능",
+      },
+      {
+        category: "신고자 친족·동거인 구조금",
+        icon: "👨‍👩‍👧",
+        tag: "신설",
+        tagColor: "bg-green-500/20 text-green-400 border-green-500/30",
+        before: "신고자 본인만 구조금 신청 가능",
+        after: "신고자의 친족 또는 동거인도 피해 시 구조금 신청 가능\n대상: 치료비, 이사비, 소송비용, 임금 손실액 등",
+        point: "신고로 인한 가족 피해까지 국가가 보호",
+      },
+    ]
+  },
+  {
+    version: "v2",
+    law: "법률 제19931호",
+    date: "2023.12.19",
+    label: "2023년 2차 개정",
+    badge: "",
+    badgeColor: "",
+    isLatest: false,
+    items: [
+      {
+        category: "포상금 상한액 상향",
+        icon: "🏆",
+        tag: "강화",
+        tagColor: "bg-red-500/20 text-red-400 border-red-500/30",
+        before: "포상금 최대 2억원",
+        after: "포상금 최대 5억원으로 상향",
+        point: "적극적 신고 유인 강화",
+      },
+      {
+        category: "고액부정청구자 명단공표 강화",
+        icon: "📢",
+        tag: "강화",
+        tagColor: "bg-red-500/20 text-red-400 border-red-500/30",
+        before: "명단공표 대상·기준 불명확",
+        after: "1억원 이상 확정 시 기업명·대표자명 대국민 공표\n공표 기간 5년, 관보 및 홈페이지 게재",
+        point: "사회적 낙인 효과 강화 → 부정청구 억제",
+      },
+    ]
+  },
+  {
+    version: "v1",
+    law: "법률 제16704호",
+    date: "2020.01.01",
+    label: "최초 시행",
+    badge: "",
+    badgeColor: "",
+    isLatest: false,
+    items: [
+      {
+        category: "법률 최초 시행",
+        icon: "📋",
+        tag: "신설",
+        tagColor: "bg-green-500/20 text-green-400 border-green-500/30",
+        before: "공공재정 부정수급 통합 법률 없음 (개별법 산재)",
+        after: "공공재정환수법 제정: 허위·과다·목적외 3유형 환수 근거\n제재부가금: 허위5배·과다3배·목적외2배\n고액부정청구자 명단공표 제도 도입",
+        point: "공공재정 부정수급 일반법 탄생",
+      },
+    ]
+  },
+];
+
 
 const PUBLIC_ORG_TYPES = [
   { label: "중앙부처", icon: Landmark },
@@ -494,9 +604,9 @@ const QUICK_MENUS: Record<ModeType, { label: string; icon: any; prompt: string }
     { label: "유권해석 사례", icon: Search, prompt: "공공재정환수법 관련 2025년 최신 유권해석 사례를 주제별(R&D, 창업지원금, 공사/계약, 복지/보조금, 일반운영비)로 설명해줘. 실제 질의·회신 사례 중심으로 알려줘." },
     { label: "이의신청 방법", icon: Gavel, prompt: "공공재정 환수 결정에 불복하는 이의신청 절차, 기간(30일), 준비 서류, 행정심판 전략을 구체적으로 안내해줘. 승소 가능성을 높이는 핵심 포인트도 알려줘." },
     { label: "자진신고 감면", icon: MessageSquare, prompt: "공공재정환수법 제10조의 자진신고 감면 제도를 설명해줘. 조사 전 자진신고 시 제재부가금 면제 요건, 실제 감면 사례, 신고 절차를 구체적으로 알려줘." },
-    { label: "2024 개정법 핵심", icon: AlertTriangle, prompt: "2024년 9월 27일 시행된 공공재정환수법 개정 핵심 내용을 알려줘. 형사처벌 신설(허위청구 3년·과다청구 1년), 이자 환수 합리화(귀책사유 있을 때만), 자진신고 감면 정밀화, 비실명 대리신고 도입 등 실무에 중요한 변경사항을 구체적으로 설명해줘." },
+    { label: "⚡ 개정사항 비교 확인", icon: AlertTriangle, prompt: "__AMENDMENT_PAGE__" },
     { label: "신고 포상·보상금", icon: CheckCircle2, prompt: "공공재정 부정청구 신고자가 받을 수 있는 포상금(최대 5억원)과 보상금(최대 30억원, 환수액의 30%) 제도를 설명해줘. 신청 절차, 지급 요건, 구조금 제도, 비실명 대리신고 방법까지 구체적으로 알려줘." },
-    { label: "📚 강의 신청 안내", icon: GraduationCap, prompt: "주양순 대표의 공공재정환수법 강의를 신청하고 싶어요. 강의 내용, 커리큘럼, 대상 기관, 신청 방법을 자세히 알려주세요." },
+    { label: "📚 강의 신청 안내", icon: GraduationCap, prompt: "__LECTURE_PAGE__" },
   ]
 };
 
@@ -613,7 +723,8 @@ const EcaCorruptionCounselor: React.FC = () => {
   }, [chatLog, isTyping]);
 
   const handleBack = () => {
-    if (mode) { setMode(null); setChatLog([]); }
+    if (mode === 'lecture' || mode === 'amendment') { setMode('recovery'); }
+    else if (mode) { setMode(null); setChatLog([]); }
     else {
       sessionStorage.setItem('hero_view_mode', 'consulting');
       const event = new CustomEvent('navigate', { detail: 'home' });
@@ -623,6 +734,10 @@ const EcaCorruptionCounselor: React.FC = () => {
 
   const handleSend = async (text: string = chatInput) => {
     if (!text.trim() || !mode) return;
+    // 강의 안내 페이지로 이동
+    if (text === '__LECTURE_PAGE__') { setMode('lecture'); return; }
+    // 개정사항 비교 페이지로 이동
+    if (text === '__AMENDMENT_PAGE__') { setMode('amendment'); return; }
     setChatLog(prev => [...prev, { role: 'user', text }]);
     setChatInput('');
     setIsTyping(true);
@@ -643,6 +758,313 @@ const EcaCorruptionCounselor: React.FC = () => {
       setIsTyping(false);
     }
   };
+
+  // ==================== 개정사항 비교 페이지 ====================
+  if (mode === 'amendment') {
+    const [selectedVersion, setSelectedVersion] = React.useState('v3');
+    const selected = AMENDMENT_HISTORY.find(h => h.version === selectedVersion)!;
+
+    return (
+      <section className="relative z-10 py-8 px-4 w-full max-w-4xl mx-auto min-h-screen flex flex-col gap-5">
+        {/* 헤더 */}
+        <div className="flex items-center gap-3">
+          <button onClick={handleBack} className="p-2 rounded-full bg-slate-800 border border-slate-700 hover:border-yellow-400 transition-all shrink-0">
+            <ArrowLeft className="w-4 h-4 text-slate-400" />
+          </button>
+          <div>
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-yellow-400" />
+              공공재정환수법 개정사항 비교
+            </h2>
+            <p className="text-xs text-yellow-400 font-bold">개정 시마다 자동 업데이트 · 개정 전/후 한눈 비교</p>
+          </div>
+        </div>
+
+        {/* 최신 개정 알림 배너 */}
+        <div className="flex items-center gap-3 p-4 bg-red-900/20 border border-red-500/40 rounded-2xl">
+          <span className="text-2xl shrink-0">🔔</span>
+          <div>
+            <p className="text-red-400 font-black text-sm">최신 개정 · {AMENDMENT_HISTORY[0].date} 시행</p>
+            <p className="text-white text-sm font-bold">{AMENDMENT_HISTORY[0].label} ({AMENDMENT_HISTORY[0].law})</p>
+            <p className="text-slate-400 text-xs mt-0.5">형사처벌 신설 · 이자환수 합리화 · 자진신고 정밀화 · 비실명 대리신고 도입</p>
+          </div>
+          <span className="ml-auto shrink-0 px-2 py-1 bg-red-500 text-white text-[10px] font-black rounded-full">NEW</span>
+        </div>
+
+        {/* 버전 탭 */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {AMENDMENT_HISTORY.map(h => (
+            <button
+              key={h.version}
+              onClick={() => setSelectedVersion(h.version)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-black whitespace-nowrap border transition-all shrink-0 ${
+                selectedVersion === h.version
+                  ? 'bg-yellow-500 text-black border-yellow-400'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:border-yellow-500/50 hover:text-white'
+              }`}
+            >
+              {h.isLatest && <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>}
+              {h.label}
+              {h.isLatest && <span className="px-1.5 py-0.5 bg-red-500 text-white text-[9px] rounded-full">최신</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* 선택된 버전 정보 */}
+        <div className="flex items-center gap-3 px-1">
+          <span className="text-slate-400 text-xs font-bold">{selected.law}</span>
+          <span className="text-slate-600">·</span>
+          <span className="text-slate-400 text-xs">시행일 {selected.date}</span>
+          <span className="ml-auto text-slate-500 text-xs">총 {selected.items.length}개 변경사항</span>
+        </div>
+
+        {/* 개정 항목 카드들 */}
+        <div className="flex flex-col gap-4">
+          {selected.items.map((item, i) => (
+            <div key={i} className="bg-slate-900/70 border border-slate-700 rounded-2xl overflow-hidden">
+              {/* 카드 헤더 */}
+              <div className="flex items-center gap-3 px-5 py-3 bg-slate-800/60 border-b border-slate-700">
+                <span className="text-xl">{item.icon}</span>
+                <span className="text-white font-black text-sm">{item.category}</span>
+                <span className={`ml-auto text-[10px] px-2 py-1 rounded-full border font-black ${item.tagColor}`}>{item.tag}</span>
+              </div>
+
+              {/* 개정 전/후 비교 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-700">
+                {/* 개정 전 */}
+                <div className="p-4">
+                  <p className="text-xs font-black text-slate-500 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-slate-600 rounded-full"></span>
+                    개정 전
+                  </p>
+                  <p className="text-slate-400 text-sm leading-relaxed whitespace-pre-line">{item.before}</p>
+                </div>
+                {/* 개정 후 */}
+                <div className="p-4 bg-slate-800/30">
+                  <p className="text-xs font-black text-yellow-400 mb-2 flex items-center gap-1.5">
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                    개정 후
+                  </p>
+                  <p className="text-white text-sm leading-relaxed font-bold whitespace-pre-line">{item.after}</p>
+                </div>
+              </div>
+
+              {/* 실무 포인트 */}
+              <div className="flex items-start gap-2 px-5 py-3 bg-yellow-900/10 border-t border-yellow-500/20">
+                <span className="text-yellow-400 text-xs font-black shrink-0 mt-0.5">💡 실무 포인트</span>
+                <p className="text-yellow-300 text-xs leading-relaxed">{item.point}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 다음 개정 예고 안내 */}
+        <div className="flex items-center gap-3 p-4 bg-slate-800/50 border border-slate-700 rounded-2xl">
+          <span className="text-xl">📌</span>
+          <div>
+            <p className="text-slate-300 text-sm font-bold">개정사항 업데이트 안내</p>
+            <p className="text-slate-500 text-xs mt-0.5 leading-relaxed">
+              공공재정환수법 개정 시 이 페이지에 즉시 반영됩니다.
+              법제처 국가법령정보센터 또는 기획재정부 공고를 통해 개정 여부를 확인하세요.
+            </p>
+          </div>
+        </div>
+
+        {/* 하단 버튼 */}
+        <button onClick={handleBack}
+          className="flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-colors px-6 py-3 rounded-full hover:bg-slate-800/50 mx-auto">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="font-bold text-sm">공공재정환수법 상담소로 돌아가기</span>
+        </button>
+      </section>
+    );
+  }
+
+  // ==================== 강의 안내 페이지 ====================
+  if (mode === 'lecture') {
+    return (
+      <section className="relative z-10 py-8 px-4 w-full max-w-4xl mx-auto min-h-screen flex flex-col gap-6">
+        {/* 헤더 */}
+        <div className="flex items-center gap-3">
+          <button onClick={handleBack} className="p-2 rounded-full bg-slate-800 border border-slate-700 hover:border-green-400 transition-all shrink-0">
+            <ArrowLeft className="w-4 h-4 text-slate-400" />
+          </button>
+          <div>
+            <h2 className="text-lg font-black text-white flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-green-400" />
+              공공재정환수법 강의 안내
+            </h2>
+            <p className="text-xs text-green-400 font-bold">주양순 대표 · 청렴공정연구센터</p>
+          </div>
+        </div>
+
+        {/* 강사 프로필 */}
+        <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/20 border border-green-500/30 rounded-2xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-14 h-14 rounded-2xl bg-green-600/30 border border-green-500/40 flex items-center justify-center shrink-0 text-2xl">👩‍🏫</div>
+            <div>
+              <h3 className="text-white font-black text-lg">주양순 대표</h3>
+              <p className="text-green-400 text-sm font-bold mb-2">청렴공정연구센터(Ethics-Core AI Smart Platform)</p>
+              <div className="flex flex-wrap gap-2">
+                {["국가청렴권익교육원 등록강사", "인사혁신처 적극행정 전문강사단", "청렴시민감사관"].map((badge, i) => (
+                  <span key={i} className="text-[10px] px-2 py-1 bg-green-900/40 border border-green-500/30 text-green-300 rounded-full font-bold">{badge}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 강의 특징 */}
+        <div className="bg-slate-900/60 border border-slate-700 rounded-2xl p-5">
+          <h4 className="text-white font-black mb-4 flex items-center gap-2">
+            <span className="text-yellow-400">⭐</span> 타 강사와의 차별점
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {[
+              { icon: "⚖️", title: "판례 중심 실전 강의", desc: "법령 조문 암기 지양 → 실제 환수 처분·판례 사례 중심" },
+              { icon: "🧮", title: "환수 계산기 직접 시연", desc: "수강자가 본인 사례 입력 → 환수금·제재부가금 실시간 계산" },
+              { icon: "🤖", title: "Ethics-CoreAI 실습", desc: "AI 상담소·유권해석 검색 등 디지털 도구 현장 실습" },
+              { icon: "📊", title: "Mentimeter 속마음 퀴즈", desc: "우리 기관 위험 유형 실시간 투표·시각화" },
+              { icon: "🎨", title: "Canva AI 토론형", desc: "환수 사례 카드뉴스 제작 → 팀별 발표·토론" },
+              { icon: "📋", title: "2024 개정법 최신 반영", desc: "형사처벌 신설·이자 합리화 등 최신 개정 내용 포함" },
+            ].map((item, i) => (
+              <div key={i} className="flex gap-3 p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-xl shrink-0">{item.icon}</span>
+                <div>
+                  <p className="text-white text-xs font-black">{item.title}</p>
+                  <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 커리큘럼 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* 기본형 */}
+          <div className="bg-slate-900/60 border border-green-500/30 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-1 bg-green-600 text-white text-xs font-black rounded-lg">기본형</span>
+              <span className="text-slate-400 text-xs">2~3시간</span>
+            </div>
+            <div className="space-y-3">
+              {[
+                { part: "1부", time: "30분", title: "공공재정환수법이란?", items: ["허위·과다·목적외 3유형 핵심", "2024 개정 형사처벌 신설 영향"] },
+                { part: "2부", time: "60분", title: "우리 기관은 얼마나 위험한가?", items: ["6대 유형 판례 집중 분석", "환수 계산기 시연", "Mentimeter 퀴즈"] },
+                { part: "3부", time: "50분", title: "걸리면 어떻게 하나?", items: ["이의신청 30일 기한·전략", "자진신고 감면 제도", "AI 상담소 실습"] },
+              ].map((p, i) => (
+                <div key={i} className="border-l-2 border-green-500/40 pl-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-green-400 text-xs font-black">{p.part}</span>
+                    <span className="text-slate-500 text-[10px]">({p.time})</span>
+                    <span className="text-white text-xs font-bold">{p.title}</span>
+                  </div>
+                  {p.items.map((item, j) => (
+                    <p key={j} className="text-slate-400 text-[11px] ml-1">· {item}</p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 심화형 */}
+          <div className="bg-slate-900/60 border border-emerald-500/30 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="px-2 py-1 bg-emerald-600 text-white text-xs font-black rounded-lg">심화형</span>
+              <span className="text-slate-400 text-xs">4~6시간 (워크숍)</span>
+            </div>
+            <div className="space-y-3">
+              <div className="p-2 bg-emerald-900/20 rounded-lg border border-emerald-500/20">
+                <p className="text-emerald-400 text-xs font-bold">기본형 전체 포함 +</p>
+              </div>
+              {[
+                { part: "4부", time: "90분", title: "유권해석 실전 워크숍", items: ["R&D·창업·공사·복지·운영비 팀 배정", "실제 유권해석 질의 사례 풀이", "Canva AI 카드뉴스 제작·발표"] },
+                { part: "5부", time: "60분", title: "내부 통제 시스템 점검", items: ["담당자 실무 체크리스트", "사전통지·이자면제·소액특례 활용", "기관 맞춤 예방 대책 수립"] },
+              ].map((p, i) => (
+                <div key={i} className="border-l-2 border-emerald-500/40 pl-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-emerald-400 text-xs font-black">{p.part}</span>
+                    <span className="text-slate-500 text-[10px]">({p.time})</span>
+                    <span className="text-white text-xs font-bold">{p.title}</span>
+                  </div>
+                  {p.items.map((item, j) => (
+                    <p key={j} className="text-slate-400 text-[11px] ml-1">· {item}</p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 대상 기관 */}
+        <div className="bg-slate-900/60 border border-slate-700 rounded-2xl p-5">
+          <h4 className="text-white font-black mb-3 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-green-400" /> 강의 대상 기관
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {[
+              { icon: "🏛️", label: "지방자치단체", desc: "보조금·감사·회계·예산 부서" },
+              { icon: "🏢", label: "중앙부처·소속기관", desc: "보조금·R&D·위탁사업 담당" },
+              { icon: "🏗️", label: "공공기관·지방공기업", desc: "재무·감사 담당자" },
+              { icon: "🎓", label: "교육청·국공립대학", desc: "연구비·사업비 담당자" },
+              { icon: "❤️", label: "복지법인·의료기관", desc: "보조금 수급 민간단체" },
+              { icon: "🚀", label: "창업·벤처기관", desc: "창업지원금 수급 기업" },
+            ].map((org, i) => (
+              <div key={i} className="flex gap-2 p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-lg shrink-0">{org.icon}</span>
+                <div>
+                  <p className="text-white text-xs font-bold">{org.label}</p>
+                  <p className="text-slate-500 text-[10px]">{org.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 강의 신청 CTA */}
+        <div className="bg-gradient-to-r from-green-900/40 to-emerald-900/30 border border-green-500/40 rounded-2xl p-6">
+          <h4 className="text-white font-black text-center mb-4 text-lg">📩 강의 신청 방법</h4>
+          <div className="flex flex-col gap-3">
+            <a href="https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-green-600 hover:bg-green-500 text-white font-black rounded-xl transition-all text-sm shadow-lg shadow-green-900/40">
+              <FileText className="w-4 h-4" />
+              👉 강의 의뢰 신청 폼 바로가기
+            </a>
+            <a href="https://edu.acrc.go.kr/0302/lecturer/yEYijtPPTsxXYRUcAPed/view.do?_search=true&keyword=%C1%D6%BE%E7%BC%F8"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-slate-700 hover:bg-slate-600 text-white font-black rounded-xl transition-all text-sm border border-slate-600">
+              <BookOpen className="w-4 h-4" />
+              👉 국가청렴권익교육원 강사풀 바로가기
+            </a>
+            <div className="flex gap-3 mt-1">
+              <div className="flex-1 flex items-center gap-2 p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-green-400 text-lg">📞</span>
+                <div>
+                  <p className="text-slate-400 text-[10px]">전화 문의</p>
+                  <p className="text-white text-sm font-black">010-6667-1467</p>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center gap-2 p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+                <span className="text-green-400 text-lg">✉️</span>
+                <div>
+                  <p className="text-slate-400 text-[10px]">이메일 문의</p>
+                  <p className="text-white text-sm font-black">yszoo1467@naver.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 하단 버튼 */}
+        <button onClick={handleBack}
+          className="flex items-center justify-center gap-2 text-slate-400 hover:text-white transition-colors px-6 py-3 rounded-full hover:bg-slate-800/50 mx-auto">
+          <ArrowLeft className="w-4 h-4" />
+          <span className="font-bold text-sm">공공재정환수법 상담소로 돌아가기</span>
+        </button>
+      </section>
+    );
+  }
 
   // ==================== 모드 선택 화면 ====================
   if (!mode) {
