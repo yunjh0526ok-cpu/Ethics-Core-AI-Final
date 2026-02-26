@@ -769,8 +769,10 @@ const EcaCorruptionCounselor: React.FC = () => {
   }, [chatLog, isTyping]);
 
   const handleBack = () => {
-    if (mode === 'lecture' || mode === 'amendment') { setMode('recovery'); }
-    else if (mode) { setMode(null); setChatLog([]); }
+    if (mode === 'lecture' || mode === 'amendment') {
+      setMode('recovery');
+      setChatLog([{ role: 'ai', text: GREETINGS['recovery'] }]);
+    } else if (mode) { setMode(null); setChatLog([]); }
     else {
       sessionStorage.setItem('hero_view_mode', 'consulting');
       const event = new CustomEvent('navigate', { detail: 'home' });
