@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Presentation, Briefcase, ExternalLink, Mail, Phone, UserCheck, GraduationCap, Bot, Sparkles } from 'lucide-react';
@@ -38,9 +37,8 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ isOpen, onClose }) => {
                 <X className="w-6 h-6" />
               </button>
 
-              {/* Header with Ethics-Core AI Mascot */}
+              {/* Header */}
               <div className="text-center mb-8 mt-2 flex flex-col items-center">
-                  {/* Mascot Eco -> Ethics-Core AI Agent */}
                   <div className="relative mb-4 group cursor-pointer">
                       <div className="absolute inset-0 bg-cyber-500/30 rounded-full blur-xl animate-pulse group-hover:bg-cyber-500/50 transition-all"></div>
                       <div className="relative w-20 h-20 rounded-full bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-cyber-accent flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] group-hover:scale-110 transition-transform duration-300">
@@ -58,40 +56,44 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ isOpen, onClose }) => {
                   <p className="text-slate-400 text-sm md:text-base">Ethics-Core AI가 최적의 솔루션을 연결해 드립니다.</p>
               </div>
 
-              {/* 
-                 2x2 GRID LAYOUT (Fixed for Mobile & Desktop)
-                 grid-cols-2: Always 2 columns
-              */}
+              {/* 2x2 GRID */}
               <div className="grid grid-cols-2 gap-3 md:gap-6 w-full max-w-3xl mx-auto">
-                {/* 1. 강의의뢰 및 신청폼 */}
+
+                {/* 1. 강의 의뢰 신청 */}
                 <button 
-                  onClick={() => window.open('https://genuineform-romelia88280.preview.softr.app/?autoUser=true&show-toolbar=true', '_blank')}
+                  onClick={() => window.open('https://genuineform-romelia88280.softr.app', '_blank')}
                   className="group flex flex-col items-center p-4 md:p-8 rounded-2xl bg-slate-900/60 border border-slate-700 hover:bg-slate-800 hover:border-cyber-500 hover:scale-[1.02] transition-all duration-300 text-center h-full min-h-[160px] md:min-h-[220px] justify-between shadow-lg"
                 >
                   <div className="flex flex-col items-center">
                     <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-cyber-500/10 border border-cyber-500/20 flex items-center justify-center mb-3 md:mb-5 group-hover:bg-cyber-500/20 transition-colors">
                         <Presentation className="w-6 h-6 md:w-8 md:h-8 text-cyber-500" />
                     </div>
-                    <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">강의의뢰 및<br/>신청폼</h4>
+                    <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">강의 의뢰<br/>신청</h4>
+                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 break-keep leading-relaxed hidden md:block">
+                      AI 참여형 청렴 강의<br/>맞춤 프로그램 신청
+                    </p>
                   </div>
                   <span className="text-[10px] md:text-xs text-cyber-400 font-bold flex items-center gap-1 group-hover:underline mt-2 opacity-80">
-                    작성하기 <ExternalLink className="w-3 h-3" />
+                    신청하기 <ExternalLink className="w-3 h-3" />
                   </span>
                 </button>
 
-                {/* 2. Ethics-Core AI 사업 컨설팅 신청 */}
+                {/* 2. 사업협업 신청 ← 소프틀 폼으로 연결 */}
                 <button 
-                  onClick={() => setShowContact(true)}
+                  onClick={() => window.open('https://sophie31819.softr.app/business-apply', '_blank')}
                   className="group flex flex-col items-center p-4 md:p-8 rounded-2xl bg-slate-900/60 border border-slate-700 hover:bg-slate-800 hover:border-purple-500 hover:scale-[1.02] transition-all duration-300 text-center h-full min-h-[160px] md:min-h-[220px] justify-between shadow-lg"
                 >
                   <div className="flex flex-col items-center">
                     <div className="w-10 h-10 md:w-14 md:h-14 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-3 md:mb-5 group-hover:bg-purple-500/20 transition-colors">
                         <Briefcase className="w-6 h-6 md:w-8 md:h-8 text-purple-500" />
                     </div>
-                    <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">Ethics-Core AI<br/>사업 컨설팅 신청</h4>
+                    <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">사업협업<br/>신청</h4>
+                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 break-keep leading-relaxed hidden md:block">
+                      PoC 도입 · 구독 계약<br/>투자·파트너십 · MOU
+                    </p>
                   </div>
                   <span className="text-[10px] md:text-xs text-purple-400 font-bold flex items-center gap-1 group-hover:underline mt-2 opacity-80">
-                    문의하기 <Mail className="w-3 h-3" />
+                    신청하기 <ExternalLink className="w-3 h-3" />
                   </span>
                 </button>
 
@@ -105,13 +107,16 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ isOpen, onClose }) => {
                         <UserCheck className="w-6 h-6 md:w-8 md:h-8 text-green-500" />
                     </div>
                     <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">청렴 시민<br/>감사관 의뢰</h4>
+                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 break-keep leading-relaxed hidden md:block">
+                      청렴도 향상 정책 자문<br/>시민 감사 활동 의뢰
+                    </p>
                   </div>
                   <span className="text-[10px] md:text-xs text-green-400 font-bold flex items-center gap-1 group-hover:underline mt-2 opacity-80">
                     문의하기 <Mail className="w-3 h-3" />
                   </span>
                 </button>
 
-                {/* 4. AI 기반 청렴·인권교육 미래대학 프로그램 */}
+                {/* 4. AI 기반 청렴·인권 미래대학 */}
                 <button 
                   onClick={() => window.open('https://blog.naver.com/yszoo1467/224180090553', '_blank')}
                   className="group flex flex-col items-center p-4 md:p-8 rounded-2xl bg-slate-900/60 border border-slate-700 hover:bg-slate-800 hover:border-[#ff6e1e] hover:scale-[1.02] transition-all duration-300 text-center h-full min-h-[160px] md:min-h-[220px] justify-between shadow-lg"
@@ -121,11 +126,15 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ isOpen, onClose }) => {
                         <GraduationCap className="w-6 h-6 md:w-8 md:h-8 text-[#ff6e1e]" />
                     </div>
                     <h4 className="text-sm md:text-lg font-bold text-white leading-tight break-keep">AI 기반 청렴·인권<br/>미래대학 프로그램</h4>
+                    <p className="text-[10px] md:text-xs text-slate-400 mt-2 break-keep leading-relaxed hidden md:block">
+                      차세대 윤리 교육<br/>프로그램 상세 보기
+                    </p>
                   </div>
                   <span className="text-[10px] md:text-xs text-[#ff6e1e] font-bold flex items-center gap-1 group-hover:underline mt-2 opacity-80">
-                    프로그램 상세 보기 <ExternalLink className="w-3 h-3" />
+                    프로그램 보기 <ExternalLink className="w-3 h-3" />
                   </span>
                 </button>
+
               </div>
 
               {/* Contact Info Overlay */}
