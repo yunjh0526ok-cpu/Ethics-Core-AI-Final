@@ -168,19 +168,19 @@ const RelationshipThermometer: React.FC = () => {
     <section className="relative z-10 py-24 px-4 w-full max-w-7xl mx-auto border-t border-slate-800">
       <div className="mb-6">
         <button onClick={handleBack} className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group px-4 py-2 rounded-full hover:bg-slate-800/50">
-          <div className="p-1.5 rounded-full bg-slate-800 border border-slate-700 group-hover:border-pink-500 transition-all"><ArrowLeft className="w-4 h-4" /></div>
+          <div className="p-1.5 rounded-full bg-slate-800 border border-slate-700 group-hover:border-cyber-accent transition-all"><ArrowLeft className="w-4 h-4" /></div>
           <span className="font-bold text-sm">이전 화면으로</span>
         </button>
       </div>
       <div className="text-center mb-12">
-        <span className="text-pink-400 font-tech tracking-widest text-xs uppercase mb-2 block">Relationship Zone</span>
-        <h2 className="text-4xl md:text-5xl font-black text-white mb-4">💝 <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-400">관계 온도계</span></h2>
+        <span className="text-cyber-accent font-tech tracking-widest text-xs uppercase mb-2 block">Relation Lab</span>
+        <h2 className="text-4xl md:text-5xl font-black text-white mb-4">💝 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 to-cyber-purple">관계 온도계</span></h2>
         <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">성별 갈등 통역부터 직장 내 성인지 사례까지.<br /><span className="text-white font-bold">AI가 관계의 온도를 재고, 따뜻하게 만들어드려요.</span></p>
       </div>
       <div className="flex flex-wrap justify-center gap-3 mb-10">
         {tabs.map(tab => (
           <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all ${activeTab === tab.key ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/30' : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700 hover:border-pink-500/50'}`}>
+            className={`px-5 py-2.5 rounded-full font-bold text-sm transition-all ${activeTab === tab.key ? 'bg-gradient-to-r from-cyber-500 to-cyber-purple text-white shadow-lg shadow-cyber-500/30' : 'bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700 hover:border-cyber-accent/50'}`}>
             {tab.icon} {tab.label}
           </button>
         ))}
@@ -189,25 +189,25 @@ const RelationshipThermometer: React.FC = () => {
       <AnimatePresence mode="wait">
         {activeTab === 'gender' && (
           <motion.div key="gender" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-pink-900/30 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-pink-900/30">
-              <div className="flex gap-1"><Mars className="w-6 h-6 text-blue-400" /><Venus className="w-6 h-6 text-pink-400" /></div>
-              <div><h3 className="text-2xl font-black text-white">성별 갈등 통역기</h3><p className="text-pink-200/60 text-sm">그 말이 왜 불편했는지 AI가 설명해드려요</p></div>
+            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
+              <div className="flex gap-1"><Mars className="w-6 h-6 text-blue-400" /><Venus className="w-6 h-6 text-cyber-accent" /></div>
+              <div><h3 className="text-2xl font-black text-white">성별 갈등 통역기</h3><p className="text-cyber-accent/60 text-sm">그 말이 왜 불편했는지 AI가 설명해드려요</p></div>
             </div>
             <div className="space-y-5">
-              <textarea value={genderInput} onChange={e => setGenderInput(e.target.value)} placeholder="예) 팀장이 '여자가 왜 이렇게 예민해?' 라고 했어요." className="w-full h-28 bg-slate-900/60 border border-pink-900/40 rounded-2xl p-4 text-white text-base focus:border-pink-500 focus:outline-none resize-none placeholder:text-slate-500" />
-              <button onClick={handleGenderTranslate} disabled={genderLoading || !genderInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white disabled:opacity-50 transition-all">
+              <textarea value={genderInput} onChange={e => setGenderInput(e.target.value)} placeholder="예) 팀장이 '여자가 왜 이렇게 예민해?' 라고 했어요." className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500" />
+              <button onClick={handleGenderTranslate} disabled={genderLoading || !genderInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all">
                 {genderLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...</> : <><Sparkles className="w-5 h-5" /> 공감 번역하기</>}
               </button>
               {genderResult && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                  <div className="bg-gradient-to-br from-slate-900/80 to-pink-950/30 border border-pink-500/20 rounded-2xl p-6">
-                    <p className="text-pink-100 text-base leading-relaxed text-center whitespace-pre-wrap">{genderResult}</p>
+                  <div className="bg-gradient-to-br from-slate-900/80 to-cyber-900/30 border border-cyber-500/30 rounded-2xl p-6">
+                    <p className="text-slate-100 text-base leading-relaxed text-center whitespace-pre-wrap">{genderResult}</p>
                     {genderFallback && <p className="text-center text-xs text-slate-500 mt-2 flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> OFFLINE</p>}
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30"><strong className="text-blue-400 text-sm block mb-1">남성/선배 처방전</strong><p className="text-slate-300 text-sm">{genderPlan.male}</p></div>
-                    <div className="bg-slate-800/60 p-4 rounded-xl border border-pink-500/30"><strong className="text-pink-400 text-sm block mb-1">여성/후배 처방전</strong><p className="text-slate-300 text-sm">{genderPlan.female}</p></div>
+                    <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-500/30"><strong className="text-cyber-accent text-sm block mb-1">여성/후배 처방전</strong><p className="text-slate-300 text-sm">{genderPlan.female}</p></div>
                   </div>
                 </motion.div>
               )}
@@ -217,34 +217,34 @@ const RelationshipThermometer: React.FC = () => {
 
         {activeTab === 'cases' && (
           <motion.div key="cases" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="max-w-3xl mx-auto space-y-4">
-            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-purple-900/30 rounded-3xl p-8 shadow-2xl">
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-purple-900/30">
-                <BookOpen className="w-7 h-7 text-purple-400" />
-                <div><h3 className="text-2xl font-black text-white">성인지 감수성 사례 Q&A</h3><p className="text-purple-200/60 text-sm">직장 내 성차별·성희롱 실제 사례와 법적 대응법</p></div>
+            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-purple/20 rounded-3xl p-8 shadow-2xl">
+              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-cyber-purple/20">
+                <BookOpen className="w-7 h-7 text-cyber-purple" />
+                <div><h3 className="text-2xl font-black text-white">성인지 감수성 사례 Q&A</h3><p className="text-cyber-purple/60 text-sm">직장 내 성차별·성희롱 실제 사례와 법적 대응법</p></div>
               </div>
               <div className="relative mb-5">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="키워드 검색 (예: 육아휴직, 회식, 채용, 2차 피해)" className="w-full pl-10 pr-4 py-3 bg-slate-900/60 border border-purple-900/40 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none placeholder:text-slate-500" />
+                <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="키워드 검색 (예: 육아휴직, 회식, 채용, 2차 피해)" className="w-full pl-10 pr-4 py-3 bg-slate-900/60 border border-cyber-purple/20 rounded-xl text-white text-sm focus:border-cyber-purple focus:outline-none placeholder:text-slate-500" />
               </div>
               <div className="space-y-2">
                 {filteredCases.map((c, i) => (
                   <div key={c.id} className="border border-slate-700 rounded-xl overflow-hidden">
                     <button onClick={() => setOpenCase(openCase === c.id ? null : c.id)} className="w-full p-4 flex items-start justify-between gap-3 text-left hover:bg-slate-800/60 transition-colors">
                       <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <span className="text-purple-400 font-black text-sm shrink-0 mt-0.5">Q{i + 1}</span>
+                        <span className="text-cyber-purple font-black text-sm shrink-0 mt-0.5">Q{i + 1}</span>
                         <div>
                           <p className="text-slate-200 text-sm font-medium leading-snug">{c.q}</p>
-                          <span className="inline-block mt-1.5 px-2 py-0.5 bg-purple-900/40 border border-purple-700/40 rounded-full text-xs text-purple-300">{c.tag}</span>
+                          <span className="inline-block mt-1.5 px-2 py-0.5 bg-cyber-purple/10 border border-cyber-purple/30 rounded-full text-xs text-cyber-purple/80">{c.tag}</span>
                         </div>
                       </div>
-                      {openCase === c.id ? <ChevronUp className="w-4 h-4 text-purple-400 shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 mt-1" />}
+                      {openCase === c.id ? <ChevronUp className="w-4 h-4 text-cyber-purple shrink-0 mt-1" /> : <ChevronDown className="w-4 h-4 text-slate-500 shrink-0 mt-1" />}
                     </button>
                     <AnimatePresence>
                       {openCase === c.id && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                           <div className="px-4 pb-4 pt-2 bg-slate-900/40 border-t border-slate-700">
                             <p className="text-slate-300 text-sm leading-relaxed mb-3">{c.a}</p>
-                            <div className="text-xs text-slate-500 bg-slate-800/60 px-3 py-2 rounded-lg"><span className="text-purple-400 font-bold">📋 관련 법령: </span>{c.law}</div>
+                            <div className="text-xs text-slate-500 bg-slate-800/60 px-3 py-2 rounded-lg"><span className="text-cyber-purple font-bold">📋 관련 법령: </span>{c.law}</div>
                           </div>
                         </motion.div>
                       )}
@@ -254,15 +254,15 @@ const RelationshipThermometer: React.FC = () => {
                 {filteredCases.length === 0 && <div className="text-center py-8 text-slate-500 text-sm">검색 결과가 없어요.</div>}
               </div>
             </div>
-            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-purple-900/30 rounded-3xl p-6 shadow-2xl">
-              <h4 className="text-white font-black text-lg mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5 text-purple-400" /> 내 상황 직접 물어보기</h4>
+            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-purple/20 rounded-3xl p-6 shadow-2xl">
+              <h4 className="text-white font-black text-lg mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5 text-cyber-purple" /> 내 상황 직접 물어보기</h4>
               <p className="text-slate-400 text-sm mb-4">위 사례에 없는 상황이라면 AI에게 직접 물어보세요. 관련 법령·판례·대응 방법을 알려드려요.</p>
-              <textarea value={caseQuestion} onChange={e => setCaseQuestion(e.target.value)} placeholder="예) 팀장이 제 외모를 자꾸 평가해요. 이게 성희롱인가요?" className="w-full h-24 bg-slate-900/60 border border-purple-900/40 rounded-xl p-4 text-white text-sm focus:border-purple-500 focus:outline-none resize-none placeholder:text-slate-500 mb-3" />
-              <button onClick={handleCaseQuestion} disabled={caseLoading || !caseQuestion.trim()} className="w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white disabled:opacity-50 transition-all">
+              <textarea value={caseQuestion} onChange={e => setCaseQuestion(e.target.value)} placeholder="예) 팀장이 제 외모를 자꾸 평가해요. 이게 성희롱인가요?" className="w-full h-24 bg-slate-900/60 border border-cyber-purple/20 rounded-xl p-4 text-white text-sm focus:border-cyber-purple focus:outline-none resize-none placeholder:text-slate-500 mb-3" />
+              <button onClick={handleCaseQuestion} disabled={caseLoading || !caseQuestion.trim()} className="w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all">
                 {caseLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> AI가 분석 중...</> : <><Send className="w-4 h-4" /> AI 상담 받기</>}
               </button>
               {caseAnswer && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-slate-900/60 border border-purple-500/20 rounded-xl p-5">
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-4 bg-slate-900/60 border border-cyber-purple/30 rounded-xl p-5">
                   <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{caseAnswer}</p>
                   <div className="mt-4 pt-3 border-t border-slate-700 flex flex-wrap gap-3 text-xs text-slate-500">
                     <span>📞 국가인권위원회: 1331</span><span>📞 고용노동부: 1350</span><span>📞 여성긴급전화: 1366</span>
@@ -275,23 +275,23 @@ const RelationshipThermometer: React.FC = () => {
 
         {activeTab === 'lang' && (
           <motion.div key="lang" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-teal-900/30 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-teal-900/30">
-              <MessageCircle className="w-7 h-7 text-teal-400" />
-              <div><h3 className="text-2xl font-black text-white">관계 언어 번역기</h3><p className="text-teal-200/60 text-sm">같은 말, 다르게 들리는 이유를 AI가 분석해드려요</p></div>
+            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
+              <MessageCircle className="w-7 h-7 text-cyber-accent" />
+              <div><h3 className="text-2xl font-black text-white">관계 언어 번역기</h3><p className="text-cyber-accent/60 text-sm">같은 말, 다르게 들리는 이유를 AI가 분석해드려요</p></div>
             </div>
             <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-2">
               {LANG_EXAMPLES.map((ex, i) => (
-                <button key={i} onClick={() => setLangInput(ex.text)} className="p-3 bg-slate-800/60 border border-teal-900/30 rounded-xl text-left hover:border-teal-500/50 transition-colors group">
-                  <p className="text-teal-400 text-xs font-bold mb-1">{ex.situation}</p>
+                <button key={i} onClick={() => setLangInput(ex.text)} className="p-3 bg-slate-800/60 border border-cyber-500/20 rounded-xl text-left hover:border-cyber-accent/50 transition-colors group">
+                  <p className="text-cyber-accent text-xs font-bold mb-1">{ex.situation}</p>
                   <p className="text-slate-300 text-xs">{ex.text}</p>
-                  <p className="text-slate-600 text-xs mt-1 group-hover:text-teal-400 transition-colors">→ 클릭해서 분석</p>
+                  <p className="text-slate-600 text-xs mt-1 group-hover:text-cyber-accent transition-colors">→ 클릭해서 분석</p>
                 </button>
               ))}
             </div>
             <div className="space-y-4">
-              <textarea value={langInput} onChange={e => setLangInput(e.target.value)} placeholder="예) '그냥 알아서 해요'라는 말이 뭘 어떻게 하라는 건지 모르겠어요." className="w-full h-28 bg-slate-900/60 border border-teal-900/40 rounded-2xl p-4 text-white text-base focus:border-teal-500 focus:outline-none resize-none placeholder:text-slate-500" />
-              <button onClick={handleLangTranslate} disabled={langLoading || !langInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 text-white disabled:opacity-50 transition-all">
+              <textarea value={langInput} onChange={e => setLangInput(e.target.value)} placeholder="예) '그냥 알아서 해요'라는 말이 뭘 어떻게 하라는 건지 모르겠어요." className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500" />
+              <button onClick={handleLangTranslate} disabled={langLoading || !langInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all">
                 {langLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...</> : <><Sparkles className="w-5 h-5" /> 뉘앙스 번역하기</>}
               </button>
               {langResult && (() => {
@@ -301,9 +301,9 @@ const RelationshipThermometer: React.FC = () => {
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30"><strong className="text-blue-400 text-xs block mb-2 uppercase tracking-wider">💬 말한 사람의 의도</strong><p className="text-slate-300 text-sm">{json.senderMeaning}</p></div>
-                      <div className="bg-slate-800/60 p-4 rounded-xl border border-rose-500/30"><strong className="text-rose-400 text-xs block mb-2 uppercase tracking-wider">😟 듣는 사람의 감정</strong><p className="text-slate-300 text-sm">{json.receiverFeeling}</p></div>
+                      <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-accent/30"><strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">😟 듣는 사람의 감정</strong><p className="text-slate-300 text-sm">{json.receiverFeeling}</p></div>
                     </div>
-                    <div className="bg-teal-950/40 border border-teal-500/30 rounded-xl p-4"><strong className="text-teal-400 text-xs block mb-2 uppercase tracking-wider">✨ 더 나은 표현 방법</strong><p className="text-slate-200 text-sm leading-relaxed">{json.betterExpression}</p></div>
+                    <div className="bg-slate-900/60 border border-cyber-accent/30 rounded-xl p-4"><strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">✨ 더 나은 표현 방법</strong><p className="text-slate-200 text-sm leading-relaxed">{json.betterExpression}</p></div>
                     <div className="bg-slate-800/60 border border-slate-600 rounded-xl p-3 flex items-start gap-2"><span className="text-yellow-400">💡</span><p className="text-slate-300 text-sm">{json.tip}</p></div>
                     {langFallback && <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> OFFLINE</p>}
                     <button onClick={() => { setLangInput(''); setLangResult(''); }} className="w-full py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4" /> 새로운 상황 분석하기</button>
@@ -316,23 +316,23 @@ const RelationshipThermometer: React.FC = () => {
 
         {activeTab === 'temp' && (
           <motion.div key="temp" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-orange-900/30 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-orange-900/30">
-              <Thermometer className="w-8 h-8 text-orange-400" />
-              <div><h3 className="text-2xl font-black text-white">관계 온도 진단</h3><p className="text-orange-200/60 text-sm">지금 이 관계, 온도가 몇 도인가요?</p></div>
+            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-accent/20 rounded-3xl p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-accent/20">
+              <Thermometer className="w-8 h-8 text-cyber-accent" />
+              <div><h3 className="text-2xl font-black text-white">관계 온도 진단</h3><p className="text-cyber-accent/60 text-sm">지금 이 관계, 온도가 몇 도인가요?</p></div>
             </div>
             {!tempDone ? (
               <div>
                 <div className="flex gap-1.5 mb-6 justify-center">
-                  {TEMP_QUESTIONS.map((_, i) => <div key={i} className={`h-2 flex-1 rounded-full transition-colors ${i < tempStep ? 'bg-orange-500' : i === tempStep ? 'bg-orange-400 animate-pulse' : 'bg-slate-800'}`} />)}
+                  {TEMP_QUESTIONS.map((_, i) => <div key={i} className={`h-2 flex-1 rounded-full transition-colors ${i < tempStep ? 'bg-cyber-accent' : i === tempStep ? 'bg-cyber-accent animate-pulse' : 'bg-slate-800'}`} />)}
                 </div>
-                <p className="text-center text-orange-400 text-xs font-bold mb-3 uppercase tracking-widest">STEP {tempStep + 1} / {TEMP_QUESTIONS.length}</p>
+                <p className="text-center text-cyber-accent text-xs font-bold mb-3 uppercase tracking-widest">STEP {tempStep + 1} / {TEMP_QUESTIONS.length}</p>
                 <h4 className="text-xl font-bold text-white text-center mb-6">{TEMP_QUESTIONS[tempStep].question}</h4>
                 <div className="space-y-3">
                   {TEMP_QUESTIONS[tempStep].options.map((opt, idx) => (
                     <button key={idx} onClick={() => handleTempSelect(opt.value)} className="w-full p-4 rounded-xl bg-slate-900/60 border border-slate-700 hover:border-orange-500 hover:bg-slate-800/80 transition-all text-left group flex items-center justify-between">
                       <span className="text-slate-200 text-base group-hover:text-white">{opt.label}</span>
-                      <ArrowRight className="w-4 h-4 text-orange-400 opacity-0 group-hover:opacity-100 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-cyber-accent opacity-0 group-hover:opacity-100 transition-all" />
                     </button>
                   ))}
                 </div>
