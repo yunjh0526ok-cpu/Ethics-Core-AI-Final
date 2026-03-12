@@ -120,7 +120,7 @@ const Hero: React.FC = () => {
     { label: "ECA 부패 상담관", action: "corruption_direct", desc: "청탁금지/이해충돌 법령 (AI Studio)" },
     { label: "공공재정 환수법 상담소", action: "recovery_intro", desc: "부정이익 환수 AI 자문 (Gemini)" },
     { label: "적극행정 및 면책 상담", action: "admin", desc: "사전컨설팅 및 면책 제도" },
-    { label: "Relation Lab", action: "relationship", desc: "성별 갈등·관계언어·온도 진단" },
+    { label: "관계 온도계", action: "relationship", desc: "성별 갈등·관계언어·온도 진단" },
   ];
 
   // ✅ 강의의뢰와 사업협업 분리
