@@ -407,7 +407,7 @@ const MBTI_Latte: React.FC = () => {
                 )}
                 {translatedText ? (
                   <div className="w-full h-full overflow-y-auto custom-scrollbar flex flex-col justify-center animate-in fade-in zoom-in duration-300">
-                    <p className="text-amber-100 font-warm text-2xl md:text-3xl leading-relaxed break-keep whitespace-pre-wrap text-center drop-shadow-lg">
+                    <p className="text-amber-100 font-sans text-base md:text-lg leading-relaxed break-keep whitespace-pre-wrap text-center">
                       <Quote className="w-6 h-6 inline-block mb-4 mr-2 rotate-180 text-amber-500/50 align-top" />
                       {translatedText}
                       <Quote className="w-6 h-6 inline-block mt-4 ml-2 text-amber-500/50 align-bottom" />
