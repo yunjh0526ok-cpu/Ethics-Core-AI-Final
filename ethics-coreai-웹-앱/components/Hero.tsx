@@ -117,7 +117,7 @@ const Hero: React.FC = () => {
   const menuItems = [
     { label: "갑질 및 직장 내 괴롭힘 상담", action: "diagnostics", desc: "비가시적 괴롭힘 진단" },
     { label: "청렴 DNA 진단", action: "integrity", desc: "나의 청렴 MBTI 확인 및 마법의 소통 번역기" },
-    { label: "관계 온도계", action: "relationship", desc: "성별 갈등·관계언어·온도 진단" },
+    { label: "관계 온도계", action: "relationship", desc: "성별 갈등·성인지사례·관계언어·온도 진단" },
     { label: "ECA 부패 상담관", action: "corruption_direct", desc: "청탁금지/이해충돌 법령 (AI Studio)" },
     { label: "공공재정 환수법 상담소", action: "recovery_intro", desc: "부정이익 환수 AI 자문 (Gemini)" },
     { label: "적극행정 및 면책 상담", action: "admin", desc: "사전컨설팅 및 면책 제도" },
