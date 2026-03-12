@@ -80,7 +80,7 @@ const ApplyModal: React.FC<ApplyModalProps> = ({ isOpen, onClose }) => {
 
                 {/* 2. 사업협업 신청 ← 소프틀 폼으로 연결 */}
                 <button 
-                  onClick={() => window.open('https://sophie31819.softr.app/business-apply', '_blank')}
+                  onClick={() => window.open('https://sophie31819.softr.app/', '_blank')}
                   className="group flex flex-col items-center p-4 md:p-8 rounded-2xl bg-slate-900/60 border border-slate-700 hover:bg-slate-800 hover:border-purple-500 hover:scale-[1.02] transition-all duration-300 text-center h-full min-h-[160px] md:min-h-[220px] justify-between shadow-lg"
                 >
                   <div className="flex flex-col items-center">
