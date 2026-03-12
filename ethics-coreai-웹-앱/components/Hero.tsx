@@ -3,10 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, ChevronRight, ShieldCheck, ArrowRight, MessageCircle, Box, Home, Sparkles, ArrowLeft, Handshake, UserCheck, GraduationCap, HelpCircle, ExternalLink, X, CheckCircle2, Phone, Mail, Calendar, Briefcase } from 'lucide-react';
 import ApplyModal from './ApplyModal';
 
-const PARTNER_LINKS: Record<string, string> = {
-  lecture: "https://genuineform-romelia88280.softr.app/",
-  business: "https://sophie31819.softr.app/"
-};
+const PARTNER_DETAILS: Record<string, {
   title: string;
   subtitle: string;
   description: string;
@@ -15,8 +12,6 @@ const PARTNER_LINKS: Record<string, string> = {
 }> = {
   lecture: {
     title: "강의 의뢰",
-    link: "https://genuineform-romelia88280.softr.app/",
-  }
     subtitle: "단순 강의를 넘어, 조직 변화를 설계합니다",
     description: "주양순 대표는 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관에서 활발히 활동 중인 AI 기반 청렴·적극행정 전문 강사입니다. 귀 기관의 특성에 맞는 맞춤형 강의를 제안드립니다.",
     points: [
@@ -30,9 +25,7 @@ const PARTNER_LINKS: Record<string, string> = {
     cta: "강의 의뢰 문의하기"
   },
   business: {
-    title: "에코AI 사업 협업",
-     link: "https://sophie31819.softr.app/",
-}  
+    title: "사업 협업",
     subtitle: "함께 만드는 청렴한 미래",
     description: "Ethics-Core AI 플랫폼을 기반으로 공공기관·민간기업과의 사업 협업을 진행합니다. AI 기술과 청렴 전문성을 결합하여 조직의 윤리경영 수준을 한 단계 높여드립니다.",
     points: [
@@ -428,15 +421,16 @@ const Hero: React.FC = () => {
 
                   <button
                     onClick={() => {
-                      const link = PARTNER_LINKS[selectedPartner as string];
-                  
-                      if (link) {
-                        window.open(link, "_blank");
+                      const urls: Record<string, string> = {
+                        lecture: 'https://genuineform-romelia88280.softr.app/',
+                        business: 'https://sophie31819.softr.app/',
+                      };
+                      if (urls[selectedPartner]) {
+                        window.open(urls[selectedPartner], '_blank');
                       } else {
+                        setSelectedPartner(null);
                         handleMenuClick('contact');
                       }
-                  
-                      setSelectedPartner(null);
                     }}
                     className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white rounded-xl font-black text-base transition-all shadow-lg flex items-center justify-center gap-2"
                   >
