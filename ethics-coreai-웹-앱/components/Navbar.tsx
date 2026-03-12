@@ -57,9 +57,8 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
           <button onClick={() => onNavigate('diagnostics')} className={getLinkClass('diagnostics')}>Culture Scan</button>
           <button onClick={() => onNavigate('admin')} className={getLinkClass('admin')}>Admin Partner</button>
           <button onClick={() => onNavigate('integrity')} className={getLinkClass('integrity')}>Integrity Zone</button>
-          {/* ✅ 관계 온도계 추가 */}
           <button onClick={() => onNavigate('relationship')} className={getLinkClass('relationship')}>
-            💝 관계온도계
+            Relation Lab
           </button>
           <button 
             onClick={() => onNavigate('contact')}
@@ -94,8 +93,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
               <MobileMenuItem label="Culture Scan" sub="조직문화 진단" onClick={() => handleMobileNav('diagnostics')} active={currentView === 'diagnostics'} />
               <MobileMenuItem label="Admin Partner" sub="적극행정 파트너" onClick={() => handleMobileNav('admin')} active={currentView === 'admin'} />
               <MobileMenuItem label="Integrity Zone" sub="청렴 DNA & 번역기" onClick={() => handleMobileNav('integrity')} active={currentView === 'integrity'} />
-              {/* ✅ 관계 온도계 모바일 메뉴 추가 */}
-              <MobileMenuItem label="💝 관계 온도계" sub="남녀갈등 통역 · 연애상담 · 감수성 체크" onClick={() => handleMobileNav('relationship')} active={currentView === 'relationship'} />
+              <MobileMenuItem label="Relation Lab" sub="Gender Gap · Love Counsel · Sensitivity" onClick={() => handleMobileNav('relationship')} active={currentView === 'relationship'} />
               <MobileMenuItem label="Contact Us" sub="문의하기" onClick={() => handleMobileNav('contact')} active={currentView === 'contact'} highlight />
             </div>
 
