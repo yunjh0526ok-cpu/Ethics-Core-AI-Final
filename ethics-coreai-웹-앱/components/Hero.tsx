@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bot, ChevronRight, ShieldCheck, ArrowRight, MessageCircle, Box, Home, Sparkles, ArrowLeft, Handshake, UserCheck, GraduationCap, HelpCircle, ExternalLink, X, CheckCircle2, Phone, Mail, Calendar } from 'lucide-react';
+import { Bot, ChevronRight, ShieldCheck, ArrowRight, MessageCircle, Box, Home, Sparkles, ArrowLeft, Handshake, UserCheck, GraduationCap, HelpCircle, ExternalLink, X, CheckCircle2, Phone, Mail, Calendar, Briefcase } from 'lucide-react';
 import ApplyModal from './ApplyModal';
 
 const PARTNER_DETAILS: Record<string, {
@@ -11,18 +11,32 @@ const PARTNER_DETAILS: Record<string, {
   cta: string;
 }> = {
   lecture: {
-    title: "강의 의뢰 및 사업 협업",
+    title: "강의 의뢰",
     subtitle: "단순 강의를 넘어, 조직 변화를 설계합니다",
-    description: "주양순 대표는 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관에서 활발히 활동 중인 AI 기반 청렴·적극행정 전문 강사입니다. 귀 기관의 특성에 맞는 맞춤형 솔루션을 제안드립니다.",
+    description: "주양순 대표는 인사혁신처 적극행정 강사단, 국가청렴권익교육원 등 전국 공공기관에서 활발히 활동 중인 AI 기반 청렴·적극행정 전문 강사입니다. 귀 기관의 특성에 맞는 맞춤형 강의를 제안드립니다.",
     points: [
       "AI 참여형 청렴·적극행정 강의 (전국 출강 가능)",
       "Gemini·ChatGPT 기반 실시간 AI 실습 강의",
       "Mentimeter 활용 인터랙티브 참여형 교육",
-      "조직문화 정밀 진단 및 컨설팅",
       "청렴·갑질·이해충돌 예방 워크숍 설계",
-      "기관 맞춤형 AI 교육 플랫폼 구축 협업"
+      "기관 맞춤형 AI 교육 콘텐츠 개발",
+      "연간 청렴 교육 프로그램 설계 및 운영"
     ],
     cta: "강의 의뢰 문의하기"
+  },
+  business: {
+    title: "사업 협업",
+    subtitle: "함께 만드는 청렴한 미래",
+    description: "Ethics-Core AI 플랫폼을 기반으로 공공기관·민간기업과의 사업 협업을 진행합니다. AI 기술과 청렴 전문성을 결합하여 조직의 윤리경영 수준을 한 단계 높여드립니다.",
+    points: [
+      "Ethics-Core AI SaaS 플랫폼 도입 협업",
+      "조직문화 정밀 진단 및 컨설팅",
+      "AI 기반 부패 위험도 사전 탐지 시스템 구축",
+      "기관 맞춤형 AI 교육 플랫폼 구축 협업",
+      "공공기관·민간기업 청렴 솔루션 파트너십",
+      "윤리경영 인증 및 컨설팅 지원"
+    ],
+    cta: "사업 협업 문의하기"
   },
   citizen: {
     title: "청렴 시민 감사관/정책 자문",
@@ -67,7 +81,6 @@ const Hero: React.FC = () => {
     }
   }, []);
 
-  // consulting 모드 진입 시 페이지 맨 위로 스크롤
   useEffect(() => {
     if (viewMode === 'consulting') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -109,12 +122,14 @@ const Hero: React.FC = () => {
     { label: "적극행정 및 면책 상담", action: "admin", desc: "사전컨설팅 및 면책 제도" }
   ];
 
+  // ✅ 강의의뢰와 사업협업 분리
   const partnerItems = [
-    { label: "강의 의뢰 및 사업 협업", icon: Handshake, action: 'contact', detailKey: 'lecture', desc: "전문가 매칭 및 협업 제안" },
+    { label: "강의 의뢰", icon: GraduationCap, action: 'contact', detailKey: 'lecture', desc: "AI 참여형 청렴·적극행정 강의" },
+    { label: "사업 협업", icon: Briefcase, action: 'contact', detailKey: 'business', desc: "플랫폼 도입 및 파트너십" },
     { label: "청렴 시민 감사관/정책 자문", icon: UserCheck, action: 'contact', detailKey: 'citizen', desc: "청렴도 향상 정책 자문" },
     {
       label: "AI 기반 청렴·인권 미래대학",
-      icon: GraduationCap,
+      icon: Handshake,
       action: 'https://blog.naver.com/yszoo1467/224180090553',
       isExternal: true,
       desc: "차세대 윤리 교육 프로그램"
@@ -124,10 +139,6 @@ const Hero: React.FC = () => {
 
   return (
     <>
-      {/* 
-        [수정 1] section에서 overflow-hidden 제거 → 모바일 스크롤 가능하게
-        [수정 3] consulting 모드에서 pt-20으로 상단 여백 확보
-      */}
       <section
         className={`relative w-full min-h-screen flex flex-col z-10 px-4 transition-all duration-700 ease-in-out ${
           viewMode === 'intro'
@@ -210,11 +221,6 @@ const Hero: React.FC = () => {
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="w-full flex flex-col items-center relative z-20 pb-32 px-2"
             >
-              {/*
-                [수정 1] 모바일: flex-col (세로 쌓기), 데스크탑: flex-row
-                [수정 1] gap-8로 카드 사이 간격 확보 → 겹침 방지
-                gap-[450px]은 xl(1280px+)에서만 적용
-              */}
               <div className="flex flex-col xl:flex-row items-center justify-center gap-8 xl:gap-[450px] w-full max-w-[1600px] relative z-10 pt-4">
 
                 {/* LEFT: PARTNER CARD */}
@@ -224,7 +230,6 @@ const Hero: React.FC = () => {
                   transition={{ delay: 0.3 }}
                   className="w-full max-w-[440px] bg-slate-900/80 backdrop-blur-xl border border-cyber-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col hover:border-cyber-500 transition-colors duration-500"
                 >
-                  {/* 헤더 - 모바일 padding 줄임 */}
                   <div className="bg-gradient-to-r from-blue-600 to-cyber-purple p-5 md:p-8 flex items-center gap-4 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-12 -mt-12 blur-3xl"></div>
                     <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shadow-lg relative z-10 shrink-0">
@@ -236,7 +241,6 @@ const Hero: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 바디 */}
                   <div className="p-4 md:p-6 space-y-3 bg-slate-900/40">
                     <div className="mb-2 px-1">
                       <p className="text-slate-400 text-sm font-medium leading-relaxed">
@@ -256,7 +260,6 @@ const Hero: React.FC = () => {
                             <item.icon className="w-5 h-5" />
                           </div>
                           <div className="flex-grow min-w-0">
-                            {/* [수정 2] truncate 제거 → 텍스트 잘림 방지, text-sm으로 조정 */}
                             <div className="text-slate-200 font-bold text-sm md:text-base group-hover:text-white leading-tight">{item.label}</div>
                             <div className="text-slate-500 text-xs group-hover:text-blue-100 mt-0.5">{item.desc}</div>
                           </div>
@@ -284,7 +287,6 @@ const Hero: React.FC = () => {
                   transition={{ delay: 0.5 }}
                   className="w-full max-w-[440px] bg-slate-900/80 backdrop-blur-xl border border-cyber-500/30 rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col hover:border-cyber-500 transition-colors duration-500"
                 >
-                  {/* 헤더 */}
                   <div className="bg-gradient-to-r from-blue-600 to-cyber-purple p-5 md:p-8 flex items-center gap-4 relative overflow-hidden shrink-0">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-12 -mt-12 blur-3xl"></div>
                     <div className="w-11 h-11 md:w-14 md:h-14 rounded-2xl bg-white/20 border border-white/30 flex items-center justify-center shadow-lg relative z-10 shrink-0">
@@ -296,7 +298,6 @@ const Hero: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* 메뉴 리스트 */}
                   <div className="p-4 md:p-6 space-y-3 bg-slate-900/40">
                     {menuItems.map((item, idx) => (
                       <button
@@ -309,7 +310,6 @@ const Hero: React.FC = () => {
                             {idx + 1}
                           </div>
                           <div className="flex-grow min-w-0">
-                            {/* [수정 2] truncate 제거 → 텍스트 잘림 방지 */}
                             <div className="text-slate-200 font-bold text-sm md:text-base group-hover:text-white leading-tight">{item.label}</div>
                             <div className="text-slate-500 text-xs group-hover:text-blue-100 mt-0.5">{item.desc}</div>
                           </div>
@@ -332,7 +332,7 @@ const Hero: React.FC = () => {
 
         </AnimatePresence>
 
-        {/* BOTTOM BUTTON - 모바일 중앙 정렬 */}
+        {/* BOTTOM BUTTON */}
         <AnimatePresence>
           {viewMode === 'consulting' && (
             <motion.button
