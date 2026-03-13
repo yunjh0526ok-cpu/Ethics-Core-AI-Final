@@ -191,7 +191,7 @@ const FacilitatorDashboard: React.FC = () => {
                 <p className="text-slate-400 mt-2 text-base">카테고리별 세션을 만들고 실시간으로 진행하세요.</p>
               </div>
               <button
-                onClick={() => { setStep('create'); setSelectedCategory(null); setSessionTitle(''); }}
+                onClick={() => { setStep('create'); setSelectedCategories([]); setSessionTitle(''); }}
                 className="flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-base bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 self-start md:self-auto"
               >
                 <Plus className="w-5 h-5" /> 새 세션 만들기
@@ -418,7 +418,14 @@ const FacilitatorDashboard: React.FC = () => {
             </AnimatePresence>
 
             <button
-              onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'quiz' }))}
+              onClick={() => {
+                const cats = selectedCategories.length > 0
+                  ? selectedCategories
+                  : ['integrity', 'workshop', 'teambuilding', 'party'];
+                window.dispatchEvent(new CustomEvent('navigate', {
+                  detail: { view: 'quiz', categories: cats, code: newSession.code, title: newSession.title }
+                }));
+              }}
               className={`w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r ${CATEGORIES[newSession.category].gradient} text-white hover:scale-[1.01] shadow-lg transition-all`}>
               <Play className="w-5 h-5" /> 세션 시작하기
             </button>
