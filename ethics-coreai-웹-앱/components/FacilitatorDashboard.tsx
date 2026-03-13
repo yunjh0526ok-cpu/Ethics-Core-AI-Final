@@ -71,9 +71,9 @@ const CATEGORIES: Record<Category, {
 
 // ─── 더미 세션 데이터 ─────────────────────────────────────────
 const DUMMY_SESSIONS: Session[] = [
-  { id: '1', title: '2025 청렴도 향상 교육', category: 'integrity', code: 'ECO-4821', participants: 42, createdAt: '2026.03.10', status: 'ended' },
-  { id: '2', title: '상반기 HR 워크숍', category: 'workshop', code: 'ECO-7734', participants: 18, createdAt: '2026.03.12', status: 'active' },
-  { id: '3', title: '3월 팀빌딩 데이', category: 'teambuilding', code: 'ECO-2291', participants: 0, createdAt: '2026.03.13', status: 'draft' },
+  { id: '1', title: '2026 청렴도 향상 교육', category: 'integrity', code: 'ECO-4821', participants: 42, createdAt: '2026.03.10', status: 'ended' },
+  { id: '2', title: '상하반기 HR 워크숍', category: 'workshop', code: 'ECO-7734', participants: 18, createdAt: '2026.03.12', status: 'active' },
+  { id: '3', title: '월별 팀빌딩 데이', category: 'teambuilding', code: 'ECO-2291', participants: 0, createdAt: '2026.03.13', status: 'draft' },
 ];
 
 // ─── 세션 코드 생성 ───────────────────────────────────────────
