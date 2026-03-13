@@ -18,9 +18,11 @@ import EcaCorruptionCounselor from './components/EcaCorruptionCounselor';
 import RelationshipThermometer from './components/RelationshipThermometer';
 // ✅ 퍼실리테이터 대시보드 추가
 import FacilitatorDashboard from './components/FacilitatorDashboard';
+// ✅ 퀴즈 스테이지 추가
+import QuizStage from './components/QuizStage';
 
-// ✅ 'relationship' + 'facilitator' 뷰 추가
-type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator';
+// ✅ 'relationship' + 'facilitator' + 'quiz' 뷰 추가
+type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewName>('home');
@@ -142,6 +144,13 @@ const App: React.FC = () => {
         {currentView === 'facilitator' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <FacilitatorDashboard />
+          </div>
+        )}
+
+        {/* ✅ 퀴즈 스테이지 뷰 추가 */}
+        {currentView === 'quiz' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <QuizStage />
           </div>
         )}
 
