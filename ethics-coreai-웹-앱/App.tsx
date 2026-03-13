@@ -16,9 +16,11 @@ import ProactiveAdministration from './components/ProactiveAdministration';
 import EcaCorruptionCounselor from './components/EcaCorruptionCounselor';
 // ✅ 관계 온도계 추가
 import RelationshipThermometer from './components/RelationshipThermometer';
+// ✅ 퍼실리테이터 대시보드 추가
+import FacilitatorDashboard from './components/FacilitatorDashboard';
 
-// ✅ 'relationship' 뷰 추가
-type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship';
+// ✅ 'relationship' + 'facilitator' 뷰 추가
+type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewName>('home');
@@ -133,6 +135,13 @@ const App: React.FC = () => {
         {currentView === 'relationship' && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <RelationshipThermometer />
+          </div>
+        )}
+
+        {/* ✅ 퍼실리테이터 대시보드 뷰 추가 */}
+        {currentView === 'facilitator' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <FacilitatorDashboard />
           </div>
         )}
 
