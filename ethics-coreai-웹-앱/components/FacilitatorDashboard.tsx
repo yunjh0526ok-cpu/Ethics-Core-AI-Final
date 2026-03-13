@@ -272,7 +272,7 @@ const FacilitatorDashboard: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Lock className="w-5 h-5 text-amber-400 shrink-0" />
                 <div>
-                  <p className="text-white font-bold text-sm">AI 시나리오 자동생성 · 실시간 퀴즈 · 인사이트 리포트</p>
+                  <p className="text-white font-bold text-sm">AI 시나리오와 고퀄리티ppt 자동생성 · 실시간 퀴즈 · 인사이트 리포트</p>
                   <p className="text-slate-400 text-xs mt-0.5">Standard 플랜 이상에서 사용 가능합니다.</p>
                 </div>
               </div>
