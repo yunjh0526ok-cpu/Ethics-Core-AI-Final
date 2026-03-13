@@ -3,7 +3,7 @@ import { Hexagon, Box, Lock, Menu, X, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
-  onNavigate: (view: 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator') => void;
+  onNavigate: (view: 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz') => void;
   currentView: string;
 }
 
