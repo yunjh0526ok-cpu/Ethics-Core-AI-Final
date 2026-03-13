@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Plus, Play, Users, BarChart3, Settings,
@@ -89,6 +89,34 @@ const FacilitatorDashboard: React.FC = () => {
   const [newSession, setNewSession] = useState<Session | null>(null);
   const [copied, setCopied] = useState(false);
   const [filterCat, setFilterCat] = useState<Category | 'all'>('all');
+  const [showQR, setShowQR] = useState(false);
+  const qrRef = useRef<HTMLCanvasElement>(null);
+
+  // QR 코드 생성 (canvas 직접 그리기)
+  useEffect(() => {
+    if (!showQR || !newSession || !qrRef.current) return;
+    const canvas = qrRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const size = 200;
+    canvas.width = size;
+    canvas.height = size;
+    // 외부 QR 라이브러리 없이 Google Chart API 이미지 사용
+    const img = new Image();
+    const qrText = encodeURIComponent(`https://ethics-core-ai.vercel.app/?code=${newSession.code}`);
+    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${qrText}&bgcolor=0f172a&color=06b6d4&format=png`;
+    img.crossOrigin = 'anonymous';
+    img.onload = () => { ctx.drawImage(img, 0, 0, size, size); };
+    img.onerror = () => {
+      // 폴백: 텍스트 표시
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = '#06b6d4';
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(newSession.code, size / 2, size / 2);
+    };
+  }, [showQR, newSession]);
 
   const handleBack = () => {
     window.dispatchEvent(new CustomEvent('navigate', { detail: 'home' }));
@@ -353,10 +381,41 @@ const FacilitatorDashboard: React.FC = () => {
                 className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white transition-all">
                 {copied ? <><Check className="w-4 h-4 text-green-400" /> 복사됨!</> : <><Copy className="w-4 h-4" /> 코드 복사</>}
               </button>
-              <button className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-slate-800 border border-slate-700 hover:border-violet-500 text-white transition-all">
+              <button onClick={() => setShowQR(true)}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-slate-800 border border-slate-700 hover:border-violet-500 text-white transition-all">
                 <QrCode className="w-4 h-4" /> QR 코드
               </button>
             </div>
+
+            {/* QR 모달 */}
+            <AnimatePresence>
+              {showQR && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+                  onClick={() => setShowQR(false)}>
+                  <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                    onClick={e => e.stopPropagation()}
+                    className="bg-[#0f172a] border border-slate-700 rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
+                    <button onClick={() => setShowQR(false)} className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors">
+                      <X className="w-5 h-5" />
+                    </button>
+                    <h4 className="text-white font-black text-lg mb-1">QR 코드</h4>
+                    <p className="text-slate-400 text-xs mb-5">참가자가 스캔하면 바로 입장해요</p>
+                    <div className="bg-slate-900 rounded-2xl p-4 inline-block mb-4 border border-slate-700">
+                      <canvas ref={qrRef} className="rounded-xl" style={{ width: 200, height: 200 }} />
+                    </div>
+                    <p className={`font-mono font-black text-xl tracking-widest mb-1 ${newSession ? CATEGORIES[newSession.category].color : 'text-cyan-400'}`}>
+                      {newSession?.code}
+                    </p>
+                    <p className="text-slate-500 text-xs">ethics-core-ai.vercel.app</p>
+                    <button onClick={() => setShowQR(false)}
+                      className="mt-5 w-full py-3 rounded-xl font-bold text-sm bg-slate-800 border border-slate-700 hover:border-cyan-500 text-white transition-all">
+                      닫기
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('navigate', { detail: 'quiz' }))}
