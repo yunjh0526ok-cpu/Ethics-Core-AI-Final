@@ -83,7 +83,7 @@ const generateCode = () => `ECO-${Math.floor(1000 + Math.random() * 9000)}`;
 const FacilitatorDashboard: React.FC = () => {
   const [step, setStep] = useState<Step>('dashboard');
   const [sessions, setSessions] = useState<Session[]>(DUMMY_SESSIONS);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [sessionTitle, setSessionTitle] = useState('');
   const [creating, setCreating] = useState(false);
   const [newSession, setNewSession] = useState<Session | null>(null);
@@ -94,14 +94,23 @@ const FacilitatorDashboard: React.FC = () => {
     window.dispatchEvent(new CustomEvent('navigate', { detail: 'home' }));
   };
 
+  const toggleCategory = (cat: Category) => {
+    setSelectedCategories(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
   const handleCreate = async () => {
-    if (!selectedCategory || !sessionTitle.trim()) return;
+    if (!sessionTitle.trim()) return;
     setCreating(true);
     await new Promise(r => setTimeout(r, 1200));
+    // 카테고리 미선택 시 전체 포함
+    const cats = selectedCategories.length > 0 ? selectedCategories : ['integrity', 'workshop', 'teambuilding', 'party'] as Category[];
+    const primaryCat = cats[0];
     const session: Session = {
       id: Date.now().toString(),
       title: sessionTitle,
-      category: selectedCategory,
+      category: primaryCat,
       code: generateCode(),
       participants: 0,
       createdAt: new Date().toLocaleDateString('ko-KR').replace(/\. /g, '.').replace('.', ''),
@@ -256,28 +265,42 @@ const FacilitatorDashboard: React.FC = () => {
               <p className="text-slate-400 text-sm">카테고리를 선택하면 AI가 맞춤 콘텐츠를 준비해요.</p>
             </div>
 
-            {/* 카테고리 선택 */}
-            <div className="grid grid-cols-2 gap-3 mb-8">
-              {(Object.entries(CATEGORIES) as [Category, typeof CATEGORIES[Category]][]).map(([key, cat]) => (
-                <button key={key} onClick={() => setSelectedCategory(key)}
-                  className={`p-5 rounded-2xl border text-left transition-all group ${selectedCategory === key
-                    ? `${cat.bg} ${cat.border} scale-[1.02] shadow-lg`
-                    : 'bg-slate-900/60 border-slate-700 hover:border-slate-500'}`}>
-                  <div className={`mb-3 ${selectedCategory === key ? cat.color : 'text-slate-500 group-hover:text-slate-300'} transition-colors`}>
-                    {cat.icon}
-                  </div>
-                  <h4 className={`font-black text-sm mb-1 ${selectedCategory === key ? 'text-white' : 'text-slate-300'}`}>{cat.label}</h4>
-                  <p className="text-[11px] text-slate-500 leading-snug">{cat.desc}</p>
-                  <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold border ${selectedCategory === key ? `${cat.bg} ${cat.border} ${cat.color}` : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
-                    {cat.tag}
-                  </span>
-                  {selectedCategory === key && (
-                    <div className={`absolute top-3 right-3 w-5 h-5 rounded-full bg-gradient-to-br ${cat.gradient} flex items-center justify-center`}>
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                  )}
-                </button>
-              ))}
+            {/* 카테고리 선택 (다중 선택 가능) */}
+            <div className="mb-3">
+              <p className="text-slate-400 text-xs mb-3">퀴즈 카테고리 선택 <span className="text-slate-600">(미선택 시 전체 포함)</span></p>
+              <div className="grid grid-cols-2 gap-3 mb-2">
+                {(Object.entries(CATEGORIES) as [Category, typeof CATEGORIES[Category]][]).map(([key, cat]) => {
+                  const isSelected = selectedCategories.includes(key);
+                  return (
+                    <button key={key} onClick={() => toggleCategory(key)}
+                      className={`relative p-5 rounded-2xl border text-left transition-all group ${isSelected
+                        ? `${cat.bg} ${cat.border} scale-[1.02] shadow-lg`
+                        : 'bg-slate-900/60 border-slate-700 hover:border-slate-500'}`}>
+                      <div className={`mb-3 ${isSelected ? cat.color : 'text-slate-500 group-hover:text-slate-300'} transition-colors`}>
+                        {cat.icon}
+                      </div>
+                      <h4 className={`font-black text-sm mb-1 ${isSelected ? 'text-white' : 'text-slate-300'}`}>{cat.label}</h4>
+                      <p className="text-[11px] text-slate-500 leading-snug">{cat.desc}</p>
+                      <span className={`inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold border ${isSelected ? `${cat.bg} ${cat.border} ${cat.color}` : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                        {cat.tag}
+                      </span>
+                      {isSelected && (
+                        <div className={`absolute top-3 right-3 w-5 h-5 rounded-full bg-gradient-to-br ${cat.gradient} flex items-center justify-center`}>
+                          <Check className="w-3 h-3 text-white" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedCategories.length > 0 && (
+                <p className="text-xs text-cyan-400 font-bold text-center">
+                  ✅ {selectedCategories.map(c => CATEGORIES[c].label).join(' · ')} 선택됨
+                </p>
+              )}
+              {selectedCategories.length === 0 && (
+                <p className="text-xs text-slate-600 text-center">선택 없으면 4개 카테고리 전체 포함</p>
+              )}
             </div>
 
             {/* 세션 제목 */}
@@ -294,9 +317,9 @@ const FacilitatorDashboard: React.FC = () => {
             {/* 생성 버튼 */}
             <button
               onClick={handleCreate}
-              disabled={!selectedCategory || !sessionTitle.trim() || creating}
-              className={`w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all ${selectedCategory && sessionTitle.trim()
-                ? `bg-gradient-to-r ${CATEGORIES[selectedCategory!].gradient} text-white hover:scale-[1.01] shadow-lg`
+              disabled={!sessionTitle.trim() || creating}
+              className={`w-full py-4 rounded-2xl font-black text-base flex items-center justify-center gap-2 transition-all ${sessionTitle.trim()
+                ? 'bg-gradient-to-r from-cyan-600 to-violet-600 hover:from-cyan-500 hover:to-violet-500 text-white hover:scale-[1.01] shadow-lg'
                 : 'bg-slate-800 text-slate-600 cursor-not-allowed'}`}>
               {creating
                 ? <><Loader2 className="w-5 h-5 animate-spin" /> 세션 생성 중...</>
