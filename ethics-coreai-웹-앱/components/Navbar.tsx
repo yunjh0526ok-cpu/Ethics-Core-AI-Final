@@ -1,135 +1,160 @@
-import React, { useState } from 'react';
-import { Hexagon, Box, Lock, Menu, X, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { Suspense, useEffect, useState } from 'react';
+import Background3D from './components/Background3D';
+import Hero from './components/Hero';
+import Career from './components/Career';
+import Services from './components/Services';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
+import MouseTrail from './components/MouseTrail';
+import Vision from './components/Vision';
+import Gallery from './components/Gallery';
+import Diagnostics from './components/Diagnostics';
+import Contact from './components/Contact';
+import ProposalChatbot from './components/ProposalChatbot';
+import MBTI_Latte from './components/MBTI_Latte';
+import ProactiveAdministration from './components/ProactiveAdministration';
+import EcaCorruptionCounselor from './components/EcaCorruptionCounselor';
+// ✅ 관계 온도계 추가
+import RelationshipThermometer from './components/RelationshipThermometer';
+// ✅ 퍼실리테이터 대시보드 추가
+import FacilitatorDashboard from './components/FacilitatorDashboard';
 
-interface NavbarProps {
-  onNavigate: (view: 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship') => void;
-  currentView: string;
-}
+// ✅ 'relationship' + 'facilitator' 뷰 추가
+type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator';
 
-const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const getLinkClass = (viewName: string) => {
-    const isActive = currentView === viewName;
-    return `text-sm font-bold tracking-widest uppercase transition-all duration-300 cursor-pointer ${
-      isActive ? 'text-cyber-accent scale-105 shadow-[0_0_10px_rgba(6,182,212,0.5)]' : 'text-slate-300 hover:text-white hover:scale-105'
-    }`;
-  };
+const App: React.FC = () => {
+  const [currentView, setCurrentView] = useState<ViewName>('home');
 
-  const handleMobileNav = (view: any) => {
-    onNavigate(view);
-    setIsMobileMenuOpen(false);
-  };
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const page = params.get('page');
+    if (page === 'active-admin') {
+      setCurrentView('admin');
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleNavigation = (e: CustomEvent<ViewName>) => {
+      setCurrentView(e.detail);
+    };
+    window.addEventListener('navigate', handleNavigation as EventListener);
+    return () => window.removeEventListener('navigate', handleNavigation as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F12') { e.preventDefault(); return false; }
+      if (e.ctrlKey && e.shiftKey && ['I','i','J','j','C','c'].includes(e.key)) { e.preventDefault(); return false; }
+      if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) { e.preventDefault(); return false; }
+      if (e.ctrlKey && (e.key === 'S' || e.key === 's')) { e.preventDefault(); return false; }
+      if (e.ctrlKey && (e.key === 'P' || e.key === 'p')) { e.preventDefault(); return false; }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen') { navigator.clipboard.writeText(''); }
+    };
+    const handleDragStart = (e: DragEvent) => { e.preventDefault(); return false; };
+    const securityInterval = setInterval(() => {
+      console.clear();
+      (function() { try { (function a(){ debugger; })(); } catch(e){} })();
+    }, 1000);
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('dragstart', handleDragStart);
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('dragstart', handleDragStart);
+      clearInterval(securityInterval);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentView]);
 
   return (
-    <>
-      <nav className="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-4 md:py-6 md:px-12 bg-[#020205]/80 backdrop-blur-md border-b border-white/5 shadow-lg">
-        {/* Logo Section */}
-        <button onClick={() => onNavigate('home')} className="flex items-center gap-3 md:gap-4 cursor-pointer group bg-transparent border-none p-0 outline-none z-50 relative">
-          <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center">
-            <Hexagon className="w-full h-full text-cyber-accent stroke-[1.5] fill-cyber-accent/5 group-hover:fill-cyber-accent/20 transition-all duration-500 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Box className="w-5 h-5 md:w-6 md:h-6 text-white stroke-2" />
-            </div>
-            <div className="absolute -right-1 -bottom-1 w-2.5 h-2.5 bg-cyber-500 rounded-full animate-pulse"></div>
+    <div className="min-h-screen bg-[#020205] text-slate-200 font-sans transition-all duration-300 select-none">
+      <Navbar onNavigate={setCurrentView} currentView={currentView} />
+      <MouseTrail />
+      
+      <Suspense fallback={<div className="fixed inset-0 bg-black z-50 flex items-center justify-center text-white font-tech animate-pulse">Initializing Security Core...</div>}>
+        <Background3D view={currentView} />
+      </Suspense>
+      
+      <main className="relative w-full overflow-x-hidden pt-24 min-h-screen">
+        {currentView === 'home' && <Hero />}
+
+        {currentView === 'about' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Vision />
+            <Services />
+            <Career />
+            <Gallery />
           </div>
-          
-          <div className="flex flex-col justify-center text-left">
-            <span className="font-tech font-bold text-white text-lg md:text-2xl leading-none tracking-wide group-hover:text-cyber-accent transition-colors">
-              Ethics-Core AI
-            </span>
-            <span className="font-sans font-black text-slate-200 text-sm md:text-xl leading-none tracking-tight mt-1 group-hover:text-white transition-colors">
-              청렴공정AI센터
-            </span>
-          </div>
-        </button>
-
-        {/* DESKTOP Navigation */}
-        <div className="hidden xl:flex items-center gap-8">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/30 rounded-full mr-4">
-            <Lock className="w-3 h-3 text-red-500" />
-            <span className="text-[10px] font-bold text-red-400 tracking-wider uppercase">Security Active</span>
-          </div>
-
-          <button onClick={() => onNavigate('about')} className={getLinkClass('about')}>About</button>
-          <button onClick={() => onNavigate('proposal')} className={getLinkClass('proposal')}>Core Proposal</button>
-          <button onClick={() => onNavigate('diagnostics')} className={getLinkClass('diagnostics')}>Culture Scan</button>
-          <button onClick={() => onNavigate('admin')} className={getLinkClass('admin')}>Admin Partner</button>
-          <button onClick={() => onNavigate('integrity')} className={getLinkClass('integrity')}>Integrity Zone</button>
-          <button onClick={() => onNavigate('relationship')} className={getLinkClass('relationship')}>
-            Relation Lab
-          </button>
-          <button 
-            onClick={() => onNavigate('contact')}
-            className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-wider"
-          >
-            Contact
-          </button>
-        </div>
-
-        {/* MOBILE Hamburger */}
-        <button 
-          className="xl:hidden z-50 p-2 text-white relative hover:text-cyber-accent transition-colors"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
-        </button>
-      </nav>
-
-      {/* MOBILE Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-[#020205]/95 backdrop-blur-xl xl:hidden flex flex-col pt-28 px-6 pb-10 overflow-y-auto"
-          >
-            <div className="flex flex-col gap-2">
-              <MobileMenuItem label="About Company" sub="센터 소개 및 비전" onClick={() => handleMobileNav('about')} active={currentView === 'about'} />
-              <MobileMenuItem label="Core Proposal" sub="2026년형 제안서" onClick={() => handleMobileNav('proposal')} active={currentView === 'proposal'} />
-              <MobileMenuItem label="Culture Scan" sub="조직문화 진단" onClick={() => handleMobileNav('diagnostics')} active={currentView === 'diagnostics'} />
-              <MobileMenuItem label="Admin Partner" sub="적극행정 파트너" onClick={() => handleMobileNav('admin')} active={currentView === 'admin'} />
-              <MobileMenuItem label="Integrity Zone" sub="청렴 DNA & 번역기" onClick={() => handleMobileNav('integrity')} active={currentView === 'integrity'} />
-              <MobileMenuItem label="Relation Lab" sub="Gender Gap · Love Counsel · Sensitivity" onClick={() => handleMobileNav('relationship')} active={currentView === 'relationship'} />
-              <MobileMenuItem label="Contact Us" sub="문의하기" onClick={() => handleMobileNav('contact')} active={currentView === 'contact'} highlight />
-            </div>
-
-            <div className="mt-auto pt-8 border-t border-white/10 text-center">
-              <p className="text-slate-500 text-xs mb-2">Ethics-Core AI Digital Platform</p>
-              <div className="flex justify-center items-center gap-2 text-red-400 text-xs font-bold bg-red-500/10 py-2 px-4 rounded-full mx-auto w-fit">
-                <Lock className="w-3 h-3" /> Security Protocol Active
-              </div>
-            </div>
-          </motion.div>
         )}
-      </AnimatePresence>
-    </>
+
+        {currentView === 'proposal' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ProposalChatbot />
+          </div>
+        )}
+
+        {currentView === 'diagnostics' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Diagnostics />
+          </div>
+        )}
+
+        {currentView === 'admin' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ProactiveAdministration />
+          </div>
+        )}
+
+        {currentView === 'integrity' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <MBTI_Latte />
+          </div>
+        )}
+
+        {currentView === 'counseling_center' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <EcaCorruptionCounselor />
+          </div>
+        )}
+
+        {/* ✅ 관계 온도계 뷰 추가 */}
+        {currentView === 'relationship' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <RelationshipThermometer />
+          </div>
+        )}
+
+        {/* ✅ 퍼실리테이터 대시보드 뷰 추가 */}
+        {currentView === 'facilitator' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <FacilitatorDashboard />
+          </div>
+        )}
+
+        {currentView === 'contact' && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Contact />
+          </div>
+        )}
+      </main>
+      
+      <Footer />
+    </div>
   );
 };
 
-const MobileMenuItem = ({ label, sub, onClick, active, highlight }: { label: string, sub: string, onClick: () => void, active?: boolean, highlight?: boolean }) => (
-  <button 
-    onClick={onClick}
-    className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 flex items-center justify-between group
-      ${active 
-        ? 'bg-cyber-900 border-cyber-accent text-white shadow-[0_0_15px_rgba(6,182,212,0.2)]' 
-        : highlight 
-          ? 'bg-white text-black border-white' 
-          : 'bg-slate-900/50 border-slate-800 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
-      }
-    `}
-  >
-    <div>
-      <span className={`block text-lg font-bold font-tech uppercase tracking-wide ${highlight ? 'text-black' : active ? 'text-cyber-accent' : 'text-white'}`}>
-        {label}
-      </span>
-      <span className={`text-xs ${highlight ? 'text-slate-600' : 'text-slate-500'} font-medium`}>{sub}</span>
-    </div>
-    <ChevronRight className={`w-5 h-5 ${highlight ? 'text-black' : active ? 'text-cyber-accent' : 'text-slate-600 group-hover:text-white'}`} />
-  </button>
-);
-
-export default Navbar;
+export default App;
