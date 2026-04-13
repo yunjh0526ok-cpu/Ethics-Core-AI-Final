@@ -9,14 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.40.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "framer-motion": "^12.33.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.563.0",
+    "pptxgenjs": "^4.0.1",
+    "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "three": "^0.182.0",
-    "framer-motion": "^12.33.0",
-    "react": "^19.2.4",
-    "@google/genai": "^1.40.0",
-    "lucide-react": "^0.563.0",
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0"
+    "use-sound": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
