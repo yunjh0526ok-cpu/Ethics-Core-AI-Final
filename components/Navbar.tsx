@@ -61,7 +61,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
             Relation Lab
           </button>
           <button onClick={() => onNavigate('facilitator')} className={getLinkClass('facilitator')}>
-            EcoStage
+            ECOSTAGE
           </button>
           <button 
             onClick={() => onNavigate('contact')}
@@ -97,7 +97,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
               <MobileMenuItem label="Admin Partner" sub="적극행정 파트너" onClick={() => handleMobileNav('admin')} active={currentView === 'admin'} />
               <MobileMenuItem label="Integrity Zone" sub="청렴 DNA & 번역기" onClick={() => handleMobileNav('integrity')} active={currentView === 'integrity'} />
               <MobileMenuItem label="Relation Lab" sub="Gender Gap · Love Counsel · Sensitivity" onClick={() => handleMobileNav('relationship')} active={currentView === 'relationship'} />
-              <MobileMenuItem label="EcoStage" sub="퍼실리테이터 세션 대시보드" onClick={() => handleMobileNav('facilitator')} active={currentView === 'facilitator'} />
+              <MobileMenuItem label="ECOSTAGE" sub="퍼실리테이터 세션 대시보드" onClick={() => handleMobileNav('facilitator')} active={currentView === 'facilitator'} />
               <MobileMenuItem label="Contact Us" sub="문의하기" onClick={() => handleMobileNav('contact')} active={currentView === 'contact'} highlight />
             </div>
 
