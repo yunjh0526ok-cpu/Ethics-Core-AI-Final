@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Thermometer, MessageCircle, Sparkles, ArrowLeft, RefreshCw, Loader2, WifiOff, ArrowRight, Venus, Mars, BookOpen, ChevronDown, ChevronUp, Send, Search } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 type TabType = 'gender' | 'cases' | 'lang' | 'temp';
 
@@ -75,8 +72,7 @@ const RelationshipThermometer: React.FC = () => {
     if (!genderInput.trim()) return;
     setGenderLoading(true); setGenderResult(''); setGenderFallback(false);
     try {
-      if (!genAI) throw new Error('no key');
-      const res = await genAI.models.generateContent({
+      const res = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
         contents: `다음 말이나 상황을 분석해줘: "${genderInput}"`,
         config: {
@@ -86,10 +82,10 @@ const RelationshipThermometer: React.FC = () => {
 3. femaleTip: 여성/후배 대처법 1줄
 한국어로.`,
           responseMimeType: 'application/json',
-          responseSchema: { type: Type.OBJECT, properties: { translatedText: { type: Type.STRING }, maleTip: { type: Type.STRING }, femaleTip: { type: Type.STRING } }, required: ['translatedText', 'maleTip', 'femaleTip'] }
+          responseSchema: { type: 'OBJECT', properties: { translatedText: { type: 'STRING' }, maleTip: { type: 'STRING' }, femaleTip: { type: 'STRING' } }, required: ['translatedText', 'maleTip', 'femaleTip'] }
         }
       });
-      const raw = typeof res.text === 'function' ? res.text() : (res.text || '{}');
+      const raw = res.text || '{}';
       const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
       setGenderResult(cleanText(json.translatedText || ''));
       setGenderPlan({ male: cleanText(json.maleTip || ''), female: cleanText(json.femaleTip || '') });
@@ -104,8 +100,7 @@ const RelationshipThermometer: React.FC = () => {
     if (!langInput.trim()) return;
     setLangLoading(true); setLangResult(''); setLangFallback(false);
     try {
-      if (!genAI) throw new Error('no key');
-      const res = await genAI.models.generateContent({
+      const res = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
         contents: `직장에서 들은 말이나 상황: "${langInput}"`,
         config: {
@@ -117,10 +112,10 @@ const RelationshipThermometer: React.FC = () => {
 4. tip: 소통 팁 1줄
 한국어로.`,
           responseMimeType: 'application/json',
-          responseSchema: { type: Type.OBJECT, properties: { senderMeaning: { type: Type.STRING }, receiverFeeling: { type: Type.STRING }, betterExpression: { type: Type.STRING }, tip: { type: Type.STRING } }, required: ['senderMeaning', 'receiverFeeling', 'betterExpression', 'tip'] }
+          responseSchema: { type: 'OBJECT', properties: { senderMeaning: { type: 'STRING' }, receiverFeeling: { type: 'STRING' }, betterExpression: { type: 'STRING' }, tip: { type: 'STRING' } }, required: ['senderMeaning', 'receiverFeeling', 'betterExpression', 'tip'] }
         }
       });
-      const raw = typeof res.text === 'function' ? res.text() : (res.text || '{}');
+      const raw = res.text || '{}';
       const json = JSON.parse(raw.replace(/```json|```/g, '').trim());
       setLangResult(JSON.stringify(json));
     } catch {
@@ -133,13 +128,12 @@ const RelationshipThermometer: React.FC = () => {
     if (!caseQuestion.trim()) return;
     setCaseLoading(true); setCaseAnswer('');
     try {
-      if (!genAI) throw new Error('no key');
-      const res = await genAI.models.generateContent({
+      const res = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
         contents: `직장 내 성인지 감수성 질문: "${caseQuestion}"`,
         config: { systemInstruction: `당신은 직장 내 성인지 감수성, 성차별, 성희롱 전문 AI 상담관입니다. 관련 법령, 판례, 신고 절차를 포함해 답변하세요. 마크다운 기호 사용 금지. 한국어로. 구조: 1)상황 판단 2)관련 법령 3)대응 방법 4)신고 기관` }
       });
-      const raw = typeof res.text === 'function' ? res.text() : (res.text || '');
+      const raw = res.text || '';
       setCaseAnswer(cleanText(raw));
     } catch {
       setCaseAnswer('현재 AI 연결이 원활하지 않습니다. 국가인권위원회(1331) 또는 고용노동부(1350)으로 직접 문의하세요.');

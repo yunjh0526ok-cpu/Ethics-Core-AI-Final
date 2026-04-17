@@ -24,10 +24,7 @@ import {
   ArrowLeft,
   Copy
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 const KEYWORDS = [
   { text: "적극행정 면책", count: 85 },
@@ -113,16 +110,8 @@ const ProactiveAdministration: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    if (!genAI) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API KEY 확인 필요)" }]);
-        setIsTyping(false);
-      }, 1000);
-      return;
-    }
-
     try {
-      const response = await genAI.models.generateContent({
+      const { text: responseText } = await geminiGenerateContent({
         model: "gemini-2.5-flash",
         contents: text,
         config: {
@@ -261,7 +250,6 @@ const ProactiveAdministration: React.FC = () => {
                 `,
         }
       });
-      const responseText = response.text;
       setMessages(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
    } catch (error: any) {
       setMessages(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);

@@ -8,10 +8,7 @@ import {
   UserCheck, Brain, Search, FileText, Sparkles, Sun,
   ShieldAlert, BookOpen, Siren
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 interface ChatMessage {
     role: 'user' | 'ai';
@@ -276,14 +273,6 @@ const Diagnostics: React.FC = () => {
     setChatInput('');
     setIsTyping(true);
 
-    if (!genAI) {
-        setTimeout(() => {
-            setChatLog(prev => [...prev, { role: 'ai', text: "시스템 점검 중입니다. (API Key Error)" }]);
-            setIsTyping(false);
-        }, 1000);
-        return;
-    }
-
     let systemInstruction = "";
     if (activeTab === 'law') {
         systemInstruction = `
@@ -317,12 +306,11 @@ const Diagnostics: React.FC = () => {
     }
 
     try {
-        const response = await genAI.models.generateContent({
+        const { text: responseText } = await geminiGenerateContent({
             model: "gemini-2.5-flash",
             contents: msg,
             config: { systemInstruction }
         });
-        const responseText = response.text;
         setChatLog(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);
     } catch (error: any) {
         setChatLog(prev => [...prev, { role: 'ai', text: `에러: ${error?.message || JSON.stringify(error)}` }]);

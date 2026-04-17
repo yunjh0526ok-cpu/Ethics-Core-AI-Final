@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, RefreshCw, Zap, Quote, Coffee, ArrowRight, Heart, UserCog, Briefcase, Repeat, Stethoscope, CheckCircle2, Loader2, AlertTriangle, WifiOff, ArrowLeft } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 interface MBTIProfile {
   nickname: string;
@@ -148,8 +145,6 @@ const MBTI_Latte: React.FC = () => {
 
     // ===== 버그 수정: 로딩 중 상태를 별도로 표시, actionPlan은 건드리지 않음 =====
     try {
-      if (!genAI) throw new Error("API Key missing");
-
       const systemInstruction = `
         당신은 유머러스하고 통찰력 있는 '꼰대어 번역기'이자 '소통 코치'입니다.
         사용자가 입력한 말이나 상황을 분석하여 반드시 다음 JSON 형식으로만 출력하세요.
@@ -166,28 +161,27 @@ const MBTI_Latte: React.FC = () => {
         setTimeout(() => reject(new Error("Request timed out")), 15000)
       );
 
-      const apiPromise = genAI.models.generateContent({
+      const apiPromise = geminiGenerateContent({
         model: "gemini-2.5-flash",
         contents: `다음 말 또는 상황을 번역해줘: "${latteInput}"`,
         config: {
           systemInstruction,
           responseMimeType: "application/json",
           responseSchema: {
-            type: Type.OBJECT,
+            type: "OBJECT",
             properties: {
-              translatedText: { type: Type.STRING },
-              managerTip: { type: Type.STRING },
-              juniorTip: { type: Type.STRING }
+              translatedText: { type: "STRING" },
+              managerTip: { type: "STRING" },
+              juniorTip: { type: "STRING" }
             },
             required: ["translatedText", "managerTip", "juniorTip"]
           }
         }
       });
 
-      const response = await Promise.race([apiPromise, timeoutPromise]) as any;
+      const response = await Promise.race([apiPromise, timeoutPromise]) as { text: string };
       
-      // ===== 버그 수정: response.text를 올바르게 파싱 =====
-      const rawText = typeof response.text === 'function' ? response.text() : (response.text || "{}");
+      const rawText = response.text || "{}";
       const cleanJsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
       const json = JSON.parse(cleanJsonStr);
 

@@ -1,13 +1,38 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleGenAI, createUserContent, createPartFromText, createPartFromBase64 } from '@google/genai';
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 import PptxGenJS from 'pptxgenjs';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import {
-  ArrowLeft, Play, Copy, Check, ChevronLeft, ChevronRight, Sparkles, Lock, Download,
-  FileImage, FileText, Trash2, LayoutTemplate, GripVertical,
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+} from 'chart.js';
+import { Radar, Bar } from 'react-chartjs-2';
+import {
+  ArrowLeft, Play, Copy, Check, ChevronLeft, ChevronRight, Sparkles, Download,
+  FileImage, FileText, Trash2, LayoutTemplate, GripVertical, ImagePlus, Crown,
 } from 'lucide-react';
+
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+);
 
 type Category = 'integrity' | 'workshop' | 'teambuilding' | 'party';
 type OrgType = 'public' | 'local' | 'enterprise';
@@ -22,6 +47,14 @@ interface Session {
   code: string;
 }
 
+export interface SlideStyle {
+  titleFontPx: number;
+  bodyFontPx: number;
+  titleColor: string;
+  bodyColor: string;
+  textAlign: 'left' | 'center';
+}
+
 export interface DeckSlide {
   template: SlideTemplate;
   title: string;
@@ -32,67 +65,127 @@ export interface DeckSlide {
   chartLabels: string[];
   chartValues: number[];
   bgImage: string;
+  caseStudy?: string;
+  philosophyNote?: string;
+  imageQuery?: string;
+  style?: Partial<SlideStyle>;
 }
 
-const ai = import.meta.env.VITE_GEMINI_API_KEY ? new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }) : null;
 const generateCode = () => `ECO-${Math.floor(1000 + Math.random() * 9000)}`;
 
 const FOOTER_BRAND = 'Ethics-Core AI · EcoStage';
 
-const BG_BY_TEMPLATE: Record<SlideTemplate, string> = {
-  title: 'https://source.unsplash.com/1600x900/?government,city,night',
-  twoColumn: 'https://source.unsplash.com/1600x900/?ethics,documents,office',
-  chart: 'https://source.unsplash.com/1600x900/?dashboard,data,monitoring',
-  conclusion: 'https://source.unsplash.com/1600x900/?teamwork,success,meeting',
+const PHILOSOPHY_SOURCE =
+  '청렴공정연구센터 블로그(https://blog.naver.com/yszoo1467)가 강조하는 철학: 청렴·공정·윤리의 균형, 제도와 현장 실천의 일치, 투명한 의사결정과 책임 있는 거버넌스, 이해충돌·갑질 예방을 통한 신뢰 회복.';
+
+const CURATED_BG: Record<SlideTemplate, string[]> = {
+  title: [
+    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1920&q=85',
+  ],
+  twoColumn: [
+    'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1920&q=85',
+  ],
+  chart: [
+    'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=85',
+  ],
+  conclusion: [
+    'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1920&q=85',
+    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&w=1920&q=85',
+  ],
 };
 
+const BG_BY_TEMPLATE: Record<SlideTemplate, string> = {
+  title: CURATED_BG.title[0],
+  twoColumn: CURATED_BG.twoColumn[0],
+  chart: CURATED_BG.chart[0],
+  conclusion: CURATED_BG.conclusion[0],
+};
+
+const defaultSlideStyle: SlideStyle = {
+  titleFontPx: 40,
+  bodyFontPx: 17,
+  titleColor: '#ffffff',
+  bodyColor: '#e2e8f0',
+  textAlign: 'left',
+};
+
+function pickCuratedBg(tpl: SlideTemplate, idx: number): string {
+  const arr = CURATED_BG[tpl];
+  return arr[idx % arr.length];
+}
+
+async function fetchUnsplashForTheme(theme: string): Promise<string | null> {
+  const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string | undefined;
+  if (!key?.trim()) return null;
+  try {
+    const q = encodeURIComponent(theme.slice(0, 80) || 'integrity ethics governance');
+    const res = await fetch(`https://api.unsplash.com/photos/random?query=${q}&orientation=landscape&client_id=${key}`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { urls?: { regular?: string; full?: string } };
+    return data.urls?.regular || data.urls?.full || null;
+  } catch {
+    return null;
+  }
+}
+
 function emptyDeckFromTopic(topic: string): DeckSlide[] {
-  return [
-    {
-      template: 'title',
-      title: topic ? `${topic}` : '청렴 교육 오프닝',
-      subtitle: '타이틀 슬라이드',
-      bullets: ['교육 목표와 기대 효과', '오늘의 핵심 키워드 3가지', '세션 운영 방식 안내'],
-      leftColumn: [''],
-      rightColumn: [''],
-      chartLabels: ['이해충돌', '갑질', '투명성', '금품'],
-      chartValues: [68, 55, 72, 48],
-      bgImage: BG_BY_TEMPLATE.title,
-    },
-    {
-      template: 'twoColumn',
-      title: topic ? `${topic} — 현황 vs 과제` : '현황과 과제',
-      subtitle: '투 컬럼',
-      bullets: [],
-      leftColumn: ['규정·제도는 존재하나 현장 실행이 제각각', '민원·내부 신고 대응 일관성 부족'],
-      rightColumn: ['설명 가능한 결정 로그 표준화 필요', '관리자 공통 체크리스트·교차검증 도입'],
-      chartLabels: [],
-      chartValues: [],
-      bgImage: BG_BY_TEMPLATE.twoColumn,
-    },
-    {
-      template: 'chart',
-      title: topic ? `${topic} — 리스크 프로파일` : '조직 리스크 프로파일',
-      subtitle: '차트 슬라이드',
-      bullets: [],
-      leftColumn: [],
-      rightColumn: [],
-      chartLabels: ['이해충돌', '갑질·괴롭힘', '금품·향응', '의사결정 투명성'],
-      chartValues: [72, 58, 52, 69],
-      bgImage: BG_BY_TEMPLATE.chart,
-    },
-    {
-      template: 'conclusion',
-      title: topic ? `${topic} — 실행 과제` : '결론 · Next Step',
-      subtitle: '결론 슬라이드',
-      bullets: ['즉시: 결정 로그 템플릿·신고 채널 재공지', '2주: 부서장 체크리스트 파일럿', '분기: 취약도 재측정·리포트 공유'],
-      leftColumn: [],
-      rightColumn: [],
-      chartLabels: [],
-      chartValues: [],
-      bgImage: BG_BY_TEMPLATE.conclusion,
-    },
-  ];
+  const t = topic || 'AI 시대 공공 청렴';
+  const order: SlideTemplate[] = ['title', 'twoColumn', 'chart', 'twoColumn', 'chart', 'twoColumn', 'chart', 'twoColumn', 'chart', 'conclusion'];
+  return order.map((tpl, i) => {
+    const base: DeckSlide = {
+      template: tpl,
+      title:
+        tpl === 'title'
+          ? t
+          : tpl === 'conclusion'
+            ? `${t} — 실행 과제 · 결론`
+            : `${t} — 심화 ${Math.floor(i / 2) + 1}`,
+      subtitle:
+        tpl === 'title'
+          ? '오프닝 · 철학과 방향'
+          : tpl === 'chart'
+            ? '리스크 프로파일'
+            : tpl === 'conclusion'
+              ? 'Next Step'
+              : '현황 · 과제 · 사례',
+      bullets:
+        tpl === 'title'
+          ? ['교육 목표·기대효과', '핵심 키워드 3가지', '세션 운영·토론 규칙']
+          : tpl === 'conclusion'
+            ? ['즉시: 결정 로그·신고 채널 재공지', '2주: 관리자 체크리스트 파일럿', '분기: 취약도 재측정·리포트 공유']
+            : [],
+      leftColumn:
+        tpl === 'twoColumn'
+          ? ['규정·제도는 존재하나 실행 편차', '민원·내부 신고 대응 일관성 이슈', '현장 정보 비대칭·설명 책임 부족']
+          : [],
+      rightColumn:
+        tpl === 'twoColumn'
+          ? ['결정 로그·근거 표준화', '교차검증·이해충돌 사전 점검', '피드백 루프·심리적 안전 설계']
+          : [],
+      chartLabels: tpl === 'chart' ? ['이해충돌', '갑질·괴롭힘', '금품·향응', '의사결정 투명성'] : [],
+      chartValues: tpl === 'chart' ? [68 + (i % 3) * 2, 58, 52, 69].map((v) => Math.min(95, v + (i % 2))) : [],
+      bgImage: pickCuratedBg(tpl, i),
+      philosophyNote:
+        tpl === 'title'
+          ? `${PHILOSOPHY_SOURCE} 오늘 세션은 이 철학을 현장 언어로 번역합니다.`
+          : '제도의 형식적 준수를 넘어, 구성원이 체감하는 공정성과 설명 가능성을 동시에 확보하는 것이 핵심입니다.',
+      caseStudy:
+        tpl === 'twoColumn'
+          ? '가명 사례: 내부 인허가 과정에서 유사 업체 담당자와의 비공식 접촉이 반복되며, 이해충돌 소지가 제기됐으나 기록이 불명확해 감사 대응이 지연된 상황. 조직은 사전 신고·회피 절차와 회의록 템플릿을 정비하고, 이해관계자 맵을 공개해 신뢰를 회복했습니다.'
+          : tpl === 'chart'
+            ? '사례 스냅샷: 부서 간 정보 비대칭으로 인해 동일 사안에 대해 상이한 해석이 공존, 외부 감사에서 “절차는 있으나 실효성 부족” 지적이 반복된 사례를 바탕으로 한 지표입니다.'
+            : undefined,
+      style: { ...defaultSlideStyle },
+    };
+    return base;
+  });
 }
 
 const defaultSlides: DeckSlide[] = emptyDeckFromTopic('AI 시대 공공 청렴');
@@ -113,6 +206,9 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
     chartLabels = ['이해충돌', '갑질', '투명성', '금품'];
     chartValues = [68, 58, 72, 52];
   }
+  const caseStudy = raw.caseStudy != null ? String(raw.caseStudy) : undefined;
+  const philosophyNote = raw.philosophyNote != null ? String(raw.philosophyNote) : undefined;
+  const imageQuery = raw.imageQuery != null ? String(raw.imageQuery) : undefined;
   return {
     template: tpl,
     title,
@@ -122,7 +218,11 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
     rightColumn: rightColumn.length ? rightColumn : [''],
     chartLabels,
     chartValues,
-    bgImage: BG_BY_TEMPLATE[tpl],
+    bgImage: pickCuratedBg(tpl, idx),
+    caseStudy,
+    philosophyNote,
+    imageQuery,
+    style: { ...defaultSlideStyle },
   };
 }
 
@@ -161,6 +261,14 @@ async function fetchLogoDataUrl(): Promise<string | undefined> {
   }
 }
 
+export interface ReportInsight {
+  executiveSummary: string;
+  keyIssues: string[];
+  solutions: string[];
+  policyRecommendations: string[];
+  recommendedCourses: string[];
+}
+
 const FacilitatorDashboard: React.FC = () => {
   const [step, setStep] = useState<Step>('dashboard');
   const [session, setSession] = useState<Session | null>(null);
@@ -178,6 +286,7 @@ const FacilitatorDashboard: React.FC = () => {
   const [discussionInput, setDiscussionInput] = useState('');
   const [surveyInput, setSurveyInput] = useState('');
   const [reportSummary, setReportSummary] = useState('');
+  const [reportInsight, setReportInsight] = useState<ReportInsight | null>(null);
   const [reportFiles, setReportFiles] = useState<File[]>([]);
   const [weaknessScores, setWeaknessScores] = useState([
     { label: '이해충돌', value: 68 },
@@ -188,10 +297,17 @@ const FacilitatorDashboard: React.FC = () => {
   const qrRef = useRef<HTMLCanvasElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const slideBgInputRef = useRef<HTMLInputElement>(null);
 
-  const isAdminUnlocked = typeof window !== 'undefined' && sessionStorage.getItem('eco_admin_auth') === '1';
-  const isStandardPlan = typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard';
-  const premiumEnabled = isAdminUnlocked || isStandardPlan;
+  const [subscribed, setSubscribed] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard',
+  );
+  const openSubscribe = () => setShowUpgradeModal(true);
+  const userIntegrityIndex = useMemo(
+    () => Math.round(weaknessScores.reduce((a, x) => a + x.value, 0) / weaknessScores.length),
+    [weaknessScores],
+  );
+  const industryBenchmark = useMemo(() => Math.min(98, userIntegrityIndex + 15), [userIntegrityIndex]);
 
   const currentSlide = slides[slideIdx];
 
@@ -248,31 +364,56 @@ const FacilitatorDashboard: React.FC = () => {
 
   const generateScenarioSlides = async () => {
     if (!topicInput.trim()) return;
-    if (!premiumEnabled) return setShowUpgradeModal(true);
     setGenLoading(true);
     try {
-      if (!ai) throw new Error('no key');
-      const prompt = `주제: ${topicInput}
-청렴 교육 발표용 슬라이드 정확히 4장을 JSON 배열로 생성하세요. 순서 고정:
-1) template "title"
-2) template "twoColumn"
-3) template "chart"
-4) template "conclusion"
+      const prompt = `당신은 공공·민간 청렴·공정 거버넌스 교육 콘텐츠 디렉터입니다.
 
-스키마 예시:
-[
- {"template":"title","title":"...","subtitle":"...","bullets":["","",""]},
- {"template":"twoColumn","title":"...","subtitle":"...","leftColumn":["",""],"rightColumn":["",""]},
- {"template":"chart","title":"...","subtitle":"...","chartLabels":["","","",""],"chartValues":[60,70,55,65]},
- {"template":"conclusion","title":"...","subtitle":"...","bullets":["","",""]}
-]
-chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
-      const res = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
-      const text = res.text || '';
+참고 철학(반드시 논지에 녹여낼 것): ${PHILOSOPHY_SOURCE}
+
+주제: "${topicInput}"
+
+요구사항:
+- JSON 배열만 출력. 마크다운·코드펜스 금지.
+- 슬라이드는 **최소 10장, 최대 14장**. 단답형·한 줄 요약 위주 금지.
+- 각 슬라이드는 **전문 해설(philosophyNote)** 과 **깊이 있는 사례(caseStudy)** 를 포함한다.
+  - philosophyNote: 3~6문장. 청렴·공정·윤리의 균형, 제도-실천 정합, 설명 책임, 신뢰 회복 관점.
+  - caseStudy: 4~8문장. 익명화된 Case Study(배경-갈등-결정-결과-교훈). 실제 공직·기업 윤리 이슈에 가깝게.
+- template은 "title" | "twoColumn" | "chart" | "conclusion" 만 사용. 흐름: 오프닝 title → twoColumn/chart를 교차 → 마지막은 반드시 conclusion.
+- title/subtitle/bullets 또는 leftColumn/rightColumn은 서술형·전문 톤(한국어).
+- chart 슬라이드: chartLabels 4~8개, chartValues는 각 0~100 정수.
+- imageQuery: 슬라이드 배경에 쓸 Unsplash 검색용 짧은 영어 키워드(예: "integrity governance skyline").
+
+객체 스키마(배열 원소):
+{
+  "template": "title" | "twoColumn" | "chart" | "conclusion",
+  "title": string,
+  "subtitle": string,
+  "bullets"?: string[],
+  "leftColumn"?: string[],
+  "rightColumn"?: string[],
+  "chartLabels"?: string[],
+  "chartValues"?: number[],
+  "philosophyNote": string,
+  "caseStudy": string,
+  "imageQuery": string
+}`;
+      const { text } = await geminiGenerateContent({ model: 'gemini-2.5-flash', contents: prompt });
       const matched = text.match(/\[[\s\S]*\]/);
       if (!matched) throw new Error('format');
       const parsed = JSON.parse(matched[0]) as Record<string, unknown>[];
-      setSlides(parsed.slice(0, 4).map((row, i) => normalizeAiSlide(row, i)));
+      const normalized = parsed.slice(0, 14).map((row, i) => normalizeAiSlide(row, i));
+      const enriched: DeckSlide[] = [];
+      for (let i = 0; i < normalized.length; i++) {
+        const s = normalized[i];
+        const q = s.imageQuery || `${topicInput} integrity ethics`;
+        const remote = await fetchUnsplashForTheme(q);
+        enriched.push({ ...s, bgImage: remote || pickCuratedBg(s.template, i) });
+      }
+      if (enriched.length < 10) {
+        const pad = emptyDeckFromTopic(topicInput).slice(enriched.length);
+        enriched.push(...pad.slice(0, 10 - enriched.length));
+      }
+      setSlides(enriched);
       setSlideIdx(0);
     } catch {
       setSlides(emptyDeckFromTopic(topicInput));
@@ -283,6 +424,10 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
   };
 
   const exportPpt = async () => {
+    if (!subscribed) {
+      openSubscribe();
+      return;
+    }
     const logoDataUrl = await fetchLogoDataUrl();
     const pptx = new PptxGenJS();
     pptx.layout = 'LAYOUT_WIDE';
@@ -347,7 +492,7 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
           values: s.chartValues.slice(0, 8),
         }];
         slide.addChart(pptx.ChartType.bar, chartData, {
-          x: 0.9, y: contentTop, w: 11.5, h: 3.8,
+          x: 0.9, y: contentTop, w: 11.5, h: 3.2,
           chartColors: ['F97316', 'FB923C', 'FDBA74', 'EA580C'],
           barDir: 'col',
           showTitle: false,
@@ -355,25 +500,68 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
           valAxisMaxVal: 100,
         });
       }
+      let noteY = s.template === 'chart' ? contentTop + 3.35 : contentTop + 2.85;
+      if (s.philosophyNote) {
+        slide.addText(`[철학·해설]\n${s.philosophyNote}`, {
+          x: 0.7, y: noteY, w: 12, h: 1.5,
+          fontSize: 11, color: 'CBD5E1', valign: 'top',
+        });
+        noteY += 1.55;
+      }
+      if (s.caseStudy) {
+        slide.addText(`[Case Study]\n${s.caseStudy}`, {
+          x: 0.7, y: noteY, w: 12, h: 1.8,
+          fontSize: 11, color: 'FDE68A', valign: 'top',
+        });
+      }
     });
 
     await pptx.writeFile({ fileName: `ECA_${(topicInput || 'scenario').replace(/\s+/g, '_')}.pptx` });
   };
 
-  const buildLocalInsight = (rawText: string) => {
+  const buildLocalInsight = (rawText: string): ReportInsight => {
     const tokens = ['특혜', '청탁', '갑질', '불공정', '은폐', '불신', '침묵', '보복'];
     const found = tokens.filter((t) => rawText.includes(t));
     const k = found.length ? found.join(', ') : '이해충돌, 의사결정 불투명, 피드백 단절';
-    return `심층 분석 결과 (텍스트·업로드 자료 종합):\n\n` +
-      `• 부패 취약 키워드: ${k}\n` +
-      `• 조직 문화: 부서별 기준 편차, 보고 지연 패턴이 관찰될 수 있습니다.\n` +
-      `• 교육생 고충: 보복 우려로 문제 제기를 주저할 수 있습니다.\n` +
-      `• 제언: 사례형 반복 훈련, 관리자 체크리스트, 익명 피드백 채널을 병행하세요.\n` +
-      `• 업로드 파일이 있는 경우 내용을 반영해 상기를 조정하세요.`;
+    return {
+      executiveSummary: `세션 자료를 기반으로 취약 신호를 정리했습니다. 핵심 키워드: ${k}`,
+      keyIssues: [
+        `부패 취약 키워드/표현: ${k}`,
+        '조직 문화: 부서별 기준 편차, 보고 지연 패턴이 관찰될 수 있음',
+        '교육생 고충: 보복 우려로 문제 제기를 주저할 수 있음',
+      ],
+      solutions: [
+        '사례형 반복 훈련·시뮬레이션으로 판단 기준 공유',
+        '관리자 공통 체크리스트·교차검증 루틴 도입',
+        '익명 피드백 채널과 결정 로그 템플릿 병행',
+      ],
+      policyRecommendations: [
+        '이해충돌 사전 점검표를 인허가·조달 전 단계에 의무화하고, 회의록에 이해관계자 맵을 첨부',
+        '내부감사·민원응대 SLA를 수치화해 분기별 공개 리포트로 연결',
+      ],
+      recommendedCourses: ['청렴 리스크 시나리오 워크숍(8h)', '공정성 판단과 설명책임(4h)', '갑질·괴롭힘 예방 리더십(4h)'],
+    };
+  };
+
+  const parseReportJson = (text: string): ReportInsight | null => {
+    const m = text.match(/\{[\s\S]*\}/);
+    if (!m) return null;
+    try {
+      const o = JSON.parse(m[0]) as Record<string, unknown>;
+      const arr = (v: unknown) => (Array.isArray(v) ? v.map(String) : []);
+      return {
+        executiveSummary: String(o.executiveSummary ?? o.summary ?? ''),
+        keyIssues: arr(o.keyIssues).length ? arr(o.keyIssues) : arr(o.coreIssues),
+        solutions: arr(o.solutions),
+        policyRecommendations: arr(o.policyRecommendations).length ? arr(o.policyRecommendations) : arr(o.policy),
+        recommendedCourses: arr(o.recommendedCourses).length ? arr(o.recommendedCourses) : arr(o.courses),
+      };
+    } catch {
+      return null;
+    }
   };
 
   const generateInsightReport = async () => {
-    if (!premiumEnabled) return setShowUpgradeModal(true);
     setReportLoading(true);
     const rawText = `${discussionInput}\n${surveyInput}`.trim();
     try {
@@ -386,50 +574,60 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
       const MAX_BYTES = 4 * 1024 * 1024;
       const files = reportFiles.slice(0, MAX_FILES);
 
-      if (!ai) {
-        setReportSummary(buildLocalInsight(rawText));
-        return;
-      }
-
       if (!rawText && files.length === 0) {
+        setReportInsight(null);
         setReportSummary('토론·설문 텍스트 또는 이미지/PDF 파일을 업로드한 뒤 다시 생성해 주세요.');
         return;
       }
 
-      const parts: ReturnType<typeof createPartFromText>[] = [];
-      const intro = `다음은 공공기관 청렴 교육 세션의 종합 분석 자료입니다. ` +
-        `텍스트와 첨부 이미지·PDF를 모두 반영해 요약하세요.\n` +
-        `출력 형식:\n` +
-        `1) 부패 취약 키워드/표현\n` +
-        `2) 조직 문화 특징\n` +
-        `3) 교육생 고충·불만 신호\n` +
-        `4) 구체적 개선 제언 (실행 가능한 행동 위주)\n` +
-        `한국어로 전문 보고서 톤으로 작성하세요.\n\n`;
-      parts.push(createPartFromText(intro));
-      if (rawText) parts.push(createPartFromText(`[직접 입력 텍스트]\n${rawText}`));
+      const wireParts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+      const intro =
+        `다음은 공공·민간 청렴·공정 교육 세션의 종합 분석 자료입니다. 철학적 참고: ${PHILOSOPHY_SOURCE}\n` +
+        `반드시 아래 JSON **한 개만** 출력하세요. 마크다운·코드펜스 금지.\n` +
+        `{\n` +
+        `  "executiveSummary": "경영진용 2~4문장 요약",\n` +
+        `  "keyIssues": ["핵심 쟁점 bullet", "..."],\n` +
+        `  "solutions": ["실행 가능한 솔루션 bullet", "..."],\n` +
+        `  "policyRecommendations": ["제도·운영 정책 제언 (관행·지침 수준)", "..."],\n` +
+        `  "recommendedCourses": ["추천 교육 과정명", "..."]\n` +
+        `}\n` +
+        `텍스트와 첨부 이미지·PDF를 모두 반영하세요. 한국어, 전문 보고서 톤.\n\n`;
+      wireParts.push({ text: intro });
+      if (rawText) wireParts.push({ text: `[직접 입력 텍스트]\n${rawText}` });
 
       for (const f of files) {
         if (f.size > MAX_BYTES) {
-          parts.push(createPartFromText(`(파일 ${f.name}: 용량 초과로 건너뜀 — 4MB 이하만 분석)`));
+          wireParts.push({ text: `(파일 ${f.name}: 용량 초과로 건너뜀 — 4MB 이하만 분석)` });
           continue;
         }
         const b64 = await fileToBase64(f);
         const mime = mimeForFile(f);
         if (mime.startsWith('image/') || mime === 'application/pdf') {
-          parts.push(createPartFromBase64(b64, mime));
-          parts.push(createPartFromText(`(위 첨부 파일명: ${f.name})`));
+          wireParts.push({ inlineData: { mimeType: mime, data: b64 } });
+          wireParts.push({ text: `(위 첨부 파일명: ${f.name})` });
         } else {
-          parts.push(createPartFromText(`(미지원 형식 건너뜀: ${f.name})`));
+          wireParts.push({ text: `(미지원 형식 건너뜀: ${f.name})` });
         }
       }
 
-      const res = await ai.models.generateContent({
+      const { text } = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
-        contents: createUserContent(parts),
+        useParts: true,
+        parts: wireParts,
       });
-      setReportSummary(res.text || buildLocalInsight(rawText));
+      const parsed = parseReportJson(text);
+      if (parsed && parsed.keyIssues.length) {
+        setReportInsight(parsed);
+        setReportSummary('');
+      } else {
+        const local = buildLocalInsight(rawText);
+        setReportInsight(local);
+        setReportSummary(text.trim() || '');
+      }
     } catch {
-      setReportSummary(buildLocalInsight(rawText));
+      const local = buildLocalInsight(rawText);
+      setReportInsight(local);
+      setReportSummary('');
     } finally {
       setReportLoading(false);
     }
@@ -446,6 +644,10 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
   };
 
   const downloadReportPdf = async () => {
+    if (!subscribed) {
+      openSubscribe();
+      return;
+    }
     if (!reportRef.current) return;
     const canvas = await html2canvas(reportRef.current, { backgroundColor: '#07122b', scale: 2 });
     const img = canvas.toDataURL('image/png');
@@ -473,37 +675,46 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
 
   const renderSlidePreview = () => {
     const s = currentSlide;
+    const st = { ...defaultSlideStyle, ...s.style };
+    const alignClass = st.textAlign === 'center' ? 'text-center' : 'text-left';
     return (
-      <div className="relative z-10 flex flex-col min-h-[360px]">
-        <p className="text-orange-200 uppercase text-xs tracking-[0.2em] font-bold mb-2 flex items-center gap-2">
-          <LayoutTemplate className="w-4 h-4" /> {s.subtitle} · {s.template}
+      <div className={`relative z-10 flex flex-col min-h-[360px] ${alignClass}`}>
+        <p className="text-orange-200 uppercase text-xs tracking-[0.2em] font-bold mb-2 flex items-center gap-2 justify-between flex-wrap">
+          <span className="inline-flex items-center gap-2">
+            <LayoutTemplate className="w-4 h-4" /> {s.subtitle} · {s.template}
+          </span>
         </p>
-        <h4 className="text-white text-3xl md:text-5xl font-black leading-tight mb-6">{s.title}</h4>
+        <h4
+          className="font-black leading-tight mb-4 break-keep"
+          style={{ color: st.titleColor, fontSize: `${Math.min(52, st.titleFontPx)}px` }}
+        >
+          {s.title}
+        </h4>
         {s.template === 'title' || s.template === 'conclusion' ? (
           <ul className="space-y-3">
             {s.bullets.map((b, i) => (
-              <li key={i} className="text-slate-100 text-lg md:text-xl flex gap-3">
+              <li key={i} className="flex gap-3" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>
                 <span className="text-orange-300 shrink-0">•</span>
-                <span>{b}</span>
+                <span className="break-keep leading-relaxed">{b}</span>
               </li>
             ))}
           </ul>
         ) : null}
         {s.template === 'twoColumn' ? (
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-orange-300/25 bg-black/20 p-4">
+            <div className="rounded-2xl border border-orange-300/25 bg-black/25 p-4 backdrop-blur-sm">
               <p className="text-orange-300 text-sm font-bold mb-2">현황 · 리스크</p>
               <ul className="space-y-2">
                 {s.leftColumn.filter(Boolean).map((b, i) => (
-                  <li key={i} className="text-slate-100 text-base md:text-lg">• {b}</li>
+                  <li key={i} className="break-keep leading-relaxed" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>• {b}</li>
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border border-orange-300/25 bg-black/20 p-4">
+            <div className="rounded-2xl border border-orange-300/25 bg-black/25 p-4 backdrop-blur-sm">
               <p className="text-orange-300 text-sm font-bold mb-2">과제 · 개선</p>
               <ul className="space-y-2">
                 {s.rightColumn.filter(Boolean).map((b, i) => (
-                  <li key={i} className="text-slate-100 text-base md:text-lg">• {b}</li>
+                  <li key={i} className="break-keep leading-relaxed" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>• {b}</li>
                 ))}
               </ul>
             </div>
@@ -525,6 +736,18 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
                 </div>
               );
             })}
+          </div>
+        ) : null}
+        {s.philosophyNote ? (
+          <div className="mt-5 rounded-2xl border border-cyan-500/25 bg-cyan-950/30 p-4 text-left">
+            <p className="text-cyan-200 text-xs font-bold uppercase tracking-wider mb-2">철학 · 전문 해설</p>
+            <p className="text-slate-100 text-sm md:text-base leading-relaxed whitespace-pre-line">{s.philosophyNote}</p>
+          </div>
+        ) : null}
+        {s.caseStudy ? (
+          <div className="mt-3 rounded-2xl border border-amber-400/30 bg-amber-950/20 p-4 text-left">
+            <p className="text-amber-200 text-xs font-bold uppercase tracking-wider mb-2">Case Study</p>
+            <p className="text-slate-100 text-sm md:text-base leading-relaxed whitespace-pre-line">{s.caseStudy}</p>
           </div>
         ) : null}
         <div className="mt-auto pt-6 flex justify-between text-[10px] text-slate-500 border-t border-white/10">
@@ -611,8 +834,8 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
           <div className="rounded-3xl border border-orange-300/30 bg-gradient-to-br from-[#070f24] to-[#1a1035] overflow-hidden">
             <div className="px-6 py-4 border-b border-orange-300/20 flex items-center justify-between flex-wrap gap-2">
               <div>
-                <p className="text-orange-300 text-xs tracking-widest uppercase font-bold">PPT Studio · 4 Master Templates</p>
-                <h3 className="text-white text-2xl font-black">타이틀 · 투컬럼 · 차트 · 결론</h3>
+                <p className="text-orange-300 text-xs tracking-widest uppercase font-bold">PPT Studio · 10+ 슬라이드 · 풀 에디터</p>
+                <h3 className="text-white text-2xl font-black">AI 심층 해설 · Case Study · 고화질 배경</h3>
               </div>
               <div className="text-sm text-slate-300 font-mono">
                 {slideIdx + 1} / {slides.length}
@@ -633,7 +856,7 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
                     disabled={genLoading}
                     className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#f97316] to-[#fb923c] font-bold text-white disabled:opacity-50"
                   >
-                    {genLoading ? 'AI 생성 중' : 'AI로 4장 생성'}
+                    {genLoading ? 'AI 생성 중' : 'AI로 10장+ 생성'}
                   </button>
                 </div>
 
@@ -647,10 +870,10 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
                     className="relative min-h-[420px] rounded-2xl border border-orange-300/30 overflow-hidden p-8"
                   >
                     <div
-                      className="absolute inset-0 bg-cover bg-center opacity-[0.12]"
+                      className="absolute inset-0 bg-cover bg-center opacity-[0.38]"
                       style={{ backgroundImage: `url(${currentSlide.bgImage})` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#06112a]/93 via-[#0b1738]/91 to-[#2a1237]/90" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#06112a]/88 via-[#0b1738]/85 to-[#2a1237]/86" />
                     {renderSlidePreview()}
                   </motion.div>
                 </AnimatePresence>
@@ -682,11 +905,23 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
                   <GripVertical className="w-4 h-4" /> 슬라이드 편집
                 </p>
                 <label className="text-[11px] text-slate-400">마스터 템플릿</label>
+                <input
+                  ref={slideBgInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!f?.type.startsWith('image/')) return;
+                    updateCurrentSlide({ bgImage: URL.createObjectURL(f) });
+                  }}
+                />
                 <select
                   value={currentSlide.template}
                   onChange={(e) => {
                     const tpl = e.target.value as SlideTemplate;
-                    updateCurrentSlide({ template: tpl, bgImage: BG_BY_TEMPLATE[tpl] });
+                    updateCurrentSlide({ template: tpl, bgImage: pickCuratedBg(tpl, slideIdx) });
                   }}
                   className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
                 >
@@ -774,6 +1009,124 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
                     />
                   </>
                 )}
+                <label className="text-[11px] text-slate-400">배경 이미지</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => slideBgInputRef.current?.click()}
+                    className="flex-1 py-2 rounded-lg border border-orange-300/40 text-orange-100 text-xs font-bold flex items-center justify-center gap-1"
+                  >
+                    <ImagePlus className="w-3.5 h-3.5" /> 업로드
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateCurrentSlide({ bgImage: pickCuratedBg(currentSlide.template, slideIdx + 3) })
+                    }
+                    className="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-bold"
+                  >
+                    큐레이션
+                  </button>
+                </div>
+                <label className="text-[11px] text-slate-400">배경 URL (선택)</label>
+                <input
+                  value={currentSlide.bgImage}
+                  onChange={(e) => updateCurrentSlide({ bgImage: e.target.value })}
+                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2 font-mono"
+                  placeholder="https://..."
+                />
+                <label className="text-[11px] text-slate-400">타이포 · 색상 (캔버스형)</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-[10px] text-slate-500">제목(px)</span>
+                    <input
+                      type="number"
+                      min={24}
+                      max={64}
+                      value={currentSlide.style?.titleFontPx ?? defaultSlideStyle.titleFontPx}
+                      onChange={(e) =>
+                        updateCurrentSlide({
+                          style: { ...defaultSlideStyle, ...currentSlide.style, titleFontPx: Number(e.target.value) || 40 },
+                        })
+                      }
+                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">본문(px)</span>
+                    <input
+                      type="number"
+                      min={12}
+                      max={28}
+                      value={currentSlide.style?.bodyFontPx ?? defaultSlideStyle.bodyFontPx}
+                      onChange={(e) =>
+                        updateCurrentSlide({
+                          style: { ...defaultSlideStyle, ...currentSlide.style, bodyFontPx: Number(e.target.value) || 17 },
+                        })
+                      }
+                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-[10px] text-slate-500">제목색</span>
+                    <input
+                      type="color"
+                      value={currentSlide.style?.titleColor ?? defaultSlideStyle.titleColor}
+                      onChange={(e) =>
+                        updateCurrentSlide({
+                          style: { ...defaultSlideStyle, ...currentSlide.style, titleColor: e.target.value },
+                        })
+                      }
+                      className="w-full h-9 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">본문색</span>
+                    <input
+                      type="color"
+                      value={currentSlide.style?.bodyColor ?? defaultSlideStyle.bodyColor}
+                      onChange={(e) =>
+                        updateCurrentSlide({
+                          style: { ...defaultSlideStyle, ...currentSlide.style, bodyColor: e.target.value },
+                        })
+                      }
+                      className="w-full h-9 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <label className="text-[11px] text-slate-400">텍스트 정렬</label>
+                <select
+                  value={currentSlide.style?.textAlign ?? defaultSlideStyle.textAlign}
+                  onChange={(e) =>
+                    updateCurrentSlide({
+                      style: {
+                        ...defaultSlideStyle,
+                        ...currentSlide.style,
+                        textAlign: e.target.value as 'left' | 'center',
+                      },
+                    })
+                  }
+                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
+                >
+                  <option value="left">좌측</option>
+                  <option value="center">중앙</option>
+                </select>
+                <label className="text-[11px] text-slate-400">철학·해설 (편집)</label>
+                <textarea
+                  value={currentSlide.philosophyNote ?? ''}
+                  onChange={(e) => updateCurrentSlide({ philosophyNote: e.target.value })}
+                  rows={3}
+                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2"
+                />
+                <label className="text-[11px] text-slate-400">Case Study (편집)</label>
+                <textarea
+                  value={currentSlide.caseStudy ?? ''}
+                  onChange={(e) => updateCurrentSlide({ caseStudy: e.target.value })}
+                  rows={4}
+                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2"
+                />
               </div>
             </div>
           </div>
@@ -848,20 +1201,165 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
               ))}
             </div>
 
-            <div className="mt-5 rounded-2xl border border-orange-300/25 bg-[#0a1630]/70 p-4">
-              <p className="text-orange-200 text-xs tracking-wider uppercase font-bold mb-2">심층 분석 결과</p>
-              <p className="text-slate-100 whitespace-pre-line leading-relaxed">
-                {reportSummary || '리포트를 생성하면 분석 결과가 표시됩니다.'}
-              </p>
+            <div className="mt-6 grid lg:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-orange-300/25 bg-[#0a1630]/80 p-4 h-[280px]">
+                <p className="text-orange-200 text-xs font-bold uppercase tracking-wider mb-2">취약도 분포 (Bar)</p>
+                <Bar
+                  data={{
+                    labels: weaknessScores.map((x) => x.label),
+                    datasets: [
+                      {
+                        label: '지수',
+                        data: weaknessScores.map((x) => x.value),
+                        backgroundColor: 'rgba(249,115,22,0.75)',
+                        borderRadius: 6,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      x: { ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 0 }, grid: { color: 'rgba(148,163,184,0.12)' } },
+                      y: { min: 0, max: 100, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(148,163,184,0.12)' } },
+                    },
+                  }}
+                />
+              </div>
+              <div className="rounded-2xl border border-cyan-500/25 bg-[#0a1630]/80 p-4 h-[280px]">
+                <p className="text-cyan-200 text-xs font-bold uppercase tracking-wider mb-2">조직 프로파일 (Radar)</p>
+                <Radar
+                  data={{
+                    labels: weaknessScores.map((x) => x.label),
+                    datasets: [
+                      {
+                        label: '프로파일',
+                        data: weaknessScores.map((x) => x.value),
+                        backgroundColor: 'rgba(34,211,238,0.2)',
+                        borderColor: 'rgba(34,211,238,0.95)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(249,115,22,0.9)',
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                      r: {
+                        min: 0,
+                        max: 100,
+                        ticks: { color: '#64748b', backdropColor: 'transparent' },
+                        grid: { color: 'rgba(148,163,184,0.2)' },
+                        angleLines: { color: 'rgba(148,163,184,0.2)' },
+                        pointLabels: { color: '#e2e8f0', font: { size: 10 } },
+                      },
+                    },
+                  }}
+                />
+              </div>
             </div>
+
+            <div className="mt-5 rounded-2xl border border-amber-400/35 bg-gradient-to-r from-amber-950/40 to-orange-950/30 p-5 relative overflow-hidden">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="text-amber-200 text-xs font-black uppercase tracking-widest flex items-center gap-2">
+                    <Crown className="w-4 h-4" /> 업종 벤치마크 (구독자 전용 인사이트)
+                  </p>
+                  <p className="text-white text-lg font-black mt-1">
+                    귀하의 청렴 종합 지수 <span className="text-orange-300">{userIntegrityIndex}</span>
+                    <span className="text-slate-400 text-base font-bold"> vs 동일 업종 평균 {industryBenchmark}</span>
+                  </p>
+                  <p className="text-slate-300 text-sm mt-2 max-w-xl">
+                    구독 시 &quot;동일 업종 평균 대비 갭&quot;, 분기 추이, 부서별 시뮬레이션까지 제공됩니다.
+                  </p>
+                </div>
+                {!subscribed && (
+                  <button
+                    type="button"
+                    onClick={openSubscribe}
+                    className="shrink-0 px-4 py-2 rounded-xl bg-white text-black text-sm font-black"
+                  >
+                    구독 알아보기
+                  </button>
+                )}
+              </div>
+              {!subscribed && (
+                <div className="mt-4 rounded-xl border border-white/10 bg-black/40 p-4 text-center text-slate-400 text-sm blur-[3px] select-none pointer-events-none">
+                  상세 비교 데이터는 Standard 구독 후 확인할 수 있습니다.
+                </div>
+              )}
+              {subscribed && (
+                <p className="mt-4 text-emerald-200 text-sm font-bold">
+                  구독 활성화됨: 동일 업종 평균 대비 약 {Math.max(5, industryBenchmark - userIntegrityIndex)}%p 낮은 구간이 관찰됩니다. 아래 솔루션·정책 제언과 함께 개선 로드맵을 설계하세요.
+                </p>
+              )}
+            </div>
+
+            {reportInsight ? (
+              <div className="mt-6 space-y-4">
+                {reportInsight.executiveSummary ? (
+                  <div className="rounded-2xl border border-orange-300/25 bg-[#0a1630]/70 p-4">
+                    <p className="text-orange-200 text-xs font-bold uppercase tracking-wider mb-2">Executive Summary</p>
+                    <p className="text-slate-100 leading-relaxed">{reportInsight.executiveSummary}</p>
+                  </div>
+                ) : null}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-red-400/25 bg-[#1a0f14]/60 p-4">
+                    <p className="text-red-200 text-xs font-bold uppercase tracking-wider mb-2">핵심 쟁점</p>
+                    <ul className="list-disc pl-5 space-y-2 text-slate-100 text-sm">
+                      {reportInsight.keyIssues.map((t, i) => (
+                        <li key={i}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="rounded-2xl border border-emerald-400/25 bg-[#0f1a14]/60 p-4">
+                    <p className="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-2">솔루션</p>
+                    <ul className="list-disc pl-5 space-y-2 text-slate-100 text-sm">
+                      {reportInsight.solutions.map((t, i) => (
+                        <li key={i}>{t}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-cyan-400/25 bg-[#0c1528]/70 p-4">
+                  <p className="text-cyan-200 text-xs font-bold uppercase tracking-wider mb-2">AI 정책 제언</p>
+                  <ul className="list-disc pl-5 space-y-2 text-slate-100 text-sm">
+                    {reportInsight.policyRecommendations.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="rounded-2xl border border-amber-300/25 bg-[#1a1508]/60 p-4">
+                  <p className="text-amber-200 text-xs font-bold uppercase tracking-wider mb-2">추천 교육 과정</p>
+                  <ul className="list-disc pl-5 space-y-2 text-slate-100 text-sm">
+                    {reportInsight.recommendedCourses.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-2xl border border-orange-300/25 bg-[#0a1630]/70 p-4">
+                <p className="text-orange-200 text-xs tracking-wider uppercase font-bold mb-2">분석 메모</p>
+                <p className="text-slate-100 whitespace-pre-line leading-relaxed">
+                  {reportSummary || '리포트를 생성하면 구조화된 전문 보고서가 표시됩니다.'}
+                </p>
+              </div>
+            )}
+
             <div className="mt-4 flex gap-2">
               <button
+                type="button"
                 onClick={downloadReportPdf}
                 className="flex-1 py-3 rounded-xl border border-orange-300/40 text-orange-200 font-bold"
               >
-                <FileText className="w-4 h-4 inline mr-1" /> PDF 저장
+                <FileText className="w-4 h-4 inline mr-1" /> PDF 저장 {subscribed ? '' : '(구독)'}
               </button>
               <button
+                type="button"
                 onClick={downloadReportImage}
                 className="flex-1 py-3 rounded-xl border border-orange-300/40 text-orange-200 font-bold"
               >
@@ -930,38 +1428,39 @@ chartValues는 0~100 정수. 한국어로 간결하게. JSON만 출력.`;
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-lg rounded-3xl border border-orange-300/35 bg-gradient-to-br from-[#07122b] to-[#1d1233] p-6"
           >
-            <h4 className="text-white font-black text-2xl mb-2">Standard 플랜 안내</h4>
-            <p className="text-slate-300 text-sm mb-3">AI 슬라이드 생성, PPT 내보내기, 멀티모달 리포트 등</p>
+            <h4 className="text-white font-black text-2xl mb-2">Ethics-Core AI · Standard</h4>
+            <p className="text-slate-300 text-sm mb-3">
+              PDF·PPT보내기, 업종 벤치마크, 고급 리포트 등 심화 기능은 결과 확인 단계에서 구독으로 열립니다.
+            </p>
             <ul className="text-slate-200 text-sm space-y-1 mb-4">
-              <li>- 월 구독: 39,000원</li>
-              <li>- 신청: yszoo1467@naver.com / 010-6667-1467</li>
-              <li>- 결제 완료 후 관리자 승인 활성화</li>
+              <li>- 월 구독: 39,000원 (VAT 별도)</li>
+              <li>- 상담: yszoo1467@naver.com / 010-6667-1467</li>
+              <li>- PDF 리포트·추천 교육 패키지·업종 비교 데이터 포함</li>
             </ul>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
+                type="button"
                 onClick={() => setShowUpgradeModal(false)}
                 className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-300"
               >
                 닫기
               </button>
-              <button
-                onClick={() => {
-                  if (isAdminUnlocked) {
-                    localStorage.setItem('eca_plan', 'standard');
-                    setShowUpgradeModal(false);
-                  }
-                }}
-                className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[#f97316] to-[#fb923c] text-white disabled:opacity-50"
-                disabled={!isAdminUnlocked}
+              <a
+                href="mailto:yszoo1467@naver.com?subject=Ethics-Core%20AI%20Standard%20구독%20문의"
+                className="flex-1 py-3 rounded-xl text-center font-bold border border-orange-300/50 text-orange-100"
               >
-                {isAdminUnlocked ? (
-                  '관리자 즉시 활성화'
-                ) : (
-                  <>
-                    <Lock className="inline w-4 h-4 mr-1" />
-                    관리자 인증 필요
-                  </>
-                )}
+                구독 상담 (메일)
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('eca_plan', 'standard');
+                  setSubscribed(true);
+                  setShowUpgradeModal(false);
+                }}
+                className="flex-1 py-3 rounded-xl font-bold bg-gradient-to-r from-[#f97316] to-[#fb923c] text-white"
+              >
+                데모로 기능 열기
               </button>
             </div>
           </div>

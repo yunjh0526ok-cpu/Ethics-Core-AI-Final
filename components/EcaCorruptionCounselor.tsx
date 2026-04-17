@@ -6,10 +6,7 @@ import {
   Landmark, GraduationCap, Users, BookMarked, Shield, Calculator,
   Search, MessageSquare
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 interface ChatMessage {
   role: 'user' | 'ai';
@@ -789,17 +786,13 @@ const EcaCorruptionCounselor: React.FC = () => {
     setChatLog(prev => [...prev, { role: 'user', text }]);
     setChatInput('');
     setIsTyping(true);
-    if (!genAI) {
-      setTimeout(() => { setChatLog(prev => [...prev, { role: 'ai', text: 'API Key가 설정되지 않았습니다. 관리자에게 문의하세요.' }]); setIsTyping(false); }, 1000);
-      return;
-    }
     try {
-      const response = await genAI.models.generateContent({
+      const { text: reply } = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
         contents: text,
         config: { systemInstruction: SYSTEM_INSTRUCTIONS[mode] }
       });
-      setChatLog(prev => [...prev, { role: 'ai', text: response.text || '답변을 받지 못했습니다.' }]);
+      setChatLog(prev => [...prev, { role: 'ai', text: reply || '답변을 받지 못했습니다.' }]);
     } catch (e: any) {
       setChatLog(prev => [...prev, { role: 'ai', text: `오류가 발생했습니다: ${e?.message || '알 수 없는 오류'}` }]);
     } finally {

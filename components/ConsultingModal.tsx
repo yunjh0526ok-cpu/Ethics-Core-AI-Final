@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Bot, User, Mail, MessageSquare } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 interface ConsultingModalProps {
   isOpen: boolean;
@@ -20,9 +20,6 @@ const ConsultingModal: React.FC<ConsultingModalProps> = ({ isOpen, onClose }) =>
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  // Initialize API
-  const ai = process.env.API_KEY ? new GoogleGenAI({ apiKey: process.env.API_KEY }) : null;
-
   useEffect(() => {
     if (isOpen) {
       scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,16 +34,8 @@ const ConsultingModal: React.FC<ConsultingModalProps> = ({ isOpen, onClose }) =>
     setInput('');
     setIsTyping(true);
 
-    if (!ai) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: "죄송합니다. 현재 AI 연결이 원활하지 않습니다." }]);
-        setIsTyping(false);
-      }, 1000);
-      return;
-    }
-
     try {
-      const response = await ai.models.generateContent({
+      const { text: responseText } = await geminiGenerateContent({
         model: "gemini-3-flash-preview",
         contents: userMsg,
         config: {
@@ -68,8 +57,7 @@ const ConsultingModal: React.FC<ConsultingModalProps> = ({ isOpen, onClose }) =>
         }
       });
 
-      const responseText = response.text || "죄송합니다. 답변을 생성할 수 없습니다.";
-      setMessages(prev => [...prev, { role: 'ai', text: responseText }]);
+      setMessages(prev => [...prev, { role: 'ai', text: responseText || "죄송합니다. 답변을 생성할 수 없습니다." }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요." }]);
     } finally {

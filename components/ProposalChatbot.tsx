@@ -2,10 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, Sparkles, FileText, CheckCircle2, Cpu, ChevronRight, ExternalLink, Download, MessageSquare } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 const SUGGESTED_QUESTIONS = [
   "우리 기관 맞춤형 커스터마이징이 가능한가요?",
@@ -64,16 +61,8 @@ const ProposalChatbot: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    if (!ai) {
-      setTimeout(() => {
-        setMessages(prev => [...prev, { role: 'ai', text: "시스템 연결 상태를 확인해주십시오. (API Key Missing)" }]);
-        setIsTyping(false);
-      }, 1000);
-      return;
-    }
-
     try {
-      const response = await ai.models.generateContent({
+      const { text: responseText } = await geminiGenerateContent({
         model: "gemini-2.5-flash",
         contents: text,
         config: {
@@ -81,8 +70,8 @@ const ProposalChatbot: React.FC = () => {
         }
       });
 
-      const responseText = response.text || "제안 내용을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-      setMessages(prev => [...prev, { role: 'ai', text: responseText }]);
+      const safeText = responseText || "제안 내용을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+      setMessages(prev => [...prev, { role: 'ai', text: safeText }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'ai', text: "네트워크 연결이 원활하지 않습니다." }]);
     } finally {

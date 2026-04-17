@@ -2,8 +2,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Users, Play, CheckCircle2, XCircle, Zap, Clock,
-  BarChart3, RefreshCw, ChevronRight, Star, Volume2, VolumeX, Music2
+  BarChart3, RefreshCw, ChevronRight, Star, Volume2, VolumeX, Music2, Crown, FileText,
 } from 'lucide-react';
+
+const BGM_TRACKS = [
+  { id: 'sh1', name: '신뢰 · 클래식 스위트 (차분)', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+  { id: 'sh2', name: '집중 · 앰비언트 스위트', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+  { id: 'sh3', name: '로파이 스튜디오 · 낮은 템포', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+  { id: 'sh4', name: '윤리 브리핑 · 미니멀 톤', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3' },
+] as const;
 import { CAT_CONFIG, Category, INTEGRITY_TAGS, OrgType, Question, QuizPack, quizData } from '../data/quizData';
 
 type Screen = 'join' | 'question' | 'final';
@@ -55,12 +62,13 @@ const QuizStage: React.FC<QuizStageProps> = ({
   const [confetti, setConfetti] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [bgmOn, setBgmOn] = useState(true);
+  const [bgmTrackIdx, setBgmTrackIdx] = useState(0);
+  const [showSubModal, setShowSubModal] = useState(false);
   const [lastBonus, setLastBonus] = useState(0);
   const [isFacilitator, setIsFacilitator] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const bgmIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const bgmActiveRef = useRef(false);
+  const bgmAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const ensureAudioContext = () => {
     if (typeof window === 'undefined') return null;
@@ -97,38 +105,11 @@ const QuizStage: React.FC<QuizStageProps> = ({
     if (type === 'tick') makeTone(1200, 0.08, 0.1, 'square', 0);
   };
 
-  const startBgm = () => {
-    if (!bgmOn || bgmActiveRef.current) return;
-    const ctx = ensureAudioContext();
-    if (!ctx) return;
-    bgmActiveRef.current = true;
-    const playMotif = () => {
-      // Heartbeat-like pulse + suspense motif
-      const notes = [196, 196, 247, 220, 196, 247, 294];
-      notes.forEach((f, i) => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = i % 2 === 0 ? 'sawtooth' : 'triangle';
-        osc.frequency.value = f;
-        osc.connect(g);
-        g.connect(ctx.destination);
-        const t = ctx.currentTime + i * 0.16;
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(i < 2 ? 0.09 : 0.07, t + 0.015);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
-        osc.start(t);
-        osc.stop(t + 0.16);
-      });
-    };
-    playMotif();
-    bgmIntervalRef.current = setInterval(playMotif, 1050);
-  };
-
   const stopBgm = () => {
-    bgmActiveRef.current = false;
-    if (bgmIntervalRef.current) {
-      clearInterval(bgmIntervalRef.current);
-      bgmIntervalRef.current = null;
+    if (bgmAudioRef.current) {
+      bgmAudioRef.current.pause();
+      bgmAudioRef.current.src = '';
+      bgmAudioRef.current = null;
     }
   };
 
@@ -145,7 +126,12 @@ const QuizStage: React.FC<QuizStageProps> = ({
       if (!tagged) return true;
       return tagged.orgTypes.includes(initialOrgType) && tagged.packs.includes(initialQuizPack);
     });
-    return [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(10, pool.length));
+    const target = Math.min(15, Math.max(10, pool.length));
+    let shuffled = [...pool].sort(() => Math.random() - 0.5);
+    while (shuffled.length < target && pool.length > 0) {
+      shuffled = [...shuffled, ...[...pool].sort(() => Math.random() - 0.5)];
+    }
+    return shuffled.slice(0, Math.min(target, shuffled.length));
   };
 
   useEffect(() => {
@@ -159,10 +145,18 @@ const QuizStage: React.FC<QuizStageProps> = ({
   }, [initialCategories.length, initialCode, selectedCats, initialOrgType, initialQuizPack]);
 
   useEffect(() => {
-    if (screen === 'question' && bgmOn) startBgm();
-    else stopBgm();
+    if (screen !== 'question' || !bgmOn) {
+      stopBgm();
+      return;
+    }
+    const url = BGM_TRACKS[bgmTrackIdx]?.url ?? BGM_TRACKS[0].url;
+    const el = new Audio(url);
+    el.loop = true;
+    el.volume = 0.32;
+    el.play().catch(() => {});
+    bgmAudioRef.current = el;
     return () => stopBgm();
-  }, [screen, bgmOn]);
+  }, [screen, bgmOn, bgmTrackIdx]);
 
   const question = questions[currentQ];
   const totalQ = questions.length;
@@ -255,11 +249,22 @@ const QuizStage: React.FC<QuizStageProps> = ({
             <span className="font-bold text-sm">이전 화면으로</span>
           </button>
         ) : <div />}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap justify-end">
           {screen === 'question' && (
-            <button onClick={() => setBgmOn((s) => !s)} className={`p-2.5 rounded-full border transition-colors text-xs font-bold px-3 ${bgmOn ? 'bg-orange-500/20 border-orange-400/60 text-orange-200' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
-              <span className="inline-flex items-center gap-1"><Music2 className="w-3.5 h-3.5" /> {bgmOn ? 'BGM ON' : 'BGM OFF'}</span>
-            </button>
+            <>
+              <select
+                value={bgmTrackIdx}
+                onChange={(e) => setBgmTrackIdx(Number(e.target.value))}
+                className="max-w-[200px] text-xs font-bold rounded-full border border-orange-400/40 bg-[#0f172a] text-orange-100 px-3 py-2"
+              >
+                {BGM_TRACKS.map((t, i) => (
+                  <option key={t.id} value={i}>{t.name}</option>
+                ))}
+              </select>
+              <button type="button" onClick={() => setBgmOn((s) => !s)} className={`p-2.5 rounded-full border transition-colors text-xs font-bold px-3 ${bgmOn ? 'bg-orange-500/20 border-orange-400/60 text-orange-200' : 'bg-slate-800 border-slate-700 text-slate-500'}`}>
+                <span className="inline-flex items-center gap-1"><Music2 className="w-3.5 h-3.5" /> {bgmOn ? 'BGM ON' : 'BGM OFF'}</span>
+              </button>
+            </>
           )}
           <button onClick={() => setSoundOn((s) => !s)} className="p-2.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-white transition-colors">
             {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
@@ -410,19 +415,64 @@ const QuizStage: React.FC<QuizStageProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => { setScreen('join'); setScore(0); setCurrentQ(0); setSelected(null); setShowAnswer(false); setQuestions([]); }}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <button type="button" onClick={() => { setScreen('join'); setScore(0); setCurrentQ(0); setSelected(null); setShowAnswer(false); setQuestions([]); }}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-slate-800 border border-slate-700 hover:border-orange-400 text-white transition-all">
                 <RefreshCw className="w-4 h-4" /> 다시 하기
               </button>
-              <button onClick={handleBack}
+              <button type="button" onClick={handleBack}
                 className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-[#f97316] to-[#fb923c] text-white hover:scale-[1.01] transition-all shadow-lg">
                 <ChevronRight className="w-4 h-4" /> 대시보드로
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard') {
+                    window.dispatchEvent(new CustomEvent('navigate', { detail: 'facilitator' }));
+                    return;
+                  }
+                  setShowSubModal(true);
+                }}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border border-amber-400/50 text-amber-100 bg-amber-950/30"
+              >
+                <Crown className="w-4 h-4" /> 업종 평균 비교 · 심화 리포트
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard') {
+                    window.dispatchEvent(new CustomEvent('navigate', { detail: 'facilitator' }));
+                    return;
+                  }
+                  setShowSubModal(true);
+                }}
+                className="flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm border border-cyan-400/40 text-cyan-100 bg-cyan-950/25"
+              >
+                <FileText className="w-4 h-4" /> PDF 결과 패키지
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {showSubModal && (
+        <div className="fixed inset-0 z-[70] bg-black/75 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowSubModal(false)}>
+          <div className="w-full max-w-md rounded-3xl border border-orange-300/35 bg-gradient-to-br from-[#07122b] to-[#1d1233] p-6" onClick={(e) => e.stopPropagation()}>
+            <p className="text-orange-300 text-xs font-bold tracking-widest uppercase mb-2">EcoStage · Standard</p>
+            <h3 className="text-white text-2xl font-black mb-2">심화 결과는 구독 후 이용</h3>
+            <p className="text-slate-300 text-sm mb-4">
+              업종 벤치마크, PDF 패키지, AI 정책 제언 리포트는 Standard 플랜에서 제공됩니다.
+            </p>
+            <div className="flex flex-col gap-2">
+              <a href="mailto:yszoo1467@naver.com?subject=Ethics-Core%20AI%20구독%20문의" className="py-3 rounded-xl text-center font-bold bg-white text-black">구독 상담</a>
+              <button type="button" onClick={() => { localStorage.setItem('eca_plan', 'standard'); setShowSubModal(false); }} className="py-3 rounded-xl font-bold border border-orange-300/50 text-orange-100">데모로 열기</button>
+              <button type="button" onClick={() => setShowSubModal(false)} className="py-3 rounded-xl border border-slate-600 text-slate-400">닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 };
