@@ -56,10 +56,66 @@ function geminiDevPlugin(env: Record<string, string>): Plugin {
           nodeRes.statusCode = 200;
           nodeRes.setHeader('Content-Type', 'application/json');
           return nodeRes.end(JSON.stringify({ text }));
-        } catch {
-          nodeRes.statusCode = 500;
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Gemini proxy error';
+          nodeRes.statusCode = /Invalid|too large|Too many|Model not allowed/.test(message) ? 400 : 500;
           nodeRes.setHeader('Content-Type', 'application/json');
-          return nodeRes.end(JSON.stringify({ error: 'Gemini proxy error' }));
+          return nodeRes.end(JSON.stringify({ error: message }));
+        }
+      });
+    },
+  };
+}
+
+function stockQuoteDevPlugin(env: Record<string, string>): Plugin {
+  return {
+    name: 'stock-quote-api-dev',
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0];
+        if (url !== '/api/stock-quote') return next();
+
+        const nodeRes = res as unknown as ServerResponse;
+        if (req.method === 'OPTIONS') {
+          nodeRes.statusCode = 204;
+          nodeRes.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+          nodeRes.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          return nodeRes.end();
+        }
+        if (req.method !== 'POST') {
+          nodeRes.statusCode = 405;
+          return nodeRes.end('Method not allowed');
+        }
+
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(await readReqBody(req));
+        } catch {
+          nodeRes.statusCode = 400;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: 'Invalid JSON' }));
+        }
+
+        if (!parsed || typeof parsed !== 'object') {
+          nodeRes.statusCode = 400;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: 'Invalid body' }));
+        }
+
+        const mergedEnv = { ...env, ...process.env };
+        try {
+          const { fetchStockQuote } = await import('./api/stock-quote.mjs');
+          const broker = String((parsed as { broker?: string }).broker || '').toLowerCase();
+          const symbol = String((parsed as { symbol?: string }).symbol || '');
+          const quote = await fetchStockQuote(mergedEnv, { broker, symbol });
+          nodeRes.statusCode = 200;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ quote }));
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Stock quote proxy error';
+          nodeRes.statusCode = /필요|지원하지 않는|설정되지 않았|찾지 못했습니다|Invalid/.test(message) ? 400 : 500;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: message }));
         }
       });
     },
@@ -73,7 +129,7 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       host: '0.0.0.0',
     },
-    plugins: [react(), geminiDevPlugin(env)],
+    plugins: [react(), geminiDevPlugin(env), stockQuoteDevPlugin(env)],
     define: {
       /** Unsplash만 클라이언트(선택). Gemini 키는 번들에 넣지 않음 */
       'import.meta.env.VITE_UNSPLASH_ACCESS_KEY': JSON.stringify(env.VITE_UNSPLASH_ACCESS_KEY || ''),

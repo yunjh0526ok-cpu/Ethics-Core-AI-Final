@@ -5,6 +5,7 @@ import { GoogleGenAI, createUserContent, createPartFromText, createPartFromBase6
 
 const ALLOWED_MODELS = new Set([
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-3-flash-preview',
 ]);
 
@@ -32,7 +33,7 @@ function sanitizePayload(incoming) {
     return null;
   }
   const raw = JSON.stringify(cloned);
-  if (raw.length > 280000) return null;
+  if (raw.length > 900000) return null;
   return cloned;
 }
 
@@ -48,7 +49,9 @@ export async function handleGeminiProxy(apiKey, incoming) {
   if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
   const body = sanitizePayload(incoming);
   if (!body?.model) throw new Error('Invalid payload');
-  if (!ALLOWED_MODELS.has(body.model)) throw new Error('Model not allowed');
+  if (!ALLOWED_MODELS.has(body.model)) {
+    throw new Error(`Model not allowed: ${String(body.model)}`);
+  }
 
   const allowedKeys = new Set(['model', 'contents', 'config', 'useParts', 'parts']);
   for (const k of Object.keys(body)) {
@@ -73,9 +76,31 @@ export async function handleGeminiProxy(apiKey, incoming) {
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const out = await ai.models.generateContent(payload);
-  const text = typeof out.text === 'function' ? out.text() : out.text;
-  return { text: text || '' };
+  const requestedModel = String(body.model);
+  const fallbackModels = [
+    requestedModel,
+    ...(requestedModel === 'gemini-2.5-flash' ? ['gemini-2.5-flash-lite', 'gemini-3-flash-preview'] : []),
+    ...(requestedModel === 'gemini-3-flash-preview' ? ['gemini-2.5-flash', 'gemini-2.5-flash-lite'] : []),
+  ].filter((m, i, arr) => arr.indexOf(m) === i && ALLOWED_MODELS.has(m));
+
+  let lastError = null;
+  for (const model of fallbackModels) {
+    try {
+      const out = await ai.models.generateContent({ ...payload, model });
+      const text = typeof out.text === 'function' ? out.text() : out.text;
+      return { text: text || '' };
+    } catch (e) {
+      lastError = e;
+      const msg = e instanceof Error ? e.message : '';
+      const isTemporaryUnavailable =
+        msg.includes('503') ||
+        msg.includes('UNAVAILABLE') ||
+        msg.includes('high demand') ||
+        msg.includes('overloaded');
+      if (!isTemporaryUnavailable) break;
+    }
+  }
+  throw (lastError || new Error('Gemini unavailable'));
 }
 
 export default async function handler(req, res) {
@@ -122,6 +147,14 @@ export default async function handler(req, res) {
     return sendJson(res, 200, { text });
   } catch (e) {
     console.error('[api/gemini]', e);
-    return sendJson(res, 500, { error: 'Upstream or validation error' });
+    const message = e instanceof Error ? e.message : 'Upstream or validation error';
+    const status =
+      message.includes('Invalid') ||
+      message.includes('Too many') ||
+      message.includes('too large') ||
+      message.includes('Model not allowed')
+        ? 400
+        : 500;
+    return sendJson(res, status, { error: message });
   }
 }

@@ -39,6 +39,7 @@ type OrgType = 'public' | 'local' | 'enterprise';
 type QuizPack = 'basic' | 'advanced' | 'case';
 type Step = 'dashboard' | 'lobby';
 export type SlideTemplate = 'title' | 'twoColumn' | 'chart' | 'conclusion';
+export type DeckAspect = '16:9' | '4:5' | '9:16' | '1:1';
 
 interface Session {
   id: string;
@@ -68,6 +69,8 @@ export interface DeckSlide {
   caseStudy?: string;
   philosophyNote?: string;
   imageQuery?: string;
+  /** 슬라이드와 1:1로 연동되는 발표 대본(발표자가 읽는 스크립트) */
+  presenterScript?: string;
   style?: Partial<SlideStyle>;
 }
 
@@ -121,20 +124,6 @@ function pickCuratedBg(tpl: SlideTemplate, idx: number): string {
   return arr[idx % arr.length];
 }
 
-async function fetchUnsplashForTheme(theme: string): Promise<string | null> {
-  const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY as string | undefined;
-  if (!key?.trim()) return null;
-  try {
-    const q = encodeURIComponent(theme.slice(0, 80) || 'integrity ethics governance');
-    const res = await fetch(`https://api.unsplash.com/photos/random?query=${q}&orientation=landscape&client_id=${key}`);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { urls?: { regular?: string; full?: string } };
-    return data.urls?.regular || data.urls?.full || null;
-  } catch {
-    return null;
-  }
-}
-
 function emptyDeckFromTopic(topic: string): DeckSlide[] {
   const t = topic || 'AI 시대 공공 청렴';
   const order: SlideTemplate[] = ['title', 'twoColumn', 'chart', 'twoColumn', 'chart', 'twoColumn', 'chart', 'twoColumn', 'chart', 'conclusion'];
@@ -174,14 +163,20 @@ function emptyDeckFromTopic(topic: string): DeckSlide[] {
       bgImage: pickCuratedBg(tpl, i),
       philosophyNote:
         tpl === 'title'
-          ? `${PHILOSOPHY_SOURCE} 오늘 세션은 이 철학을 현장 언어로 번역합니다.`
-          : '제도의 형식적 준수를 넘어, 구성원이 체감하는 공정성과 설명 가능성을 동시에 확보하는 것이 핵심입니다.',
+          ? `주제「${t}」를 중심으로 세션에서 다룰 관점을 안내합니다. (원고·제목에 없는 내용은 추가하지 마세요.)`
+          : `「${t}」와 직접 연결된 요점만 서술합니다. 원고에 없는 사실은 넣지 않습니다.`,
       caseStudy:
         tpl === 'twoColumn'
-          ? '가명 사례: 내부 인허가 과정에서 유사 업체 담당자와의 비공식 접촉이 반복되며, 이해충돌 소지가 제기됐으나 기록이 불명확해 감사 대응이 지연된 상황. 조직은 사전 신고·회피 절차와 회의록 템플릿을 정비하고, 이해관계자 맵을 공개해 신뢰를 회복했습니다.'
+          ? `「${t}」에 대해 업로드한 원고에서 인용·요약할 문단을 여기에 두세요. 원고에 사례 문단이 없으면 이 칸은 비워 두는 것이 좋습니다.`
           : tpl === 'chart'
-            ? '사례 스냅샷: 부서 간 정보 비대칭으로 인해 동일 사안에 대해 상이한 해석이 공존, 외부 감사에서 “절차는 있으나 실효성 부족” 지적이 반복된 사례를 바탕으로 한 지표입니다.'
+            ? `차트 라벨은 원고·제목에서 발췌한 표현으로 채우세요. 숫자 근거가 없으면 모든 막대를 동일 값(예: 50)으로 두는 편이 안전합니다.`
             : undefined,
+      presenterScript:
+        tpl === 'title'
+          ? `안녕하세요. 오늘 주제는 "${t}"입니다. 세션 목표와 기대효과를 짚고 넘어가겠습니다.`
+          : tpl === 'conclusion'
+            ? `정리하겠습니다. "${t}"와 관련해 오늘 합의한 실행 과제를 다시 한 번 확인하겠습니다.`
+            : `이 슬라이드에서는 "${t}"의 핵심 포인트를 설명합니다. 청중이 이해하기 쉬운 속도로 진행하세요.`,
       style: { ...defaultSlideStyle },
     };
     return base;
@@ -203,12 +198,13 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
   let chartLabels = Array.isArray(raw.chartLabels) ? (raw.chartLabels as string[]).map(String) : [];
   let chartValues = Array.isArray(raw.chartValues) ? (raw.chartValues as number[]).map((n) => Number(n) || 0) : [];
   if (tpl === 'chart' && chartLabels.length === 0) {
-    chartLabels = ['이해충돌', '갑질', '투명성', '금품'];
-    chartValues = [68, 58, 72, 52];
+    chartLabels = ['항목 1', '항목 2', '항목 3', '항목 4'];
+    chartValues = [50, 50, 50, 50];
   }
   const caseStudy = raw.caseStudy != null ? String(raw.caseStudy) : undefined;
   const philosophyNote = raw.philosophyNote != null ? String(raw.philosophyNote) : undefined;
   const imageQuery = raw.imageQuery != null ? String(raw.imageQuery) : undefined;
+  const presenterScript = raw.presenterScript != null ? String(raw.presenterScript) : '';
   return {
     template: tpl,
     title,
@@ -222,6 +218,7 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
     caseStudy,
     philosophyNote,
     imageQuery,
+    presenterScript,
     style: { ...defaultSlideStyle },
   };
 }
@@ -278,6 +275,9 @@ const FacilitatorDashboard: React.FC = () => {
   const [selectedOrgType, setSelectedOrgType] = useState<OrgType>('public');
   const [selectedQuizPack, setSelectedQuizPack] = useState<QuizPack>('basic');
   const [topicInput, setTopicInput] = useState('');
+  const [sourceText, setSourceText] = useState('');
+  const [sourceFileName, setSourceFileName] = useState('');
+  const [aspectPreset, setAspectPreset] = useState<DeckAspect>('16:9');
   const [genLoading, setGenLoading] = useState(false);
   const [slides, setSlides] = useState<DeckSlide[]>(defaultSlides);
   const [slideIdx, setSlideIdx] = useState(0);
@@ -298,6 +298,7 @@ const FacilitatorDashboard: React.FC = () => {
   const reportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const slideBgInputRef = useRef<HTMLInputElement>(null);
+  const deckSourceInputRef = useRef<HTMLInputElement>(null);
 
   const [subscribed, setSubscribed] = useState(
     () => typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard',
@@ -318,6 +319,35 @@ const FacilitatorDashboard: React.FC = () => {
       return next;
     });
   }, [slideIdx]);
+
+  const aspectBoxClass: Record<DeckAspect, string> = {
+    '16:9': 'aspect-video w-full max-w-[min(100%,960px)]',
+    '4:5': 'aspect-[4/5] w-full max-w-[min(100%,520px)]',
+    '9:16': 'aspect-[9/16] w-full max-w-[min(100%,380px)]',
+    '1:1': 'aspect-square w-full max-w-[min(100%,560px)]',
+  };
+
+  const onDeckSourceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = '';
+    if (!f) return;
+    setSourceFileName(f.name);
+    try {
+      const t = await f.text();
+      setSourceText(t.slice(0, 200_000));
+    } catch {
+      setSourceText('');
+      setSourceFileName('');
+    }
+  };
+
+  const deleteCurrentSlide = () => {
+    if (slides.length <= 1) return;
+    const idx = slideIdx;
+    const next = slides.filter((_, i) => i !== idx);
+    setSlides(next);
+    setSlideIdx(Math.min(idx, next.length - 1));
+  };
 
   useEffect(() => {
     if (!showQR || !session || !qrRef.current) return;
@@ -363,25 +393,32 @@ const FacilitatorDashboard: React.FC = () => {
   };
 
   const generateScenarioSlides = async () => {
-    if (!topicInput.trim()) return;
+    const title = topicInput.trim();
+    const source = sourceText.trim();
+    if (!title && !source) return;
     setGenLoading(true);
     try {
-      const prompt = `당신은 공공·민간 청렴·공정 거버넌스 교육 콘텐츠 디렉터입니다.
+      const sourceBlock = source
+        ? `=== SOURCE_TEXT (ONLY USE THIS FOR FACTS; DO NOT INVENT) ===\n${source.slice(0, 120_000)}`
+        : '=== SOURCE_TEXT ===\n(비어 있음 — 제목만으로 구성하되, 제목에 없는 사실·수치·법령·사례·통계를 추가하지 마세요.)';
+      const prompt = `EcoStage 슬라이드 생성기. 아래 "제목"과 "SOURCE_TEXT"에만 충실하게 슬라이드를 만드세요.
 
-참고 철학(반드시 논지에 녹여낼 것): ${PHILOSOPHY_SOURCE}
+절대 규칙 (위반 금지):
+- 일반 상식, 뉴스, 법령, 판례, 통계, 외부 블로그·철학, 업로드되지 않은 파일 내용을 **추가하지 마세요**.
+- SOURCE_TEXT가 비어 있으면 **제목 문자열만**을 근거로 문장을 구성하세요(제목에 없는 주장 금지).
+- SOURCE_TEXT가 있으면 그 안의 문장·용어·구조만 재배열·요약·불릿화하세요. 없는 내용을 상상하지 마세요.
+- philosophyNote / caseStudy 도 위 규칙을 동일하게 적용합니다(외부 해설·가상 사례 금지).
+- chart 슬라이드: chartLabels는 SOURCE_TEXT 또는 제목에서 발췌한 짧은 구절이어야 하고, chartValues는 0~100 정수이되 **SOURCE_TEXT에 숫자가 없으면** 모든 값을 50으로 두세요.
 
-주제: "${topicInput}"
-
-요구사항:
+형식:
 - JSON 배열만 출력. 마크다운·코드펜스 금지.
-- 슬라이드는 **최소 10장, 최대 14장**. 단답형·한 줄 요약 위주 금지.
-- 각 슬라이드는 **전문 해설(philosophyNote)** 과 **깊이 있는 사례(caseStudy)** 를 포함한다.
-  - philosophyNote: 3~6문장. 청렴·공정·윤리의 균형, 제도-실천 정합, 설명 책임, 신뢰 회복 관점.
-  - caseStudy: 4~8문장. 익명화된 Case Study(배경-갈등-결정-결과-교훈). 실제 공직·기업 윤리 이슈에 가깝게.
-- template은 "title" | "twoColumn" | "chart" | "conclusion" 만 사용. 흐름: 오프닝 title → twoColumn/chart를 교차 → 마지막은 반드시 conclusion.
-- title/subtitle/bullets 또는 leftColumn/rightColumn은 서술형·전문 톤(한국어).
-- chart 슬라이드: chartLabels 4~8개, chartValues는 각 0~100 정수.
-- imageQuery: 슬라이드 배경에 쓸 Unsplash 검색용 짧은 영어 키워드(예: "integrity governance skyline").
+- 슬라이드 **10~14개**.
+- template은 "title" | "twoColumn" | "chart" | "conclusion" 만 사용. 첫 슬라이드는 title, 마지막은 conclusion, 중간은 twoColumn/chart 교차.
+- 각 원소에 presenterScript 포함: 해당 슬라이드를 발표할 때 읽을 한국어 대본(4~10문장, 슬라이드 본문과 동일 사실만).
+
+제목: "${title || '(제목 없음)'}"
+
+${sourceBlock}
 
 객체 스키마(배열 원소):
 {
@@ -395,28 +432,25 @@ const FacilitatorDashboard: React.FC = () => {
   "chartValues"?: number[],
   "philosophyNote": string,
   "caseStudy": string,
-  "imageQuery": string
+  "presenterScript": string
 }`;
       const { text } = await geminiGenerateContent({ model: 'gemini-2.5-flash', contents: prompt });
       const matched = text.match(/\[[\s\S]*\]/);
       if (!matched) throw new Error('format');
       const parsed = JSON.parse(matched[0]) as Record<string, unknown>[];
       const normalized = parsed.slice(0, 14).map((row, i) => normalizeAiSlide(row, i));
-      const enriched: DeckSlide[] = [];
-      for (let i = 0; i < normalized.length; i++) {
-        const s = normalized[i];
-        const q = s.imageQuery || `${topicInput} integrity ethics`;
-        const remote = await fetchUnsplashForTheme(q);
-        enriched.push({ ...s, bgImage: remote || pickCuratedBg(s.template, i) });
-      }
+      const enriched: DeckSlide[] = normalized.map((s, i) => ({
+        ...s,
+        bgImage: pickCuratedBg(s.template, i),
+      }));
       if (enriched.length < 10) {
-        const pad = emptyDeckFromTopic(topicInput).slice(enriched.length);
+        const pad = emptyDeckFromTopic(title || '세션').slice(enriched.length);
         enriched.push(...pad.slice(0, 10 - enriched.length));
       }
       setSlides(enriched);
       setSlideIdx(0);
     } catch {
-      setSlides(emptyDeckFromTopic(topicInput));
+      setSlides(emptyDeckFromTopic(title || '세션'));
       setSlideIdx(0);
     } finally {
       setGenLoading(false);
@@ -678,7 +712,7 @@ const FacilitatorDashboard: React.FC = () => {
     const st = { ...defaultSlideStyle, ...s.style };
     const alignClass = st.textAlign === 'center' ? 'text-center' : 'text-left';
     return (
-      <div className={`relative z-10 flex flex-col min-h-[360px] ${alignClass}`}>
+      <div className={`relative z-10 flex flex-col min-h-0 ${alignClass}`}>
         <p className="text-orange-200 uppercase text-xs tracking-[0.2em] font-bold mb-2 flex items-center gap-2 justify-between flex-wrap">
           <span className="inline-flex items-center gap-2">
             <LayoutTemplate className="w-4 h-4" /> {s.subtitle} · {s.template}
@@ -748,6 +782,12 @@ const FacilitatorDashboard: React.FC = () => {
           <div className="mt-3 rounded-2xl border border-amber-400/30 bg-amber-950/20 p-4 text-left">
             <p className="text-amber-200 text-xs font-bold uppercase tracking-wider mb-2">Case Study</p>
             <p className="text-slate-100 text-sm md:text-base leading-relaxed whitespace-pre-line">{s.caseStudy}</p>
+          </div>
+        ) : null}
+        {s.presenterScript?.trim() ? (
+          <div className="mt-3 rounded-2xl border border-violet-400/25 bg-violet-950/25 p-3 text-left">
+            <p className="text-violet-200 text-[10px] font-bold uppercase tracking-wider mb-1">발표 스크립트</p>
+            <p className="text-slate-200 text-xs leading-relaxed line-clamp-6 whitespace-pre-line">{s.presenterScript}</p>
           </div>
         ) : null}
         <div className="mt-auto pt-6 flex justify-between text-[10px] text-slate-500 border-t border-white/10">
@@ -832,51 +872,119 @@ const FacilitatorDashboard: React.FC = () => {
           </div>
 
           <div className="rounded-3xl border border-orange-300/30 bg-gradient-to-br from-[#070f24] to-[#1a1035] overflow-hidden">
-            <div className="px-6 py-4 border-b border-orange-300/20 flex items-center justify-between flex-wrap gap-2">
-              <div>
-                <p className="text-orange-300 text-xs tracking-widest uppercase font-bold">PPT Studio · 10+ 슬라이드 · 풀 에디터</p>
-                <h3 className="text-white text-2xl font-black">AI 심층 해설 · Case Study · 고화질 배경</h3>
+            <div className="px-6 py-4 border-b border-orange-300/20 flex flex-col gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <p className="text-orange-300 text-xs tracking-widest uppercase font-bold">PPT Studio · 10+ 슬라이드 · 풀 에디터</p>
+                  <h3 className="text-white text-2xl font-black">원고·제목 기반 슬라이드 · 발표 스크립트 동기화</h3>
+                </div>
+                <div className="text-sm text-slate-300 font-mono">
+                  {slideIdx + 1} / {slides.length}
+                </div>
               </div>
-              <div className="text-sm text-slate-300 font-mono">
-                {slideIdx + 1} / {slides.length}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">캔버스 비율</span>
+                {(['16:9', '4:5', '9:16', '1:1'] as const).map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => setAspectPreset(a)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-colors ${
+                      aspectPreset === a
+                        ? 'bg-orange-500/25 border-orange-300 text-orange-100'
+                        : 'border-slate-600 text-slate-400 hover:border-slate-500'
+                    }`}
+                  >
+                    {a}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className="p-5 grid lg:grid-cols-[1fr_320px] gap-5">
               <div>
-                <div className="flex gap-2 mb-4 flex-wrap">
+                <div className="flex gap-2 mb-3 flex-wrap">
                   <input
                     value={topicInput}
                     onChange={(e) => setTopicInput(e.target.value)}
-                    placeholder="주제 입력 (예: 인허가 이해충돌 예방)"
+                    placeholder="세션 제목 (원고 없을 때 최소 한 줄)"
                     className="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-[#111d3d]/70 border border-orange-300/30 text-white placeholder:text-slate-500"
                   />
                   <button
                     onClick={generateScenarioSlides}
-                    disabled={genLoading}
+                    disabled={genLoading || (!topicInput.trim() && !sourceText.trim())}
                     className="px-4 py-3 rounded-xl bg-gradient-to-r from-[#f97316] to-[#fb923c] font-bold text-white disabled:opacity-50"
                   >
                     {genLoading ? 'AI 생성 중' : 'AI로 10장+ 생성'}
                   </button>
                 </div>
+                <input
+                  ref={deckSourceInputRef}
+                  type="file"
+                  accept=".txt,.md,.markdown,text/plain"
+                  className="hidden"
+                  onChange={onDeckSourceFile}
+                />
+                <div className="mb-4 rounded-xl border border-orange-300/20 bg-[#0a1228]/80 p-3 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => deckSourceInputRef.current?.click()}
+                      className="px-3 py-2 rounded-lg border border-orange-300/40 text-orange-100 text-xs font-bold inline-flex items-center gap-1"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> 원고 업로드 (.txt / .md)
+                    </button>
+                    {(sourceFileName || sourceText) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSourceText('');
+                          setSourceFileName('');
+                        }}
+                        className="px-3 py-2 rounded-lg border border-slate-600 text-slate-400 text-xs font-bold"
+                      >
+                        원고 비우기
+                      </button>
+                    )}
+                    {sourceFileName ? (
+                      <span className="text-[11px] text-slate-400 truncate max-w-[200px]" title={sourceFileName}>
+                        {sourceFileName}
+                      </span>
+                    ) : null}
+                  </div>
+                  <label className="text-[11px] text-slate-500 block">원고 텍스트 (업로드 또는 직접 붙여넣기 · AI는 이 범위 밖 지식을 쓰지 않도록 요청됩니다)</label>
+                  <textarea
+                    value={sourceText}
+                    onChange={(e) => setSourceText(e.target.value.slice(0, 200_000))}
+                    rows={4}
+                    placeholder="여기에 붙여넣거나 파일을 업로드하세요."
+                    className="w-full rounded-lg bg-[#111d3d]/90 border border-orange-300/25 text-slate-100 text-xs py-2 px-2 placeholder:text-slate-600 resize-y min-h-[88px]"
+                  />
+                </div>
 
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`${slideIdx}-${currentSlide.template}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35 }}
-                    className="relative min-h-[420px] rounded-2xl border border-orange-300/30 overflow-hidden p-8"
-                  >
-                    <div
-                      className="absolute inset-0 bg-cover bg-center opacity-[0.38]"
-                      style={{ backgroundImage: `url(${currentSlide.bgImage})` }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#06112a]/88 via-[#0b1738]/85 to-[#2a1237]/86" />
-                    {renderSlidePreview()}
-                  </motion.div>
-                </AnimatePresence>
+                <div className="flex justify-center w-full">
+                  <div className={`relative mx-auto rounded-2xl border border-orange-300/30 overflow-hidden shadow-lg ${aspectBoxClass[aspectPreset]}`}>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={`${slideIdx}-${currentSlide.template}`}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.35 }}
+                        className="absolute inset-0 flex flex-col min-h-0"
+                      >
+                        <div
+                          className="absolute inset-0 bg-cover bg-center opacity-[0.38]"
+                          style={{ backgroundImage: `url(${currentSlide.bgImage})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#06112a]/88 via-[#0b1738]/85 to-[#2a1237]/86" />
+                        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-5 sm:p-7">
+                          {renderSlidePreview()}
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </div>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                   <button
@@ -900,10 +1008,18 @@ const FacilitatorDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-orange-300/25 bg-[#0a1630]/90 p-4 space-y-3">
+              <div className="rounded-2xl border border-orange-300/25 bg-[#0a1630]/90 p-4 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
                 <p className="text-orange-200 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
                   <GripVertical className="w-4 h-4" /> 슬라이드 편집
                 </p>
+                <button
+                  type="button"
+                  onClick={deleteCurrentSlide}
+                  disabled={slides.length <= 1}
+                  className="w-full py-2 rounded-lg border border-red-500/40 text-red-300 text-xs font-bold disabled:opacity-40 flex items-center justify-center gap-1"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> 현재 슬라이드 삭제
+                </button>
                 <label className="text-[11px] text-slate-400">마스터 템플릿</label>
                 <input
                   ref={slideBgInputRef}
@@ -1126,6 +1242,14 @@ const FacilitatorDashboard: React.FC = () => {
                   onChange={(e) => updateCurrentSlide({ caseStudy: e.target.value })}
                   rows={4}
                   className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2"
+                />
+                <label className="text-[11px] text-slate-400">발표 스크립트 (이 슬라이드 전용 · 미리보기와 동기화)</label>
+                <textarea
+                  value={currentSlide.presenterScript ?? ''}
+                  onChange={(e) => updateCurrentSlide({ presenterScript: e.target.value })}
+                  rows={5}
+                  placeholder="이 슬라이드를 넘길 때 읽을 대본을 적습니다."
+                  className="w-full rounded-lg bg-[#111d3d] border border-violet-400/30 text-white text-xs py-2 px-2 placeholder:text-slate-600"
                 />
               </div>
             </div>
