@@ -3,7 +3,7 @@ import { Hexagon, Box, Lock, Menu, X, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavbarProps {
-  onNavigate: (view: 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz' | 'stock') => void;
+  onNavigate: (view: 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz') => void;
   currentView: string;
 }
 
@@ -63,9 +63,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
           <button onClick={() => onNavigate('facilitator')} className={getLinkClass('facilitator')}>
             ECOSTAGE
           </button>
-          <button onClick={() => onNavigate('stock')} className={getLinkClass('stock')}>
-            Stock Lab
-          </button>
           <button 
             onClick={() => onNavigate('contact')}
             className="bg-white text-black px-6 py-2.5 rounded-full font-bold text-sm hover:bg-slate-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.2)] tracking-wider"
@@ -101,7 +98,6 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, currentView }) => {
               <MobileMenuItem label="Integrity Zone" sub="청렴 DNA & 번역기" onClick={() => handleMobileNav('integrity')} active={currentView === 'integrity'} />
               <MobileMenuItem label="Relation Lab" sub="Gender Gap · Love Counsel · Sensitivity" onClick={() => handleMobileNav('relationship')} active={currentView === 'relationship'} />
               <MobileMenuItem label="ECOSTAGE" sub="퍼실리테이터 세션 대시보드" onClick={() => handleMobileNav('facilitator')} active={currentView === 'facilitator'} />
-              <MobileMenuItem label="Stock Lab" sub="NH/키움 시세 연동 테스트" onClick={() => handleMobileNav('stock')} active={currentView === 'stock'} />
               <MobileMenuItem label="Contact Us" sub="문의하기" onClick={() => handleMobileNav('contact')} active={currentView === 'contact'} highlight />
             </div>
 

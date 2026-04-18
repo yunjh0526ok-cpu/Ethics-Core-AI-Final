@@ -17,9 +17,7 @@ import EcaCorruptionCounselor from './components/EcaCorruptionCounselor';
 import RelationshipThermometer from './components/RelationshipThermometer';
 import FacilitatorDashboard from './components/FacilitatorDashboard';
 import QuizStage from './components/QuizStage';
-import StockBrokerPanel from './components/StockBrokerPanel';
-
-type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz' | 'stock';
+type ViewName = 'home' | 'about' | 'proposal' | 'diagnostics' | 'admin' | 'integrity' | 'contact' | 'counseling_center' | 'relationship' | 'facilitator' | 'quiz';
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
@@ -291,12 +289,6 @@ const App: React.FC = () => {
               initialOrgType={quizOrgType}
               initialQuizPack={quizPack}
             />
-          </div>
-        )}
-
-        {currentView === 'stock' && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <StockBrokerPanel />
           </div>
         )}
 

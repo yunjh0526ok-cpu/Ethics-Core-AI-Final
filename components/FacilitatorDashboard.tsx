@@ -19,7 +19,7 @@ import {
 import { Radar, Bar } from 'react-chartjs-2';
 import {
   ArrowLeft, Play, Copy, Check, ChevronLeft, ChevronRight, Sparkles, Download,
-  FileImage, FileText, Trash2, LayoutTemplate, GripVertical, ImagePlus, Crown,
+  FileImage, FileText, Trash2, ImagePlus, Crown,
 } from 'lucide-react';
 
 ChartJS.register(
@@ -56,6 +56,8 @@ export interface SlideStyle {
   textAlign: 'left' | 'center';
 }
 
+export type FooterInsightKind = 'quote' | 'law';
+
 export interface DeckSlide {
   template: SlideTemplate;
   title: string;
@@ -67,10 +69,10 @@ export interface DeckSlide {
   chartValues: number[];
   bgImage: string;
   caseStudy?: string;
-  philosophyNote?: string;
   imageQuery?: string;
-  /** 슬라이드와 1:1로 연동되는 발표 대본(발표자가 읽는 스크립트) */
-  presenterScript?: string;
+  /** 공직자 명언(quote) 또는 관련 법령 한 줄(law) */
+  footerInsight?: string;
+  footerInsightKind?: FooterInsightKind;
   style?: Partial<SlideStyle>;
 }
 
@@ -138,7 +140,7 @@ function emptyDeckFromTopic(topic: string): DeckSlide[] {
             : `${t} — 심화 ${Math.floor(i / 2) + 1}`,
       subtitle:
         tpl === 'title'
-          ? '오프닝 · 철학과 방향'
+          ? '오프닝 · 법령·실무 초점'
           : tpl === 'chart'
             ? '리스크 프로파일'
             : tpl === 'conclusion'
@@ -161,22 +163,17 @@ function emptyDeckFromTopic(topic: string): DeckSlide[] {
       chartLabels: tpl === 'chart' ? ['이해충돌', '갑질·괴롭힘', '금품·향응', '의사결정 투명성'] : [],
       chartValues: tpl === 'chart' ? [68 + (i % 3) * 2, 58, 52, 69].map((v) => Math.min(95, v + (i % 2))) : [],
       bgImage: pickCuratedBg(tpl, i),
-      philosophyNote:
-        tpl === 'title'
-          ? `주제「${t}」를 중심으로 세션에서 다룰 관점을 안내합니다. (원고·제목에 없는 내용은 추가하지 마세요.)`
-          : `「${t}」와 직접 연결된 요점만 서술합니다. 원고에 없는 사실은 넣지 않습니다.`,
+      footerInsightKind: i % 2 === 0 ? 'law' : 'quote',
+      footerInsight:
+        i % 2 === 0
+          ? `「국가공무원법」 제56조(청렴 의무) 요지: 직무 관련 사적 이익 추구 금지 등을 한 줄로 요약해 넣으세요.`
+          : `이순신: "나의 나라를 위하여 싸우는 것이 나의 몫이다." — 주제와 연결해 각색 가능`,
       caseStudy:
         tpl === 'twoColumn'
-          ? `「${t}」에 대해 업로드한 원고에서 인용·요약할 문단을 여기에 두세요. 원고에 사례 문단이 없으면 이 칸은 비워 두는 것이 좋습니다.`
+          ? `「${t}」와 연결된 실무·원고 요지를 이 영역에 요약하세요.`
           : tpl === 'chart'
-            ? `차트 라벨은 원고·제목에서 발췌한 표현으로 채우세요. 숫자 근거가 없으면 모든 막대를 동일 값(예: 50)으로 두는 편이 안전합니다.`
+            ? `지표는 교육용 시각화이며, 수치 근거가 없으면 동일 값으로 표시하는 것이 안전합니다.`
             : undefined,
-      presenterScript:
-        tpl === 'title'
-          ? `안녕하세요. 오늘 주제는 "${t}"입니다. 세션 목표와 기대효과를 짚고 넘어가겠습니다.`
-          : tpl === 'conclusion'
-            ? `정리하겠습니다. "${t}"와 관련해 오늘 합의한 실행 과제를 다시 한 번 확인하겠습니다.`
-            : `이 슬라이드에서는 "${t}"의 핵심 포인트를 설명합니다. 청중이 이해하기 쉬운 속도로 진행하세요.`,
       style: { ...defaultSlideStyle },
     };
     return base;
@@ -202,9 +199,16 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
     chartValues = [50, 50, 50, 50];
   }
   const caseStudy = raw.caseStudy != null ? String(raw.caseStudy) : undefined;
-  const philosophyNote = raw.philosophyNote != null ? String(raw.philosophyNote) : undefined;
   const imageQuery = raw.imageQuery != null ? String(raw.imageQuery) : undefined;
-  const presenterScript = raw.presenterScript != null ? String(raw.presenterScript) : '';
+  let footerInsight = raw.footerInsight != null ? String(raw.footerInsight).trim() : '';
+  const k = raw.footerInsightKind;
+  let footerInsightKind: FooterInsightKind =
+    k === 'quote' || k === 'law' ? k : 'law';
+  const legacyPhil = raw.philosophyNote != null ? String(raw.philosophyNote).trim() : '';
+  if (!footerInsight && legacyPhil) {
+    footerInsight = legacyPhil;
+    footerInsightKind = 'law';
+  }
   return {
     template: tpl,
     title,
@@ -216,9 +220,9 @@ function normalizeAiSlide(raw: Record<string, unknown>, idx: number): DeckSlide 
     chartValues,
     bgImage: pickCuratedBg(tpl, idx),
     caseStudy,
-    philosophyNote,
     imageQuery,
-    presenterScript,
+    footerInsight: footerInsight || undefined,
+    footerInsightKind,
     style: { ...defaultSlideStyle },
   };
 }
@@ -321,10 +325,10 @@ const FacilitatorDashboard: React.FC = () => {
   }, [slideIdx]);
 
   const aspectBoxClass: Record<DeckAspect, string> = {
-    '16:9': 'aspect-video w-full max-w-[min(100%,960px)]',
-    '4:5': 'aspect-[4/5] w-full max-w-[min(100%,520px)]',
-    '9:16': 'aspect-[9/16] w-full max-w-[min(100%,380px)]',
-    '1:1': 'aspect-square w-full max-w-[min(100%,560px)]',
+    '16:9': 'aspect-video w-full max-w-[min(100%,960px)] max-h-[min(72vh,540px)]',
+    '4:5': 'aspect-[4/5] w-full max-w-[min(100%,440px)] max-h-[min(78vh,620px)]',
+    '9:16': 'aspect-[9/16] w-full max-w-[min(100%,min(360px,42vw))] max-h-[min(82vh,720px)]',
+    '1:1': 'aspect-square w-full max-w-[min(100%,480px)] max-h-[min(72vh,480px)]',
   };
 
   const onDeckSourceFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -398,27 +402,28 @@ const FacilitatorDashboard: React.FC = () => {
     if (!title && !source) return;
     setGenLoading(true);
     try {
-      const sourceBlock = source
-        ? `=== SOURCE_TEXT (ONLY USE THIS FOR FACTS; DO NOT INVENT) ===\n${source.slice(0, 120_000)}`
-        : '=== SOURCE_TEXT ===\n(비어 있음 — 제목만으로 구성하되, 제목에 없는 사실·수치·법령·사례·통계를 추가하지 마세요.)';
-      const prompt = `EcoStage 슬라이드 생성기. 아래 "제목"과 "SOURCE_TEXT"에만 충실하게 슬라이드를 만드세요.
+      const hasSource = source.length > 0;
+      const sourceBlock = hasSource
+        ? `=== SOURCE_TEXT (원고 본문) ===\n${source.slice(0, 120_000)}`
+        : '';
 
-절대 규칙 (위반 금지):
-- 일반 상식, 뉴스, 법령, 판례, 통계, 외부 블로그·철학, 업로드되지 않은 파일 내용을 **추가하지 마세요**.
-- SOURCE_TEXT가 비어 있으면 **제목 문자열만**을 근거로 문장을 구성하세요(제목에 없는 주장 금지).
-- SOURCE_TEXT가 있으면 그 안의 문장·용어·구조만 재배열·요약·불릿화하세요. 없는 내용을 상상하지 마세요.
-- philosophyNote / caseStudy 도 위 규칙을 동일하게 적용합니다(외부 해설·가상 사례 금지).
-- chart 슬라이드: chartLabels는 SOURCE_TEXT 또는 제목에서 발췌한 짧은 구절이어야 하고, chartValues는 0~100 정수이되 **SOURCE_TEXT에 숫자가 없으면** 모든 값을 50으로 두세요.
+      const promptTitleOnly = `EcoStage 공직·청렴 교육용 슬라이드 JSON 생성기.
 
-형식:
-- JSON 배열만 출력. 마크다운·코드펜스 금지.
-- 슬라이드 **10~14개**.
-- template은 "title" | "twoColumn" | "chart" | "conclusion" 만 사용. 첫 슬라이드는 title, 마지막은 conclusion, 중간은 twoColumn/chart 교차.
-- 각 원소에 presenterScript 포함: 해당 슬라이드를 발표할 때 읽을 한국어 대본(4~10문장, 슬라이드 본문과 동일 사실만).
+입력 제목: "${title || '세션'}"
 
-제목: "${title || '(제목 없음)'}"
+모드: **제목만 있음 (원고 없음)** — 대한민국 **실제 법령·조문·판례·헌재·대법원 판시·행정해석·감사·청렴 관련 규범** 중 검증 가능한 범위에서 전문 내용을 구성하세요. (Gemini 지식 기반, 가능한 한 법령명·조항을 명시)
 
-${sourceBlock}
+절대 금지:
+- 일반적인 **철학 해설·형이상학적 논지·자의적 윤리 블로그체 서술**
+- 특정 인물 사적 비방, 허위 사건 창작
+
+슬라이드 **10~14개**. template은 "title" | "twoColumn" | "chart" | "conclusion" 만 사용. 첫 장 title, 마지막 conclusion, 중간 twoColumn/chart 교차.
+
+각 슬라이드 하단 푸터(짧게):
+- "footerInsightKind": "quote" 일 때 **공직자·위인의 명언 한 줄** (출처가 분명한 인용)
+- "law" 일 때 **관련 법령·조문·판례 한 줄 요약** (법령명 포함)
+
+JSON 배열만 출력. 마크다운·코드펜스 금지.
 
 객체 스키마(배열 원소):
 {
@@ -430,10 +435,47 @@ ${sourceBlock}
   "rightColumn"?: string[],
   "chartLabels"?: string[],
   "chartValues"?: number[],
-  "philosophyNote": string,
-  "caseStudy": string,
-  "presenterScript": string
+  "caseStudy"?: string,
+  "footerInsight": string,
+  "footerInsightKind": "quote" | "law"
+}
+
+chart 슬라이드: chartValues는 0~100 정수. 근거 수치가 없으면 모두 50.`;
+
+      const promptWithSource = `EcoStage 공직·청렴 교육용 슬라이드 JSON 생성기.
+
+세션 제목: "${title || '세션'}"
+
+${sourceBlock}
+
+모드: **원고 있음** — 원고를 **구조화·불릿화·슬라이드 흐름**으로 재편성하세요. 원문과 주제에 맞게 **실제 법령·조문·판례·행정 실무 근거**를 AI가 **능동적으로 보완**해 추가하세요. (원고에 없더라도 주제·맥락과 직접 연결되는 법적 근거만)
+
+절대 금지:
+- **철학 해설형** 장황한 논설(「○○철학」식 자의적 해석)
+- 원고와 무관한 법 조문 나열
+
+슬라이드 **10~14개**. template 규칙은 제목-only 모드와 동일.
+
+각 슬라이드에 footerInsight + footerInsightKind ("quote" | "law") — 슬라이드 주제와 어울리는 **명언 한 줄** 또는 **법령 한 줄 요약**.
+
+JSON 배열만 출력. 마크다운·코드펜스 금지.
+
+객체 스키마(배열 원소):
+{
+  "template": "title" | "twoColumn" | "chart" | "conclusion",
+  "title": string,
+  "subtitle": string,
+  "bullets"?: string[],
+  "leftColumn"?: string[],
+  "rightColumn"?: string[],
+  "chartLabels"?: string[],
+  "chartValues"?: number[],
+  "caseStudy"?: string,
+  "footerInsight": string,
+  "footerInsightKind": "quote" | "law"
 }`;
+
+      const prompt = hasSource ? promptWithSource : promptTitleOnly;
       const { text } = await geminiGenerateContent({ model: 'gemini-2.5-flash', contents: prompt });
       const matched = text.match(/\[[\s\S]*\]/);
       if (!matched) throw new Error('format');
@@ -504,7 +546,7 @@ ${sourceBlock}
       const contentTop = s.template === 'title' ? 2.15 : 1.85;
 
       if (s.template === 'title' || s.template === 'conclusion') {
-        s.bullets.forEach((b, idx) => {
+        s.bullets.filter(Boolean).forEach((b, idx) => {
           slide.addText(`• ${b}`, {
             x: 0.9, y: contentTop + idx * 0.72, w: 11.5, h: 0.65,
             fontSize: 18, color: 'E2E8F0',
@@ -535,15 +577,16 @@ ${sourceBlock}
         });
       }
       let noteY = s.template === 'chart' ? contentTop + 3.35 : contentTop + 2.85;
-      if (s.philosophyNote) {
-        slide.addText(`[철학·해설]\n${s.philosophyNote}`, {
-          x: 0.7, y: noteY, w: 12, h: 1.5,
-          fontSize: 11, color: 'CBD5E1', valign: 'top',
+      if (s.footerInsight?.trim()) {
+        const tag = s.footerInsightKind === 'quote' ? '공직자 명언' : '관련 법령 한 줄';
+        slide.addText(`[${tag}]\n${s.footerInsight}`, {
+          x: 0.7, y: noteY, w: 12, h: 1.2,
+          fontSize: 11, color: 'C4B5FD', valign: 'top',
         });
-        noteY += 1.55;
+        noteY += 1.25;
       }
       if (s.caseStudy) {
-        slide.addText(`[Case Study]\n${s.caseStudy}`, {
+        slide.addText(`[맥락·요약]\n${s.caseStudy}`, {
           x: 0.7, y: noteY, w: 12, h: 1.8,
           fontSize: 11, color: 'FDE68A', valign: 'top',
         });
@@ -711,60 +754,159 @@ ${sourceBlock}
     const s = currentSlide;
     const st = { ...defaultSlideStyle, ...s.style };
     const alignClass = st.textAlign === 'center' ? 'text-center' : 'text-left';
+    const fc = `w-full rounded-lg bg-black/30 border border-white/15 text-slate-100 ${alignClass} focus:border-orange-400/55 outline-none ring-0 placeholder:text-slate-500`;
+    const scale = aspectPreset === '16:9' ? 1 : aspectPreset === '4:5' ? 0.9 : aspectPreset === '1:1' ? 0.86 : 0.8;
+    const titlePx = Math.max(15, Math.round(Math.min(42, st.titleFontPx * scale)));
+    const bodyPx = Math.max(11, Math.round(st.bodyFontPx * scale));
+    const twoColGrid = aspectPreset === '16:9' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4' : 'grid grid-cols-1 gap-2.5';
+
+    const bulletsForEdit = s.bullets.length ? s.bullets : [''];
+    const patchBullet = (i: number, v: string) => {
+      const next = bulletsForEdit.map((b, j) => (j === i ? v : b));
+      updateCurrentSlide({ bullets: next });
+    };
+    const leftRows = s.leftColumn.length ? s.leftColumn : [''];
+    const rightRows = s.rightColumn.length ? s.rightColumn : [''];
+    const patchLeft = (i: number, v: string) =>
+      updateCurrentSlide({ leftColumn: leftRows.map((b, j) => (j === i ? v : b)) });
+    const patchRight = (i: number, v: string) =>
+      updateCurrentSlide({ rightColumn: rightRows.map((b, j) => (j === i ? v : b)) });
+    const patchChartLabel = (i: number, v: string) => {
+      const labels = [...s.chartLabels];
+      labels[i] = v;
+      updateCurrentSlide({ chartLabels: labels });
+    };
+    const patchChartValue = (i: number, v: number) => {
+      const vals = [...s.chartValues];
+      vals[i] = v;
+      updateCurrentSlide({ chartValues: vals });
+    };
+
+    const footerKind = s.footerInsightKind ?? 'law';
+    const footerTitle = footerKind === 'law' ? '관련 법령 한 줄' : '공직자 명언';
+
     return (
-      <div className={`relative z-10 flex flex-col min-h-0 ${alignClass}`}>
-        <p className="text-orange-200 uppercase text-xs tracking-[0.2em] font-bold mb-2 flex items-center gap-2 justify-between flex-wrap">
-          <span className="inline-flex items-center gap-2">
-            <LayoutTemplate className="w-4 h-4" /> {s.subtitle} · {s.template}
-          </span>
-        </p>
-        <h4
-          className="font-black leading-tight mb-4 break-keep"
-          style={{ color: st.titleColor, fontSize: `${Math.min(52, st.titleFontPx)}px` }}
-        >
-          {s.title}
-        </h4>
+      <div className={`relative z-10 flex flex-col min-h-0 gap-2 ${alignClass}`}>
+        <div className="flex flex-wrap items-center gap-2 mb-1 text-left">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-orange-300/90 shrink-0">{s.template}</span>
+          <input
+            value={s.subtitle}
+            onChange={(e) => updateCurrentSlide({ subtitle: e.target.value })}
+            className={`${fc} flex-1 min-w-0 text-[10px] sm:text-xs py-1`}
+            placeholder="부제 / 라벨"
+          />
+        </div>
+        <textarea
+          value={s.title}
+          onChange={(e) => updateCurrentSlide({ title: e.target.value })}
+          rows={aspectPreset === '9:16' ? 2 : 3}
+          className={`${fc} font-black leading-tight break-keep resize-none`}
+          style={{ color: st.titleColor, fontSize: `${titlePx}px`, minHeight: '2.5em' }}
+          placeholder="슬라이드 제목"
+        />
         {s.template === 'title' || s.template === 'conclusion' ? (
-          <ul className="space-y-3">
-            {s.bullets.map((b, i) => (
-              <li key={i} className="flex gap-3" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>
-                <span className="text-orange-300 shrink-0">•</span>
-                <span className="break-keep leading-relaxed">{b}</span>
+          <ul className={`space-y-1.5 ${alignClass === 'text-center' ? 'items-center' : ''}`}>
+            {bulletsForEdit.map((b, i) => (
+              <li key={i} className="flex gap-2 items-start">
+                <span className="text-orange-300 shrink-0 pt-1" style={{ fontSize: `${bodyPx}px` }}>•</span>
+                <input
+                  value={b}
+                  onChange={(e) => patchBullet(i, e.target.value)}
+                  className={`${fc} flex-1 leading-relaxed`}
+                  style={{ color: st.bodyColor, fontSize: `${bodyPx}px` }}
+                />
+                {bulletsForEdit.length > 1 ? (
+                  <button
+                    type="button"
+                    className="text-slate-500 hover:text-red-300 text-[10px] shrink-0 pt-1"
+                    onClick={() => updateCurrentSlide({ bullets: bulletsForEdit.filter((_, j) => j !== i) })}
+                  >
+                    삭제
+                  </button>
+                ) : null}
               </li>
             ))}
+            <li>
+              <button
+                type="button"
+                className="text-[10px] font-bold text-orange-300/80 hover:text-orange-200"
+                onClick={() => updateCurrentSlide({ bullets: [...bulletsForEdit, ''] })}
+              >
+                + 불릿 추가
+              </button>
+            </li>
           </ul>
         ) : null}
         {s.template === 'twoColumn' ? (
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="rounded-2xl border border-orange-300/25 bg-black/25 p-4 backdrop-blur-sm">
-              <p className="text-orange-300 text-sm font-bold mb-2">현황 · 리스크</p>
-              <ul className="space-y-2">
-                {s.leftColumn.filter(Boolean).map((b, i) => (
-                  <li key={i} className="break-keep leading-relaxed" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>• {b}</li>
+          <div className={twoColGrid}>
+            <div className="rounded-xl border border-orange-300/25 bg-black/25 p-3 backdrop-blur-sm min-w-0">
+              <p className="text-orange-300 text-[11px] font-bold mb-2">현황 · 리스크</p>
+              <ul className="space-y-1.5">
+                {leftRows.map((b, i) => (
+                  <li key={i} className="flex gap-1 items-start">
+                    <span className="text-orange-300/80 shrink-0 text-[10px] pt-1">•</span>
+                    <input
+                      value={b}
+                      onChange={(e) => patchLeft(i, e.target.value)}
+                      className={`${fc} flex-1 text-xs leading-snug`}
+                      style={{ color: st.bodyColor, fontSize: `${bodyPx}px` }}
+                    />
+                    {leftRows.length > 1 ? (
+                      <button type="button" className="text-[9px] text-slate-500 hover:text-red-300 shrink-0" onClick={() => updateCurrentSlide({ leftColumn: leftRows.filter((_, j) => j !== i) })}>×</button>
+                    ) : null}
+                  </li>
                 ))}
+                <li>
+                  <button type="button" className="text-[10px] text-orange-300/80 font-bold" onClick={() => updateCurrentSlide({ leftColumn: [...leftRows, ''] })}>+ 행</button>
+                </li>
               </ul>
             </div>
-            <div className="rounded-2xl border border-orange-300/25 bg-black/25 p-4 backdrop-blur-sm">
-              <p className="text-orange-300 text-sm font-bold mb-2">과제 · 개선</p>
-              <ul className="space-y-2">
-                {s.rightColumn.filter(Boolean).map((b, i) => (
-                  <li key={i} className="break-keep leading-relaxed" style={{ color: st.bodyColor, fontSize: `${st.bodyFontPx}px` }}>• {b}</li>
+            <div className="rounded-xl border border-orange-300/25 bg-black/25 p-3 backdrop-blur-sm min-w-0">
+              <p className="text-orange-300 text-[11px] font-bold mb-2">과제 · 개선</p>
+              <ul className="space-y-1.5">
+                {rightRows.map((b, i) => (
+                  <li key={i} className="flex gap-1 items-start">
+                    <span className="text-orange-300/80 shrink-0 text-[10px] pt-1">•</span>
+                    <input
+                      value={b}
+                      onChange={(e) => patchRight(i, e.target.value)}
+                      className={`${fc} flex-1 text-xs leading-snug`}
+                      style={{ color: st.bodyColor, fontSize: `${bodyPx}px` }}
+                    />
+                    {rightRows.length > 1 ? (
+                      <button type="button" className="text-[9px] text-slate-500 hover:text-red-300 shrink-0" onClick={() => updateCurrentSlide({ rightColumn: rightRows.filter((_, j) => j !== i) })}>×</button>
+                    ) : null}
+                  </li>
                 ))}
+                <li>
+                  <button type="button" className="text-[10px] text-orange-300/80 font-bold" onClick={() => updateCurrentSlide({ rightColumn: [...rightRows, ''] })}>+ 행</button>
+                </li>
               </ul>
             </div>
           </div>
         ) : null}
         {s.template === 'chart' ? (
-          <div className="space-y-3 mt-2">
+          <div className="space-y-2 mt-1">
             {s.chartLabels.map((label, i) => {
               const v = s.chartValues[i] ?? 0;
               return (
-                <div key={i}>
-                  <div className="flex justify-between text-sm text-slate-200 mb-1">
-                    <span>{label}</span>
-                    <span className="font-mono text-orange-200">{v}</span>
+                <div key={i} className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-0.5">
+                    <input
+                      value={label}
+                      onChange={(e) => patchChartLabel(i, e.target.value)}
+                      className={`${fc} flex-1 min-w-0 text-xs py-0.5`}
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={v}
+                      onChange={(e) => patchChartValue(i, Math.min(100, Math.max(0, parseInt(e.target.value, 10) || 0)))}
+                      className="w-14 rounded bg-black/40 border border-white/15 text-orange-200 text-xs font-mono px-1 py-0.5 text-center"
+                    />
                   </div>
-                  <div className="h-3 rounded-full bg-slate-800 overflow-hidden">
+                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-orange-500 to-amber-300 rounded-full transition-all" style={{ width: `${Math.min(100, v)}%` }} />
                   </div>
                 </div>
@@ -772,27 +914,39 @@ ${sourceBlock}
             })}
           </div>
         ) : null}
-        {s.philosophyNote ? (
-          <div className="mt-5 rounded-2xl border border-cyan-500/25 bg-cyan-950/30 p-4 text-left">
-            <p className="text-cyan-200 text-xs font-bold uppercase tracking-wider mb-2">철학 · 전문 해설</p>
-            <p className="text-slate-100 text-sm md:text-base leading-relaxed whitespace-pre-line">{s.philosophyNote}</p>
+        <div className="mt-2 rounded-xl border border-violet-400/30 bg-violet-950/20 p-2.5 text-left space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-violet-200 text-[10px] font-bold uppercase tracking-wider">{footerTitle}</span>
+            <select
+              value={footerKind}
+              onChange={(e) => updateCurrentSlide({ footerInsightKind: e.target.value as FooterInsightKind })}
+              className="text-[10px] rounded bg-black/40 border border-white/20 text-slate-200 py-0.5 px-1"
+            >
+              <option value="law">법령 한 줄</option>
+              <option value="quote">공직자 명언</option>
+            </select>
           </div>
-        ) : null}
-        {s.caseStudy ? (
-          <div className="mt-3 rounded-2xl border border-amber-400/30 bg-amber-950/20 p-4 text-left">
-            <p className="text-amber-200 text-xs font-bold uppercase tracking-wider mb-2">Case Study</p>
-            <p className="text-slate-100 text-sm md:text-base leading-relaxed whitespace-pre-line">{s.caseStudy}</p>
-          </div>
-        ) : null}
-        {s.presenterScript?.trim() ? (
-          <div className="mt-3 rounded-2xl border border-violet-400/25 bg-violet-950/25 p-3 text-left">
-            <p className="text-violet-200 text-[10px] font-bold uppercase tracking-wider mb-1">발표 스크립트</p>
-            <p className="text-slate-200 text-xs leading-relaxed line-clamp-6 whitespace-pre-line">{s.presenterScript}</p>
-          </div>
-        ) : null}
-        <div className="mt-auto pt-6 flex justify-between text-[10px] text-slate-500 border-t border-white/10">
-          <span>{FOOTER_BRAND}</span>
-          <span className="text-orange-300/80 font-mono">{slideIdx + 1} / {slides.length}</span>
+          <textarea
+            value={s.footerInsight ?? ''}
+            onChange={(e) => updateCurrentSlide({ footerInsight: e.target.value })}
+            rows={aspectPreset === '9:16' ? 2 : 3}
+            className={`${fc} text-xs leading-relaxed resize-none min-h-[3rem]`}
+            placeholder={footerKind === 'law' ? '예: 국가공무원법 제56조 — 청렴 의무 요지' : '예: 인용할 명언 한 줄'}
+          />
+        </div>
+        <div className="rounded-xl border border-amber-400/25 bg-amber-950/15 p-2.5 text-left">
+          <p className="text-amber-200 text-[10px] font-bold uppercase tracking-wider mb-1">맥락 · 요약 (선택)</p>
+          <textarea
+            value={s.caseStudy ?? ''}
+            onChange={(e) => updateCurrentSlide({ caseStudy: e.target.value })}
+            rows={aspectPreset === '9:16' ? 2 : 3}
+            className={`${fc} text-xs leading-relaxed resize-none`}
+            placeholder="슬라이드 보조 설명"
+          />
+        </div>
+        <div className="mt-auto pt-3 flex justify-between text-[9px] text-slate-500 border-t border-white/10 gap-2">
+          <span className="truncate">{FOOTER_BRAND}</span>
+          <span className="text-orange-300/80 font-mono shrink-0">{slideIdx + 1} / {slides.length}</span>
         </div>
       </div>
     );
@@ -876,7 +1030,7 @@ ${sourceBlock}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
                   <p className="text-orange-300 text-xs tracking-widest uppercase font-bold">PPT Studio · 10+ 슬라이드 · 풀 에디터</p>
-                  <h3 className="text-white text-2xl font-black">원고·제목 기반 슬라이드 · 발표 스크립트 동기화</h3>
+                  <h3 className="text-white text-2xl font-black">법령·실무 기반 슬라이드 · 캔버스 인라인 편집</h3>
                 </div>
                 <div className="text-sm text-slate-300 font-mono">
                   {slideIdx + 1} / {slides.length}
@@ -901,13 +1055,12 @@ ${sourceBlock}
               </div>
             </div>
 
-            <div className="p-5 grid lg:grid-cols-[1fr_320px] gap-5">
-              <div>
-                <div className="flex gap-2 mb-3 flex-wrap">
+            <div className="p-5 space-y-4">
+                <div className="flex gap-2 flex-wrap">
                   <input
                     value={topicInput}
                     onChange={(e) => setTopicInput(e.target.value)}
-                    placeholder="세션 제목 (원고 없을 때 최소 한 줄)"
+                    placeholder="세션 제목 (제목만 입력 시 법령·판례 중심 AI 초안)"
                     className="flex-1 min-w-[200px] px-4 py-3 rounded-xl bg-[#111d3d]/70 border border-orange-300/30 text-white placeholder:text-slate-500"
                   />
                   <button
@@ -925,7 +1078,19 @@ ${sourceBlock}
                   className="hidden"
                   onChange={onDeckSourceFile}
                 />
-                <div className="mb-4 rounded-xl border border-orange-300/20 bg-[#0a1228]/80 p-3 space-y-2">
+                <input
+                  ref={slideBgInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!f?.type.startsWith('image/')) return;
+                    updateCurrentSlide({ bgImage: URL.createObjectURL(f) });
+                  }}
+                />
+                <div className="rounded-xl border border-orange-300/20 bg-[#0a1228]/80 p-3 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
@@ -952,14 +1117,150 @@ ${sourceBlock}
                       </span>
                     ) : null}
                   </div>
-                  <label className="text-[11px] text-slate-500 block">원고 텍스트 (업로드 또는 직접 붙여넣기 · AI는 이 범위 밖 지식을 쓰지 않도록 요청됩니다)</label>
+                  <label className="text-[11px] text-slate-500 block">
+                    원고가 있으면 구조화 + 법령·실무 보완, 없으면 제목만으로 법령·판례 중심 생성 (철학 잡설 없음)
+                  </label>
                   <textarea
                     value={sourceText}
                     onChange={(e) => setSourceText(e.target.value.slice(0, 200_000))}
-                    rows={4}
-                    placeholder="여기에 붙여넣거나 파일을 업로드하세요."
-                    className="w-full rounded-lg bg-[#111d3d]/90 border border-orange-300/25 text-slate-100 text-xs py-2 px-2 placeholder:text-slate-600 resize-y min-h-[88px]"
+                    rows={3}
+                    placeholder="원고 붙여넣기 (선택)"
+                    className="w-full rounded-lg bg-[#111d3d]/90 border border-orange-300/25 text-slate-100 text-xs py-2 px-2 placeholder:text-slate-600 resize-y min-h-[72px]"
                   />
+                </div>
+
+                <div className="flex flex-wrap items-end gap-2 rounded-xl border border-orange-300/15 bg-[#0a1228]/60 p-3">
+                  <div className="flex-1 min-w-[140px]">
+                    <label className="text-[10px] text-slate-500 block mb-0.5">템플릿</label>
+                    <select
+                      value={currentSlide.template}
+                      onChange={(e) => {
+                        const tpl = e.target.value as SlideTemplate;
+                        updateCurrentSlide({ template: tpl, bgImage: pickCuratedBg(tpl, slideIdx) });
+                      }}
+                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
+                    >
+                      <option value="title">타이틀</option>
+                      <option value="twoColumn">투 컬럼</option>
+                      <option value="chart">차트</option>
+                      <option value="conclusion">결론</option>
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={deleteCurrentSlide}
+                    disabled={slides.length <= 1}
+                    className="shrink-0 px-3 py-2 rounded-lg border border-red-500/40 text-red-300 text-xs font-bold disabled:opacity-40 flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> 슬라이드 삭제
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => slideBgInputRef.current?.click()}
+                    className="shrink-0 px-3 py-2 rounded-lg border border-orange-300/40 text-orange-100 text-xs font-bold inline-flex items-center gap-1"
+                  >
+                    <ImagePlus className="w-3.5 h-3.5" /> 배경
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateCurrentSlide({ bgImage: pickCuratedBg(currentSlide.template, slideIdx + 3) })
+                    }
+                    className="shrink-0 px-3 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-bold"
+                  >
+                    배경 큐레이션
+                  </button>
+                  <details className="flex-1 min-w-[200px] border border-white/10 rounded-lg bg-black/25 px-2 py-1">
+                    <summary className="text-[11px] text-orange-200 cursor-pointer font-bold list-none [&::-webkit-details-marker]:hidden">
+                      타이포 · 배경 URL
+                    </summary>
+                    <div className="mt-2 space-y-2 pb-2 border-t border-white/10 pt-2">
+                      <label className="text-[10px] text-slate-500">배경 URL</label>
+                      <input
+                        value={currentSlide.bgImage}
+                        onChange={(e) => updateCurrentSlide({ bgImage: e.target.value })}
+                        className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-1.5 px-2 font-mono"
+                        placeholder="https://..."
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[10px] text-slate-500">제목(px)</span>
+                          <input
+                            type="number"
+                            min={24}
+                            max={64}
+                            value={currentSlide.style?.titleFontPx ?? defaultSlideStyle.titleFontPx}
+                            onChange={(e) =>
+                              updateCurrentSlide({
+                                style: { ...defaultSlideStyle, ...currentSlide.style, titleFontPx: Number(e.target.value) || 40 },
+                              })
+                            }
+                            className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500">본문(px)</span>
+                          <input
+                            type="number"
+                            min={12}
+                            max={28}
+                            value={currentSlide.style?.bodyFontPx ?? defaultSlideStyle.bodyFontPx}
+                            onChange={(e) =>
+                              updateCurrentSlide({
+                                style: { ...defaultSlideStyle, ...currentSlide.style, bodyFontPx: Number(e.target.value) || 17 },
+                              })
+                            }
+                            className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-[10px] text-slate-500">제목색</span>
+                          <input
+                            type="color"
+                            value={currentSlide.style?.titleColor ?? defaultSlideStyle.titleColor}
+                            onChange={(e) =>
+                              updateCurrentSlide({
+                                style: { ...defaultSlideStyle, ...currentSlide.style, titleColor: e.target.value },
+                              })
+                            }
+                            className="w-full h-8 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-slate-500">본문색</span>
+                          <input
+                            type="color"
+                            value={currentSlide.style?.bodyColor ?? defaultSlideStyle.bodyColor}
+                            onChange={(e) =>
+                              updateCurrentSlide({
+                                style: { ...defaultSlideStyle, ...currentSlide.style, bodyColor: e.target.value },
+                              })
+                            }
+                            className="w-full h-8 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                      <label className="text-[10px] text-slate-500">정렬</label>
+                      <select
+                        value={currentSlide.style?.textAlign ?? defaultSlideStyle.textAlign}
+                        onChange={(e) =>
+                          updateCurrentSlide({
+                            style: {
+                              ...defaultSlideStyle,
+                              ...currentSlide.style,
+                              textAlign: e.target.value as 'left' | 'center',
+                            },
+                          })
+                        }
+                        className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1.5 px-2"
+                      >
+                        <option value="left">좌측</option>
+                        <option value="center">중앙</option>
+                      </select>
+                    </div>
+                  </details>
                 </div>
 
                 <div className="flex justify-center w-full">
@@ -978,7 +1279,11 @@ ${sourceBlock}
                           style={{ backgroundImage: `url(${currentSlide.bgImage})` }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-br from-[#06112a]/88 via-[#0b1738]/85 to-[#2a1237]/86" />
-                        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-5 sm:p-7">
+                        <div
+                          className={`relative z-10 flex-1 min-h-0 overflow-y-auto overflow-x-hidden ${
+                            aspectPreset === '9:16' || aspectPreset === '1:1' ? 'p-3 sm:p-4' : aspectPreset === '4:5' ? 'p-4 sm:p-5' : 'p-5 sm:p-7'
+                          }`}
+                        >
                           {renderSlidePreview()}
                         </div>
                       </motion.div>
@@ -986,7 +1291,7 @@ ${sourceBlock}
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <button
                     onClick={() => setSlideIdx((v) => (v === 0 ? slides.length - 1 : v - 1))}
                     className="px-4 py-2 rounded-xl border border-orange-300/40 text-orange-200"
@@ -1006,252 +1311,6 @@ ${sourceBlock}
                     다음 <ChevronRight className="w-4 h-4 inline" />
                   </button>
                 </div>
-              </div>
-
-              <div className="rounded-2xl border border-orange-300/25 bg-[#0a1630]/90 p-4 space-y-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
-                <p className="text-orange-200 text-xs font-bold uppercase tracking-wider flex items-center gap-2">
-                  <GripVertical className="w-4 h-4" /> 슬라이드 편집
-                </p>
-                <button
-                  type="button"
-                  onClick={deleteCurrentSlide}
-                  disabled={slides.length <= 1}
-                  className="w-full py-2 rounded-lg border border-red-500/40 text-red-300 text-xs font-bold disabled:opacity-40 flex items-center justify-center gap-1"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> 현재 슬라이드 삭제
-                </button>
-                <label className="text-[11px] text-slate-400">마스터 템플릿</label>
-                <input
-                  ref={slideBgInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    e.target.value = '';
-                    if (!f?.type.startsWith('image/')) return;
-                    updateCurrentSlide({ bgImage: URL.createObjectURL(f) });
-                  }}
-                />
-                <select
-                  value={currentSlide.template}
-                  onChange={(e) => {
-                    const tpl = e.target.value as SlideTemplate;
-                    updateCurrentSlide({ template: tpl, bgImage: pickCuratedBg(tpl, slideIdx) });
-                  }}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                >
-                  <option value="title">타이틀</option>
-                  <option value="twoColumn">투 컬럼</option>
-                  <option value="chart">차트</option>
-                  <option value="conclusion">결론</option>
-                </select>
-                <label className="text-[11px] text-slate-400">부제 / 라벨</label>
-                <input
-                  value={currentSlide.subtitle}
-                  onChange={(e) => updateCurrentSlide({ subtitle: e.target.value })}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                />
-                <label className="text-[11px] text-slate-400">제목</label>
-                <textarea
-                  value={currentSlide.title}
-                  onChange={(e) => updateCurrentSlide({ title: e.target.value })}
-                  rows={2}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                />
-                {(currentSlide.template === 'title' || currentSlide.template === 'conclusion') && (
-                  <>
-                    <label className="text-[11px] text-slate-400">불릿 (줄바꿈으로 구분)</label>
-                    <textarea
-                      value={currentSlide.bullets.join('\n')}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          bullets: e.target.value.split('\n').map((l) => l.trim()).filter(Boolean),
-                        })
-                      }
-                      rows={5}
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                    />
-                  </>
-                )}
-                {currentSlide.template === 'twoColumn' && (
-                  <>
-                    <label className="text-[11px] text-slate-400">좌측 컬럼 (줄바꿈)</label>
-                    <textarea
-                      value={currentSlide.leftColumn.join('\n')}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          leftColumn: e.target.value.split('\n').map((l) => l.trim()).filter(Boolean),
-                        })
-                      }
-                      rows={4}
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                    />
-                    <label className="text-[11px] text-slate-400">우측 컬럼 (줄바꿈)</label>
-                    <textarea
-                      value={currentSlide.rightColumn.join('\n')}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          rightColumn: e.target.value.split('\n').map((l) => l.trim()).filter(Boolean),
-                        })
-                      }
-                      rows={4}
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                    />
-                  </>
-                )}
-                {currentSlide.template === 'chart' && (
-                  <>
-                    <label className="text-[11px] text-slate-400">항목 라벨 (줄바꿈)</label>
-                    <textarea
-                      value={currentSlide.chartLabels.join('\n')}
-                      onChange={(e) => {
-                        const labels = e.target.value.split('\n').map((l) => l.trim()).filter(Boolean);
-                        const values = labels.map((_, i) => currentSlide.chartValues[i] ?? 50);
-                        updateCurrentSlide({ chartLabels: labels, chartValues: values });
-                      }}
-                      rows={4}
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                    />
-                    <label className="text-[11px] text-slate-400">값 0~100 (쉼표 구분, 라벨 순서와 동일)</label>
-                    <input
-                      value={currentSlide.chartValues.join(',')}
-                      onChange={(e) => {
-                        const vals = e.target.value.split(',').map((n) => Math.min(100, Math.max(0, parseInt(n.trim(), 10) || 0)));
-                        updateCurrentSlide({ chartValues: vals });
-                      }}
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2 font-mono"
-                      placeholder="68,55,72,48"
-                    />
-                  </>
-                )}
-                <label className="text-[11px] text-slate-400">배경 이미지</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => slideBgInputRef.current?.click()}
-                    className="flex-1 py-2 rounded-lg border border-orange-300/40 text-orange-100 text-xs font-bold flex items-center justify-center gap-1"
-                  >
-                    <ImagePlus className="w-3.5 h-3.5" /> 업로드
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateCurrentSlide({ bgImage: pickCuratedBg(currentSlide.template, slideIdx + 3) })
-                    }
-                    className="flex-1 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-bold"
-                  >
-                    큐레이션
-                  </button>
-                </div>
-                <label className="text-[11px] text-slate-400">배경 URL (선택)</label>
-                <input
-                  value={currentSlide.bgImage}
-                  onChange={(e) => updateCurrentSlide({ bgImage: e.target.value })}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2 font-mono"
-                  placeholder="https://..."
-                />
-                <label className="text-[11px] text-slate-400">타이포 · 색상 (캔버스형)</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[10px] text-slate-500">제목(px)</span>
-                    <input
-                      type="number"
-                      min={24}
-                      max={64}
-                      value={currentSlide.style?.titleFontPx ?? defaultSlideStyle.titleFontPx}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          style: { ...defaultSlideStyle, ...currentSlide.style, titleFontPx: Number(e.target.value) || 40 },
-                        })
-                      }
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500">본문(px)</span>
-                    <input
-                      type="number"
-                      min={12}
-                      max={28}
-                      value={currentSlide.style?.bodyFontPx ?? defaultSlideStyle.bodyFontPx}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          style: { ...defaultSlideStyle, ...currentSlide.style, bodyFontPx: Number(e.target.value) || 17 },
-                        })
-                      }
-                      className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-1 px-2"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[10px] text-slate-500">제목색</span>
-                    <input
-                      type="color"
-                      value={currentSlide.style?.titleColor ?? defaultSlideStyle.titleColor}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          style: { ...defaultSlideStyle, ...currentSlide.style, titleColor: e.target.value },
-                        })
-                      }
-                      className="w-full h-9 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-500">본문색</span>
-                    <input
-                      type="color"
-                      value={currentSlide.style?.bodyColor ?? defaultSlideStyle.bodyColor}
-                      onChange={(e) =>
-                        updateCurrentSlide({
-                          style: { ...defaultSlideStyle, ...currentSlide.style, bodyColor: e.target.value },
-                        })
-                      }
-                      className="w-full h-9 rounded-lg border border-orange-300/30 bg-[#111d3d] cursor-pointer"
-                    />
-                  </div>
-                </div>
-                <label className="text-[11px] text-slate-400">텍스트 정렬</label>
-                <select
-                  value={currentSlide.style?.textAlign ?? defaultSlideStyle.textAlign}
-                  onChange={(e) =>
-                    updateCurrentSlide({
-                      style: {
-                        ...defaultSlideStyle,
-                        ...currentSlide.style,
-                        textAlign: e.target.value as 'left' | 'center',
-                      },
-                    })
-                  }
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-sm py-2 px-2"
-                >
-                  <option value="left">좌측</option>
-                  <option value="center">중앙</option>
-                </select>
-                <label className="text-[11px] text-slate-400">철학·해설 (편집)</label>
-                <textarea
-                  value={currentSlide.philosophyNote ?? ''}
-                  onChange={(e) => updateCurrentSlide({ philosophyNote: e.target.value })}
-                  rows={3}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2"
-                />
-                <label className="text-[11px] text-slate-400">Case Study (편집)</label>
-                <textarea
-                  value={currentSlide.caseStudy ?? ''}
-                  onChange={(e) => updateCurrentSlide({ caseStudy: e.target.value })}
-                  rows={4}
-                  className="w-full rounded-lg bg-[#111d3d] border border-orange-300/30 text-white text-xs py-2 px-2"
-                />
-                <label className="text-[11px] text-slate-400">발표 스크립트 (이 슬라이드 전용 · 미리보기와 동기화)</label>
-                <textarea
-                  value={currentSlide.presenterScript ?? ''}
-                  onChange={(e) => updateCurrentSlide({ presenterScript: e.target.value })}
-                  rows={5}
-                  placeholder="이 슬라이드를 넘길 때 읽을 대본을 적습니다."
-                  className="w-full rounded-lg bg-[#111d3d] border border-violet-400/30 text-white text-xs py-2 px-2 placeholder:text-slate-600"
-                />
-              </div>
             </div>
           </div>
 
