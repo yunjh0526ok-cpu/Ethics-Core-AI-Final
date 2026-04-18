@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Thermometer, MessageCircle, Sparkles, ArrowLeft, RefreshCw, Loader2, WifiOff, ArrowRight, Venus, Mars, BookOpen, ChevronDown, ChevronUp, Send, Search } from 'lucide-react';
 import { geminiGenerateContent } from '@/lib/geminiFetch';
 
-type TabType = 'gender' | 'cases' | 'lang' | 'temp';
+type TabType = 'first' | 'cases' | 'last';
 
 const TEMP_QUESTIONS = [
   { id: 0, question: "상대방이 말할 때 나는?", options: [{ label: "끝까지 들으며 공감한다", value: 5 }, { label: "듣다가 내 말을 끼워 넣는다", value: 3 }, { label: "딴 생각을 하거나 폰을 본다", value: 1 }] },
@@ -41,8 +41,271 @@ const LANG_EXAMPLES = [
   { situation: "감정 표현", text: "왜 이렇게 예민하게 받아들여요?" },
 ];
 
+type TempDiagnosisCardProps = {
+  tempStep: number;
+  tempDone: boolean;
+  tempResult: ReturnType<typeof getTempResult>;
+  onSelect: (value: number) => void;
+  onReset: () => void;
+};
+
+const TempDiagnosisCard: React.FC<TempDiagnosisCardProps> = ({
+  tempStep,
+  tempDone,
+  tempResult,
+  onSelect,
+  onReset,
+}) => (
+  <div className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-accent/20 rounded-3xl p-8 shadow-2xl">
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-accent/20">
+      <Thermometer className="w-8 h-8 text-cyber-accent" />
+      <div>
+        <h3 className="text-2xl font-black text-white">관계 온도 진단</h3>
+        <p className="text-cyber-accent/60 text-sm">지금 이 관계, 온도가 몇 도인가요?</p>
+      </div>
+    </div>
+    {!tempDone ? (
+      <div>
+        <div className="flex gap-1.5 mb-6 justify-center">
+          {TEMP_QUESTIONS.map((_, i) => (
+            <div
+              key={i}
+              className={`h-2 flex-1 rounded-full transition-colors ${
+                i < tempStep ? 'bg-cyber-accent' : i === tempStep ? 'bg-cyber-accent animate-pulse' : 'bg-slate-800'
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-center text-cyber-accent text-xs font-bold mb-3 uppercase tracking-widest">
+          STEP {tempStep + 1} / {TEMP_QUESTIONS.length}
+        </p>
+        <h4 className="text-xl font-bold text-white text-center mb-6">{TEMP_QUESTIONS[tempStep].question}</h4>
+        <div className="space-y-3">
+          {TEMP_QUESTIONS[tempStep].options.map((opt, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => onSelect(opt.value)}
+              className="w-full p-4 rounded-xl bg-slate-900/60 border border-slate-700 hover:border-orange-500 hover:bg-slate-800/80 transition-all text-left group flex items-center justify-between"
+            >
+              <span className="text-slate-200 text-base group-hover:text-white">{opt.label}</span>
+              <ArrowRight className="w-4 h-4 text-cyber-accent opacity-0 group-hover:opacity-100 transition-all" />
+            </button>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+        <div className="text-6xl mb-4">{tempResult.emoji}</div>
+        <h4 className={`text-2xl font-black mb-2 ${tempResult.color}`}>{tempResult.label}</h4>
+        <p className="text-slate-300 mb-6">{tempResult.desc}</p>
+        <div className={`border ${tempResult.bg} rounded-2xl p-5 bg-slate-900/60 text-left mb-6`}>
+          <p className="text-slate-300 text-sm leading-relaxed">💡 {tempResult.advice}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onReset}
+          className="w-full py-3 rounded-xl font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" /> 다시 진단하기
+        </button>
+      </motion.div>
+    )}
+  </div>
+);
+
+type LangSensitivityCardProps = {
+  langInput: string;
+  setLangInput: (v: string) => void;
+  langResult: string;
+  langLoading: boolean;
+  langFallback: boolean;
+  onTranslate: () => void;
+  onClear: () => void;
+};
+
+const LangSensitivityCard: React.FC<LangSensitivityCardProps> = ({
+  langInput,
+  setLangInput,
+  langResult,
+  langLoading,
+  langFallback,
+  onTranslate,
+  onClear,
+}) => (
+  <div className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
+      <MessageCircle className="w-7 h-7 text-cyber-accent" />
+      <div>
+        <h3 className="text-2xl font-black text-white">말·행동의 뉘앙스 (남녀 받아들임)</h3>
+        <p className="text-cyber-accent/60 text-sm">같은 말도 다르게 들릴 때 생기는 오해와 민감성을 짚어봐요</p>
+      </div>
+    </div>
+    <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-2">
+      {LANG_EXAMPLES.map((ex, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => setLangInput(ex.text)}
+          className="p-3 bg-slate-800/60 border border-cyber-500/20 rounded-xl text-left hover:border-cyber-accent/50 transition-colors group"
+        >
+          <p className="text-cyber-accent text-xs font-bold mb-1">{ex.situation}</p>
+          <p className="text-slate-300 text-xs">{ex.text}</p>
+          <p className="text-slate-600 text-xs mt-1 group-hover:text-cyber-accent transition-colors">→ 클릭해서 분석</p>
+        </button>
+      ))}
+    </div>
+    <div className="space-y-4">
+      <textarea
+        value={langInput}
+        onChange={(e) => setLangInput(e.target.value)}
+        placeholder="예) '그냥 알아서 해요'라는 말이 뭘 어떻게 하라는 건지 모르겠어요."
+        className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500"
+      />
+      <button
+        type="button"
+        onClick={onTranslate}
+        disabled={langLoading || !langInput.trim()}
+        className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all"
+      >
+        {langLoading ? (
+          <>
+            <RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-5 h-5" /> 뉘앙스 번역하기
+          </>
+        )}
+      </button>
+      {langResult &&
+        (() => {
+          let json: Record<string, string> = {};
+          try {
+            json = JSON.parse(langResult) as Record<string, string>;
+          } catch {
+            /* ignore */
+          }
+          return (
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30">
+                  <strong className="text-blue-400 text-xs block mb-2 uppercase tracking-wider">💬 말한 사람의 의도</strong>
+                  <p className="text-slate-300 text-sm">{json.senderMeaning}</p>
+                </div>
+                <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-accent/30">
+                  <strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">😟 듣는 사람의 감정·오해</strong>
+                  <p className="text-slate-300 text-sm">{json.receiverFeeling}</p>
+                </div>
+              </div>
+              <div className="bg-slate-900/60 border border-cyber-accent/30 rounded-xl p-4">
+                <strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">✨ 더 나은 표현 방법</strong>
+                <p className="text-slate-200 text-sm leading-relaxed">{json.betterExpression}</p>
+              </div>
+              <div className="bg-slate-800/60 border border-slate-600 rounded-xl p-3 flex items-start gap-2">
+                <span className="text-yellow-400">💡</span>
+                <p className="text-slate-300 text-sm">{json.tip}</p>
+              </div>
+              {langFallback && (
+                <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1">
+                  <WifiOff className="w-3 h-3" /> OFFLINE
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={onClear}
+                className="w-full py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-4 h-4" /> 새로운 상황 분석하기
+              </button>
+            </motion.div>
+          );
+        })()}
+    </div>
+  </div>
+);
+
+type GenderTranslatorCardProps = {
+  genderInput: string;
+  setGenderInput: (v: string) => void;
+  genderResult: string;
+  genderPlan: { male: string; female: string };
+  genderLoading: boolean;
+  genderFallback: boolean;
+  onTranslate: () => void;
+};
+
+const GenderTranslatorCard: React.FC<GenderTranslatorCardProps> = ({
+  genderInput,
+  setGenderInput,
+  genderResult,
+  genderPlan,
+  genderLoading,
+  genderFallback,
+  onTranslate,
+}) => (
+  <div className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
+    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
+      <div className="flex gap-1">
+        <Mars className="w-6 h-6 text-blue-400" />
+        <Venus className="w-6 h-6 text-cyber-accent" />
+      </div>
+      <div>
+        <h3 className="text-2xl font-black text-white">진단 맥락 성별 갈등 통역기</h3>
+        <p className="text-cyber-accent/60 text-sm">온도 진단에서 떠오른 장면을 넣으면, 서로의 입장을 풀어드려요</p>
+      </div>
+    </div>
+    <div className="space-y-5">
+      <textarea
+        value={genderInput}
+        onChange={(e) => setGenderInput(e.target.value)}
+        placeholder="예) 팀장이 '여자가 왜 이렇게 예민해?' 라고 했어요."
+        className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500"
+      />
+      <button
+        type="button"
+        onClick={onTranslate}
+        disabled={genderLoading || !genderInput.trim()}
+        className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all"
+      >
+        {genderLoading ? (
+          <>
+            <RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...
+          </>
+        ) : (
+          <>
+            <Sparkles className="w-5 h-5" /> 공감 번역하기
+          </>
+        )}
+      </button>
+      {genderResult && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <div className="bg-gradient-to-br from-slate-900/80 to-cyber-900/30 border border-cyber-500/30 rounded-2xl p-6">
+            <p className="text-slate-100 text-base leading-relaxed text-center whitespace-pre-wrap">{genderResult}</p>
+            {genderFallback && (
+              <p className="text-center text-xs text-slate-500 mt-2 flex items-center justify-center gap-1">
+                <WifiOff className="w-3 h-3" /> OFFLINE
+              </p>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30">
+              <strong className="text-blue-400 text-sm block mb-1">남성/선배 처방전</strong>
+              <p className="text-slate-300 text-sm">{genderPlan.male}</p>
+            </div>
+            <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-500/30">
+              <strong className="text-cyber-accent text-sm block mb-1">여성/후배 처방전</strong>
+              <p className="text-slate-300 text-sm">{genderPlan.female}</p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  </div>
+);
+
 const RelationshipThermometer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('gender');
+  const [activeTab, setActiveTab] = useState<TabType>('first');
   const [genderInput, setGenderInput] = useState('');
   const [genderResult, setGenderResult] = useState('');
   const [genderPlan, setGenderPlan] = useState({ male: '번역 버튼을 누르면 처방전이 나옵니다 💊', female: '입력한 내용에 따라 대처법을 알려드려요 😊' });
@@ -152,11 +415,16 @@ const RelationshipThermometer: React.FC = () => {
   const filteredCases = CASES.filter(c => !searchTerm || c.q.includes(searchTerm) || c.tag.includes(searchTerm));
 
   const tabs = [
-    { key: 'gender' as TabType, label: '성별 갈등 통역기', icon: '🔄' },
+    { key: 'first' as TabType, label: '온도·말의 오해', icon: '🌡️' },
     { key: 'cases' as TabType, label: '성인지 사례 Q&A', icon: '📚' },
-    { key: 'lang' as TabType, label: '관계 언어 번역기', icon: '💬' },
-    { key: 'temp' as TabType, label: '관계 온도 진단', icon: '🌡️' },
+    { key: 'last' as TabType, label: '온도·성별 통역', icon: '🔄' },
   ];
+
+  const resetTemp = () => {
+    setTempStep(0);
+    setTempScores([]);
+    setTempDone(false);
+  };
 
   return (
     <section className="relative z-10 py-24 px-4 w-full max-w-7xl mx-auto border-t border-slate-800">
@@ -169,7 +437,10 @@ const RelationshipThermometer: React.FC = () => {
       <div className="text-center mb-12">
         <span className="text-cyber-accent font-tech tracking-widest text-xs uppercase mb-2 block">Relation Lab</span>
         <h2 className="text-4xl md:text-5xl font-black text-white mb-4">💝 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 to-cyber-purple">관계 온도계</span></h2>
-        <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">성별 갈등 통역부터 직장 내 성인지 사례까지.<br /><span className="text-white font-bold">AI가 관계의 온도를 재고, 따뜻하게 만들어드려요.</span></p>
+        <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
+          첫 화면에서 <span className="text-white font-bold">온도 진단과 말의 오해</span>를 함께, 가운데는 사례 Q&A, 마지막은{' '}
+          <span className="text-white font-bold">온도 진단과 성별 통역</span>을 한곳에서 이어갈 수 있어요.
+        </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3 mb-10">
         {tabs.map(tab => (
@@ -181,31 +452,38 @@ const RelationshipThermometer: React.FC = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'gender' && (
-          <motion.div key="gender" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
-              <div className="flex gap-1"><Mars className="w-6 h-6 text-blue-400" /><Venus className="w-6 h-6 text-cyber-accent" /></div>
-              <div><h3 className="text-2xl font-black text-white">성별 갈등 통역기</h3><p className="text-cyber-accent/60 text-sm">그 말이 왜 불편했는지 AI가 설명해드려요</p></div>
+        {activeTab === 'first' && (
+          <motion.div
+            key="first"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-3xl mx-auto space-y-8"
+          >
+            <TempDiagnosisCard
+              tempStep={tempStep}
+              tempDone={tempDone}
+              tempResult={tempResult}
+              onSelect={handleTempSelect}
+              onReset={resetTemp}
+            />
+            <div className="rounded-2xl border border-amber-500/25 bg-amber-950/20 px-5 py-4 text-slate-300 text-sm leading-relaxed">
+              <strong className="text-amber-200 block mb-1">민감성 한 줄 안내</strong>
+              행동이나 말의 &apos;의도&apos;와 &apos;받아들임&apos;은 성별·역할·경험에 따라 달라질 수 있어요. 위 진단으로 관계 온도를 본 뒤, 아래
+              뉘앙스 도구로 &quot;왜 상대는 그렇게 들었을까?&quot;를 함께 살보면 오해를 줄이기 쉬워요.
             </div>
-            <div className="space-y-5">
-              <textarea value={genderInput} onChange={e => setGenderInput(e.target.value)} placeholder="예) 팀장이 '여자가 왜 이렇게 예민해?' 라고 했어요." className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500" />
-              <button onClick={handleGenderTranslate} disabled={genderLoading || !genderInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all">
-                {genderLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...</> : <><Sparkles className="w-5 h-5" /> 공감 번역하기</>}
-              </button>
-              {genderResult && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                  <div className="bg-gradient-to-br from-slate-900/80 to-cyber-900/30 border border-cyber-500/30 rounded-2xl p-6">
-                    <p className="text-slate-100 text-base leading-relaxed text-center whitespace-pre-wrap">{genderResult}</p>
-                    {genderFallback && <p className="text-center text-xs text-slate-500 mt-2 flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> OFFLINE</p>}
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30"><strong className="text-blue-400 text-sm block mb-1">남성/선배 처방전</strong><p className="text-slate-300 text-sm">{genderPlan.male}</p></div>
-                    <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-500/30"><strong className="text-cyber-accent text-sm block mb-1">여성/후배 처방전</strong><p className="text-slate-300 text-sm">{genderPlan.female}</p></div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
+            <LangSensitivityCard
+              langInput={langInput}
+              setLangInput={setLangInput}
+              langResult={langResult}
+              langLoading={langLoading}
+              langFallback={langFallback}
+              onTranslate={handleLangTranslate}
+              onClear={() => {
+                setLangInput('');
+                setLangResult('');
+              }}
+            />
           </motion.div>
         )}
 
@@ -267,79 +545,34 @@ const RelationshipThermometer: React.FC = () => {
           </motion.div>
         )}
 
-        {activeTab === 'lang' && (
-          <motion.div key="lang" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-500/20 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-500/20">
-              <MessageCircle className="w-7 h-7 text-cyber-accent" />
-              <div><h3 className="text-2xl font-black text-white">관계 언어 번역기</h3><p className="text-cyber-accent/60 text-sm">같은 말, 다르게 들리는 이유를 AI가 분석해드려요</p></div>
-            </div>
-            <div className="mb-5 grid grid-cols-1 md:grid-cols-3 gap-2">
-              {LANG_EXAMPLES.map((ex, i) => (
-                <button key={i} onClick={() => setLangInput(ex.text)} className="p-3 bg-slate-800/60 border border-cyber-500/20 rounded-xl text-left hover:border-cyber-accent/50 transition-colors group">
-                  <p className="text-cyber-accent text-xs font-bold mb-1">{ex.situation}</p>
-                  <p className="text-slate-300 text-xs">{ex.text}</p>
-                  <p className="text-slate-600 text-xs mt-1 group-hover:text-cyber-accent transition-colors">→ 클릭해서 분석</p>
-                </button>
-              ))}
-            </div>
-            <div className="space-y-4">
-              <textarea value={langInput} onChange={e => setLangInput(e.target.value)} placeholder="예) '그냥 알아서 해요'라는 말이 뭘 어떻게 하라는 건지 모르겠어요." className="w-full h-28 bg-slate-900/60 border border-cyber-500/20 rounded-2xl p-4 text-white text-base focus:border-cyber-accent focus:outline-none resize-none placeholder:text-slate-500" />
-              <button onClick={handleLangTranslate} disabled={langLoading || !langInput.trim()} className="w-full py-3.5 rounded-xl font-black text-base flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyber-purple hover:from-blue-500 hover:to-purple-500 text-white disabled:opacity-50 transition-all">
-                {langLoading ? <><RefreshCw className="w-5 h-5 animate-spin" /> 분석 중...</> : <><Sparkles className="w-5 h-5" /> 뉘앙스 번역하기</>}
-              </button>
-              {langResult && (() => {
-                let json: any = {};
-                try { json = JSON.parse(langResult); } catch {}
-                return (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="bg-slate-800/60 p-4 rounded-xl border border-blue-500/30"><strong className="text-blue-400 text-xs block mb-2 uppercase tracking-wider">💬 말한 사람의 의도</strong><p className="text-slate-300 text-sm">{json.senderMeaning}</p></div>
-                      <div className="bg-slate-800/60 p-4 rounded-xl border border-cyber-accent/30"><strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">😟 듣는 사람의 감정</strong><p className="text-slate-300 text-sm">{json.receiverFeeling}</p></div>
-                    </div>
-                    <div className="bg-slate-900/60 border border-cyber-accent/30 rounded-xl p-4"><strong className="text-cyber-accent text-xs block mb-2 uppercase tracking-wider">✨ 더 나은 표현 방법</strong><p className="text-slate-200 text-sm leading-relaxed">{json.betterExpression}</p></div>
-                    <div className="bg-slate-800/60 border border-slate-600 rounded-xl p-3 flex items-start gap-2"><span className="text-yellow-400">💡</span><p className="text-slate-300 text-sm">{json.tip}</p></div>
-                    {langFallback && <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-1"><WifiOff className="w-3 h-3" /> OFFLINE</p>}
-                    <button onClick={() => { setLangInput(''); setLangResult(''); }} className="w-full py-2.5 rounded-xl text-sm font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4" /> 새로운 상황 분석하기</button>
-                  </motion.div>
-                );
-              })()}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === 'temp' && (
-          <motion.div key="temp" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            className="max-w-3xl mx-auto bg-[#0a0a12]/40 backdrop-blur-xl border border-cyber-accent/20 rounded-3xl p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-cyber-accent/20">
-              <Thermometer className="w-8 h-8 text-cyber-accent" />
-              <div><h3 className="text-2xl font-black text-white">관계 온도 진단</h3><p className="text-cyber-accent/60 text-sm">지금 이 관계, 온도가 몇 도인가요?</p></div>
-            </div>
-            {!tempDone ? (
-              <div>
-                <div className="flex gap-1.5 mb-6 justify-center">
-                  {TEMP_QUESTIONS.map((_, i) => <div key={i} className={`h-2 flex-1 rounded-full transition-colors ${i < tempStep ? 'bg-cyber-accent' : i === tempStep ? 'bg-cyber-accent animate-pulse' : 'bg-slate-800'}`} />)}
-                </div>
-                <p className="text-center text-cyber-accent text-xs font-bold mb-3 uppercase tracking-widest">STEP {tempStep + 1} / {TEMP_QUESTIONS.length}</p>
-                <h4 className="text-xl font-bold text-white text-center mb-6">{TEMP_QUESTIONS[tempStep].question}</h4>
-                <div className="space-y-3">
-                  {TEMP_QUESTIONS[tempStep].options.map((opt, idx) => (
-                    <button key={idx} onClick={() => handleTempSelect(opt.value)} className="w-full p-4 rounded-xl bg-slate-900/60 border border-slate-700 hover:border-orange-500 hover:bg-slate-800/80 transition-all text-left group flex items-center justify-between">
-                      <span className="text-slate-200 text-base group-hover:text-white">{opt.label}</span>
-                      <ArrowRight className="w-4 h-4 text-cyber-accent opacity-0 group-hover:opacity-100 transition-all" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                <div className="text-6xl mb-4">{tempResult.emoji}</div>
-                <h4 className={`text-2xl font-black mb-2 ${tempResult.color}`}>{tempResult.label}</h4>
-                <p className="text-slate-300 mb-6">{tempResult.desc}</p>
-                <div className={`border ${tempResult.bg} rounded-2xl p-5 bg-slate-900/60 text-left mb-6`}><p className="text-slate-300 text-sm leading-relaxed">💡 {tempResult.advice}</p></div>
-                <button onClick={() => { setTempStep(0); setTempScores([]); setTempDone(false); }} className="w-full py-3 rounded-xl font-bold bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"><RefreshCw className="w-4 h-4" /> 다시 진단하기</button>
-              </motion.div>
-            )}
+        {activeTab === 'last' && (
+          <motion.div
+            key="last"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="max-w-3xl mx-auto space-y-8"
+          >
+            <p className="text-center text-slate-400 text-sm leading-relaxed px-2">
+              아래에서 갈등 통역을 먼저 쓰고, 같은 진행 상태의 <strong className="text-white">관계 온도 진단</strong>으로 마음의 온도를 다시 확인해 보세요. (탭을 옮겨도 진단
+              진행은 이어집니다.)
+            </p>
+            <GenderTranslatorCard
+              genderInput={genderInput}
+              setGenderInput={setGenderInput}
+              genderResult={genderResult}
+              genderPlan={genderPlan}
+              genderLoading={genderLoading}
+              genderFallback={genderFallback}
+              onTranslate={handleGenderTranslate}
+            />
+            <TempDiagnosisCard
+              tempStep={tempStep}
+              tempDone={tempDone}
+              tempResult={tempResult}
+              onSelect={handleTempSelect}
+              onReset={resetTemp}
+            />
           </motion.div>
         )}
       </AnimatePresence>

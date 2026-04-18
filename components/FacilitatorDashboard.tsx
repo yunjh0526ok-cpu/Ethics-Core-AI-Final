@@ -287,6 +287,8 @@ const FacilitatorDashboard: React.FC = () => {
   const [selectedOrgType, setSelectedOrgType] = useState<OrgType>('public');
   const [selectedQuizPack, setSelectedQuizPack] = useState<QuizPack>('basic');
   const [topicInput, setTopicInput] = useState('');
+  /** 리포트 없이 주제만으로 AI 시나리오·PPT 초안 */
+  const [topicOnlyInput, setTopicOnlyInput] = useState('');
   const [aspectPreset, setAspectPreset] = useState<DeckAspect>('16:9');
   const [genLoading, setGenLoading] = useState(false);
   const [slides, setSlides] = useState<DeckSlide[]>(defaultSlides);
@@ -309,6 +311,7 @@ const FacilitatorDashboard: React.FC = () => {
   const reportRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const slideBgInputRef = useRef<HTMLInputElement>(null);
+  const bgCurateSaltRef = useRef(0);
   const [subscribed, setSubscribed] = useState(
     () => typeof window !== 'undefined' && localStorage.getItem('eca_plan') === 'standard',
   );
@@ -474,6 +477,66 @@ chart: 근거 없으면 chartValues 전부 50.`;
       }
       setSlides(enriched);
       setSlideIdx(0);
+    } catch {
+      setSlides(emptyDeckFromTopic(title));
+      setSlideIdx(0);
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
+  const generateSlidesFromTopicScenario = async () => {
+    const rawTopic = topicOnlyInput.trim() || topicInput.trim();
+    if (!rawTopic) return;
+    const title = topicInput.trim() || rawTopic;
+    setGenLoading(true);
+    try {
+      const prompt = `EcoStage **주제 전용** 워크숍 설계기. 아래 주제만 주어졌습니다. 공직·조직 윤리 교육 맥락에서 **전문적인 퍼실리테이션 시나리오**(시간 배분·질문·소그룹 활동 힌트)를 담은 PPT 슬라이드 JSON 배열을 만드세요.
+
+주제: "${rawTopic}"
+세션 제목(표지·결론에 우선 사용): "${title}"
+
+요구:
+- 슬라이드 **10~12장**. 첫 장 "title", 마지막 "conclusion", 중간 "twoColumn"과 "chart"를 교차.
+- **한 장**은 시나리오 타임라인(오프닝→본론→정리)을 bullet로.
+- **한 장**은 퍼실리테이터용 체크리스트(진행·주의사항).
+- chart: 주제와 연관된 **교육용 상대 비중**(0~100 정수, 합계 100에 가깝게). 근거 수치가 없으면 합리적 가정으로 채워도 됨(가상 통계 금지 문구는 슬라이드 본문에 넣지 말 것).
+- footerInsightKind는 모두 **"quote"**. footerInsight는 공직자·위인 명언 한 줄(출처 분명한 인용만).
+- 법령·판례는 일반적으로 알려진 조문명만 언급하고, 없는 판례번호를 지어내지 말 것.
+
+JSON 배열만 출력. 마크다운·코드펜스 금지.
+
+원소 스키마:
+{
+  "template": "title" | "twoColumn" | "chart" | "conclusion",
+  "title": string,
+  "subtitle": string,
+  "bullets"?: string[],
+  "leftColumn"?: string[],
+  "rightColumn"?: string[],
+  "chartLabels"?: string[],
+  "chartValues"?: number[],
+  "caseStudy"?: string,
+  "footerInsight": string,
+  "footerInsightKind": "quote"
+}`;
+      const { text } = await geminiGenerateContent({ model: 'gemini-2.5-flash', contents: prompt });
+      const matched = text.match(/\[[\s\S]*\]/);
+      if (!matched) throw new Error('format');
+      const parsed = JSON.parse(matched[0]) as Record<string, unknown>[];
+      const normalized = parsed.slice(0, 14).map((row, i) => normalizeAiSlide(row, i));
+      const enriched: DeckSlide[] = normalized.map((s, i) => ({
+        ...s,
+        footerInsightKind: 'quote' as const,
+        bgImage: pickCuratedBg(s.template, i),
+      }));
+      if (enriched.length < 9) {
+        const pad = emptyDeckFromTopic(title).slice(enriched.length);
+        enriched.push(...pad.slice(0, 9 - enriched.length));
+      }
+      setSlides(enriched);
+      setSlideIdx(0);
+      if (!topicInput.trim()) setTopicInput(title);
     } catch {
       setSlides(emptyDeckFromTopic(title));
       setSlideIdx(0);
@@ -1335,6 +1398,27 @@ chart: 근거 없으면 chartValues 전부 50.`;
                     {genLoading ? 'PPT 생성 중…' : 'PPT 생성 (리포트 기반)'}
                   </button>
                 </div>
+                <div className="rounded-xl border border-cyan-500/25 bg-[#0a1228]/50 p-4 space-y-3">
+                  <p className="text-[11px] text-cyan-200/90 font-bold uppercase tracking-wide">
+                    주제만으로 시나리오 + PPT
+                  </p>
+                  <textarea
+                    value={topicOnlyInput}
+                    onChange={(e) => setTopicOnlyInput(e.target.value)}
+                    placeholder="예) 공무원 이해충돌 사례 기반 토론 세션, 조직 내 심리적 안전감 워크숍"
+                    rows={2}
+                    className="w-full px-4 py-3 rounded-xl bg-[#111d3d]/70 border border-cyan-400/25 text-white text-sm placeholder:text-slate-500 resize-y min-h-[72px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={generateSlidesFromTopicScenario}
+                    disabled={genLoading || (!topicOnlyInput.trim() && !topicInput.trim())}
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 font-bold text-white disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+                    title={!topicOnlyInput.trim() && !topicInput.trim() ? '주제 입력란 또는 위 세션 제목 중 하나를 입력하세요.' : ''}
+                  >
+                    {genLoading ? '생성 중…' : 'AI 시나리오 + PPT (주제)'}
+                  </button>
+                </div>
                 <input
                   ref={slideBgInputRef}
                   type="file"
@@ -1382,10 +1466,17 @@ chart: 근거 없으면 chartValues 전부 50.`;
                   </button>
                   <button
                     type="button"
-                    onClick={() =>
-                      updateCurrentSlide({ bgImage: pickCuratedBg(currentSlide.template, slideIdx + 3) })
-                    }
-                    className="shrink-0 px-3 py-2 rounded-lg border border-slate-600 text-slate-300 text-xs font-bold"
+                    onClick={() => {
+                      bgCurateSaltRef.current += 1;
+                      updateCurrentSlide({
+                        bgImage: pickCuratedBg(
+                          currentSlide.template,
+                          slideIdx + bgCurateSaltRef.current * 7,
+                        ),
+                      });
+                    }}
+                    className="shrink-0 px-3 py-2 rounded-lg border border-orange-300/50 text-orange-100 text-xs font-bold hover:bg-orange-500/15 transition-colors"
+                    title="템플릿별 큐레이션 배경을 순서대로 바꿉니다."
                   >
                     배경 큐레이션
                   </button>
