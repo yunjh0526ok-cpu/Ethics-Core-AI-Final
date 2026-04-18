@@ -1,6 +1,24 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Thermometer, MessageCircle, Sparkles, ArrowLeft, RefreshCw, Loader2, WifiOff, ArrowRight, Venus, Mars, BookOpen, ChevronDown, ChevronUp, Send, Search } from 'lucide-react';
+import {
+  Thermometer,
+  MessageCircle,
+  Sparkles,
+  ArrowLeft,
+  RefreshCw,
+  Loader2,
+  WifiOff,
+  ArrowRight,
+  Venus,
+  Mars,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Send,
+  Search,
+  ClipboardList,
+  HeartHandshake,
+} from 'lucide-react';
 import { geminiGenerateContent } from '@/lib/geminiFetch';
 
 type TabType = 'first' | 'cases' | 'last';
@@ -39,6 +57,17 @@ const LANG_EXAMPLES = [
   { situation: "회의 중 발언", text: "그냥 알아서 해요, 일단 시작해요" },
   { situation: "업무 피드백", text: "틀렸어, 다시 해" },
   { situation: "감정 표현", text: "왜 이렇게 예민하게 받아들여요?" },
+];
+
+const GENDER_CHECKLIST_ITEMS = [
+  { id: 'c1', text: '회의·토론에서 특정 성별의 의견만 자주 잘리거나 묵살되지는 않았는지 점검했나요?' },
+  { id: 'c2', text: '업무 지시·피드백을 성별·연령 고정관념과 엮어 말하지 않았나요? (예: 여자라서, 남자답게)' },
+  { id: 'c3', text: '외모·복장·음성 톤을 업무 역량 평가와 분리했나요?' },
+  { id: 'c4', text: '회식·야근·출장에서 술·2차 접촉을 특정 성에게만 강요하지 않았나요?' },
+  { id: 'c5', text: '육아·가사·돌봄을 이유로 배제·축소된 업무 배정은 없었나요?' },
+  { id: 'c6', text: '동의 없는 신체 접촉·스킨십 농담을 하지 않았나요? 상대가 불편해하면 즉시 멈췄나요?' },
+  { id: 'c7', text: '성별에 따라 심부름·정리·다과만 맡기는 관행은 없었나요?' },
+  { id: 'c8', text: '누군가 불편함을 말했을 때 \'예민하다\'로 넘기지 않고 내용을 기록·전달할 채널을 알고 있나요?' },
 ];
 
 type TempDiagnosisCardProps = {
@@ -251,8 +280,8 @@ const GenderTranslatorCard: React.FC<GenderTranslatorCardProps> = ({
         <Venus className="w-6 h-6 text-cyber-accent" />
       </div>
       <div>
-        <h3 className="text-2xl font-black text-white">진단 맥락 성별 갈등 통역기</h3>
-        <p className="text-cyber-accent/60 text-sm">온도 진단에서 떠오른 장면을 넣으면, 서로의 입장을 풀어드려요</p>
+        <h3 className="text-2xl font-black text-white">성별 갈등 통역기</h3>
+        <p className="text-cyber-accent/60 text-sm">직장·일상에서 겪은 말이나 장면을 넣으면, 서로의 입장을 풀어드려요</p>
       </div>
     </div>
     <div className="space-y-5">
@@ -323,6 +352,10 @@ const RelationshipThermometer: React.FC = () => {
   const [tempStep, setTempStep] = useState(0);
   const [tempScores, setTempScores] = useState<number[]>([]);
   const [tempDone, setTempDone] = useState(false);
+  const [genderIssueInput, setGenderIssueInput] = useState('');
+  const [genderIssueAnswer, setGenderIssueAnswer] = useState('');
+  const [genderIssueLoading, setGenderIssueLoading] = useState(false);
+  const [checklistChecked, setChecklistChecked] = useState<Record<string, boolean>>({});
 
   const cleanText = (t: string) => t.replace(/\*\*/g, '').replace(/##/g, '').replace(/__/g, '').trim();
 
@@ -357,6 +390,35 @@ const RelationshipThermometer: React.FC = () => {
       setGenderPlan({ male: "'왜 그렇게 생각해?'라는 질문 하나가 갈등을 줄여줍니다.", female: '불편하면 그 자리에서 바로 말하는 게 쌓이지 않아요.' });
       setGenderFallback(true);
     } finally { setGenderLoading(false); }
+  };
+
+  const handleGenderIssueConsult = async () => {
+    if (!genderIssueInput.trim()) return;
+    setGenderIssueLoading(true);
+    setGenderIssueAnswer('');
+    try {
+      const res = await geminiGenerateContent({
+        model: 'gemini-2.5-flash',
+        contents: `직장 또는 일상에서의 젠더·성별 갈등 상담 요청:\n"${genderIssueInput}"`,
+        config: {
+          systemInstruction: `당신은 직장 내 성별 갈등·소통 갈등을 다루는 상담형 AI입니다. 법률 자문이 아니라 관계·대화·다음 행동 중심으로 답하세요.
+반드시 아래 번호 구조로만 작성하세요. 마크다운 기호(#, *, -) 사용 금지. 한국어.
+
+1) 상황 요약: 2~3문장
+2) 갈등 이슈 포인트: 개조식 3~5개
+3) 서로에게 건네기 좋은 표현: 남성·여성(또는 발화자·듣는 사람) 각 1~2문장 예시
+4) 오늘 할 수 있는 한 가지: 구체적 행동 1개
+5) 추가로 법적 분쟁·신고가 의심될 때: 국가인권위·고용노동부 등 공식 기관 상담을 권하는 한 문단(구체 판례 번호나 없는 법조문은 쓰지 말 것)`,
+        },
+      });
+      setGenderIssueAnswer(cleanText(res.text || ''));
+    } catch {
+      setGenderIssueAnswer(
+        '지금은 AI 연결이 불안정합니다. 팀 내에는 고충처리·HR 창구를, 외부에는 국가인권위원회(1331)·고용노동부(1350) 상담을 이용해 보세요.',
+      );
+    } finally {
+      setGenderIssueLoading(false);
+    }
   };
 
   const handleLangTranslate = async () => {
@@ -417,7 +479,7 @@ const RelationshipThermometer: React.FC = () => {
   const tabs = [
     { key: 'first' as TabType, label: '온도·말의 오해', icon: '🌡️' },
     { key: 'cases' as TabType, label: '성인지 사례 Q&A', icon: '📚' },
-    { key: 'last' as TabType, label: '온도·성별 통역', icon: '🔄' },
+    { key: 'last' as TabType, label: '갈등 통역·상담', icon: '🔄' },
   ];
 
   const resetTemp = () => {
@@ -439,7 +501,7 @@ const RelationshipThermometer: React.FC = () => {
         <h2 className="text-4xl md:text-5xl font-black text-white mb-4">💝 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyber-400 to-cyber-purple">관계 온도계</span></h2>
         <p className="text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed">
           첫 화면에서 <span className="text-white font-bold">온도 진단과 말의 오해</span>를 함께, 가운데는 사례 Q&A, 마지막은{' '}
-          <span className="text-white font-bold">온도 진단과 성별 통역</span>을 한곳에서 이어갈 수 있어요.
+          <span className="text-white font-bold">성별 통역·이슈 상담·자가 점검 체크리스트</span>로 이어가 보세요.
         </p>
       </div>
       <div className="flex flex-wrap justify-center gap-3 mb-10">
@@ -554,8 +616,8 @@ const RelationshipThermometer: React.FC = () => {
             className="max-w-3xl mx-auto space-y-8"
           >
             <p className="text-center text-slate-400 text-sm leading-relaxed px-2">
-              아래에서 갈등 통역을 먼저 쓰고, 같은 진행 상태의 <strong className="text-white">관계 온도 진단</strong>으로 마음의 온도를 다시 확인해 보세요. (탭을 옮겨도 진단
-              진행은 이어집니다.)
+              <strong className="text-white">관계 온도 진단</strong>은 첫 번째 탭에서 진행해 주세요. 여기서는 말의 통역, 이슈 상담, 직장 젠더 갈등
+              자가 점검을 이어가면 됩니다.
             </p>
             <GenderTranslatorCard
               genderInput={genderInput}
@@ -566,13 +628,94 @@ const RelationshipThermometer: React.FC = () => {
               genderFallback={genderFallback}
               onTranslate={handleGenderTranslate}
             />
-            <TempDiagnosisCard
-              tempStep={tempStep}
-              tempDone={tempDone}
-              tempResult={tempResult}
-              onSelect={handleTempSelect}
-              onReset={resetTemp}
-            />
+
+            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-violet-500/25 rounded-3xl p-8 shadow-2xl">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-violet-500/20">
+                <HeartHandshake className="w-8 h-8 text-violet-400" />
+                <div>
+                  <h3 className="text-2xl font-black text-white">젠더 갈등 이슈 상담</h3>
+                  <p className="text-violet-300/70 text-sm">맥락을 적으면 요약·이슈 포인트·대화 예시·오늘 할 일을 정리해 드려요</p>
+                </div>
+              </div>
+              <textarea
+                value={genderIssueInput}
+                onChange={(e) => setGenderIssueInput(e.target.value)}
+                placeholder="예) 같은 직급인데 회의 때만 제 의견을 끊고, 남 동료 말은 길게 들어줘요. 어떻게 말하는 게 좋을까요?"
+                className="w-full h-32 bg-slate-900/60 border border-violet-500/25 rounded-2xl p-4 text-white text-sm focus:border-violet-400 focus:outline-none resize-y placeholder:text-slate-500 mb-3"
+              />
+              <button
+                type="button"
+                onClick={handleGenderIssueConsult}
+                disabled={genderIssueLoading || !genderIssueInput.trim()}
+                className="w-full py-3.5 rounded-xl font-black text-sm flex items-center justify-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white disabled:opacity-50 transition-all"
+              >
+                {genderIssueLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> 상담 정리 중...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" /> 이슈 상담 받기
+                  </>
+                )}
+              </button>
+              {genderIssueAnswer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-5 rounded-xl border border-violet-500/30 bg-slate-900/50 p-5"
+                >
+                  <p className="text-slate-200 text-sm leading-relaxed whitespace-pre-wrap">{genderIssueAnswer}</p>
+                </motion.div>
+              )}
+            </div>
+
+            <div className="bg-[#0a0a12]/40 backdrop-blur-xl border border-emerald-500/25 rounded-3xl p-8 shadow-2xl">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-emerald-500/20">
+                <ClipboardList className="w-8 h-8 text-emerald-400" />
+                <div>
+                  <h3 className="text-2xl font-black text-white">직장 젠더 갈등 자가 점검</h3>
+                  <p className="text-emerald-300/70 text-sm">우리 팀·나에게 해당되거나 솔직히 더 살펴볼 점이 있으면 체크해 보세요</p>
+                </div>
+              </div>
+              <ul className="space-y-3">
+                {GENDER_CHECKLIST_ITEMS.map((item) => (
+                  <li key={item.id}>
+                    <label className="flex gap-3 items-start cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={!!checklistChecked[item.id]}
+                        onChange={() =>
+                          setChecklistChecked((prev) => ({ ...prev, [item.id]: !prev[item.id] }))
+                        }
+                        className="mt-1 w-4 h-4 rounded border-slate-600 text-emerald-500 focus:ring-emerald-500/40"
+                      />
+                      <span
+                        className={`text-sm leading-relaxed rounded-lg px-1 py-0.5 -mx-1 transition-colors ${
+                          checklistChecked[item.id]
+                            ? 'text-amber-100 bg-amber-950/50 ring-1 ring-amber-500/35'
+                            : 'text-slate-300 group-hover:text-white'
+                        }`}
+                      >
+                        {item.text}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4 border-t border-emerald-500/15">
+                <p className="text-xs text-slate-500">
+                  체크된 항목은 팀 안건·1:1 멘토링·교육 설계에서 우선 이야기해 볼 만한 주제예요. 법적 판단은 기관 상담으로 확인하세요.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setChecklistChecked({})}
+                  className="shrink-0 px-4 py-2 rounded-lg text-xs font-bold border border-slate-600 text-slate-400 hover:border-emerald-500/50 hover:text-emerald-200 transition-colors"
+                >
+                  체크 초기화
+                </button>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
