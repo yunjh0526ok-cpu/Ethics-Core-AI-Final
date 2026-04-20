@@ -9,6 +9,7 @@ import {
   ShieldAlert, BookOpen, Siren
 } from 'lucide-react';
 import { geminiGenerateContent } from '@/lib/geminiFetch';
+import { fetchLawSearchForQuery, buildUserMessageWithLawContext } from '@/lib/fetchLawContext';
 
 interface ChatMessage {
     role: 'user' | 'ai';
@@ -287,6 +288,9 @@ const Diagnostics: React.FC = () => {
             - 지도·단속 대상자로부터 수수: 금액 무관 원칙적 금지
             - 출처: 국가법령정보센터(law.go.kr) 청탁금지법 시행령 최신본 기준
 
+            [국가법령정보센터 API 검색 블록]
+            - 사용자 메시지 상단에 붙은 【국가법령정보센터 공동활용 API 검색 요약】 목록에 있는 법령명·법령ID·시행·공포일자만 법령 사실로 인정하십시오. 목록에 없는 조문·조문 본문은 만들지 말고 law.go.kr에서 확인하도록 안내하십시오.
+
             [판례 검색 원칙]
             - 법령 조문만 인용하지 말고 반드시 관련 판례, 행정심판례, 권익위 결정례까지 함께 제시
             - 예) "대법원 20XX다XXXXX", "국민권익위원회 결정 제20XX-X호" 형식으로 구체적 판례 인용
@@ -306,9 +310,14 @@ const Diagnostics: React.FC = () => {
     }
 
     try {
+        let contents = msg;
+        if (activeTab === 'law') {
+          const law = await fetchLawSearchForQuery(msg);
+          contents = buildUserMessageWithLawContext(msg, law.context);
+        }
         const { text: responseText } = await geminiGenerateContent({
             model: "gemini-2.5-flash",
-            contents: msg,
+            contents,
             config: { systemInstruction }
         });
         setChatLog(prev => [...prev, { role: 'ai', text: responseText || "답변을 받았으나 내용이 없습니다." }]);

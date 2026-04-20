@@ -7,6 +7,7 @@ import {
   Search, MessageSquare
 } from 'lucide-react';
 import { geminiGenerateContent } from '@/lib/geminiFetch';
+import { fetchLawSearchForQuery, buildUserMessageWithLawContext } from '@/lib/fetchLawContext';
 
 interface ChatMessage {
   role: 'user' | 'ai';
@@ -171,9 +172,10 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 5. 답변 원칙: 대표님 강의나 근황에 대한 질문은 "제 업무가 아닙니다"라고 하지 말고, 위 정보와 인터넷 최신 보도자료를 검색해 자부심을 가지고 상세히 답변해.
 
 [핵심 원칙 - 반드시 준수]
-- 법령 조문 나열 금지. 반드시 실제 판례, 징계 처분 사례, 처벌 결과 중심으로 답변하십시오.
+- 사용자 메시지에 【국가법령정보센터 공동활용 API 검색 요약】 블록이 있으면, 그 목록에 나온 법령명·법령ID·시행·공포일자만 법령 사실로 인정하십시오. 목록에 없는 조문번호·조문 본문은 창작하지 말고 law.go.kr에서 조문 확인을 안내하십시오.
+- 조문만 나열해 답변을 끝내지 말고, 반드시 실제 판례·징계 처분 사례·처벌 결과 중심으로 답변하십시오.
 - 모든 답변에 최소 2개 이상의 실제 사례(판례번호 또는 사건 개요)를 포함하십시오.
-- "~법 제X조에 의하면..."으로 시작하는 답변 방식 지양. "실제로 XX 사건에서는..." 방식으로 답변하십시오.
+- 답변 서두를 조문 인용만으로 시작하지 말고 "실제로 XX 사건에서는..." 식의 사례·맥락 중심을 유지하십시오.
 - 징계 수위(감봉 몇 호봉, 정직 몇 개월, 강등, 파면, 해임 등)를 구체적으로 명시하십시오.
 - 형사처벌이 있는 경우 벌금액, 징역 기간을 구체적으로 명시하십시오.
 
@@ -429,6 +431,7 @@ const SYSTEM_INSTRUCTIONS: Record<ModeType, string> = {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [핵심 원칙]
+- 사용자 메시지에 【국가법령정보센터 공동활용 API 검색 요약】 블록이 있으면 그 목록의 법령명·법령ID·시행·공포일자만 법령 사실로 인정하고, 목록에 없는 조문은 창작하지 마십시오.
 - 법령 조문 나열보다 실제 환수 처분 사례, 행정심판 결과, 판례 중심으로 답변
 - 실제 환수 금액, 제재부가금 배율, 이의신청 성공/실패 사례를 구체적으로 제시
 - 계산이 필요한 경우 구간별 이자율을 적용하여 추정 총액 제시
@@ -787,9 +790,14 @@ const EcaCorruptionCounselor: React.FC = () => {
     setChatInput('');
     setIsTyping(true);
     try {
+      let contents: string = text;
+      if (mode === 'corruption' || mode === 'recovery') {
+        const law = await fetchLawSearchForQuery(text);
+        contents = buildUserMessageWithLawContext(text, law.context);
+      }
       const { text: reply } = await geminiGenerateContent({
         model: 'gemini-2.5-flash',
-        contents: text,
+        contents,
         config: { systemInstruction: SYSTEM_INSTRUCTIONS[mode] }
       });
       setChatLog(prev => [...prev, { role: 'ai', text: reply || '답변을 받지 못했습니다.' }]);

@@ -63,6 +63,54 @@ function geminiDevPlugin(env: Record<string, string>): Plugin {
           return nodeRes.end(JSON.stringify({ error: message }));
         }
       });
+
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0];
+        if (url !== '/api/law-search') return next();
+
+        const nodeRes = res as unknown as ServerResponse;
+        if (req.method === 'OPTIONS') {
+          nodeRes.statusCode = 204;
+          nodeRes.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+          nodeRes.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          return nodeRes.end();
+        }
+        if (req.method !== 'POST') {
+          nodeRes.statusCode = 405;
+          return nodeRes.end('Method not allowed');
+        }
+
+        let parsed: { query?: string; q?: string };
+        try {
+          parsed = JSON.parse(await readReqBody(req)) as { query?: string; q?: string };
+        } catch {
+          nodeRes.statusCode = 400;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: 'Invalid JSON' }));
+        }
+
+        const oc = (env.LAW_GO_KR_OC || env.ETHICS_LAW_OC || '').trim();
+        if (!oc) {
+          nodeRes.statusCode = 503;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(
+            JSON.stringify({ context: '', laws: [], error: 'law_api_not_configured' }),
+          );
+        }
+
+        try {
+          const { handleLawSearch } = await import('./api/law-search.mjs');
+          const out = await handleLawSearch(oc, parsed.query ?? parsed.q ?? '');
+          nodeRes.statusCode = 200;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify(out));
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'Law search proxy error';
+          nodeRes.statusCode = 500;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ context: '', laws: [], error: message }));
+        }
+      });
     },
   };
 }
