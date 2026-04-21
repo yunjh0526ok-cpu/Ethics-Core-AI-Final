@@ -1,7 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ExternalLink, LayoutGrid, Presentation } from 'lucide-react';
-
-type ToolTab = 'padlet' | 'mentimeter';
+import React, { useMemo } from 'react';
+import { ExternalLink } from 'lucide-react';
 
 /** Share 링크를 임베드에 쓰기 쉬운 형태로만 보정합니다. 공식 Embed 코드가 있으면 그걸 우선하세요. */
 function normalizeSessionToolUrl(raw: string): string {
@@ -39,111 +37,66 @@ function sanitizeSessionEmbedUrl(raw: string | undefined): string | null {
 
 const SessionToolEmbeds: React.FC = () => {
   const padletUrl = useMemo(
-    () => sanitizeSessionEmbedUrl(import.meta.env.VITE_PADLET_EMBED_URL as string | undefined),
+    () => sanitizeSessionEmbedUrl(import.meta.env.VITE_PADLET_EMBED_URL as string | undefined) || 'https://padlet.com/auth/signup',
     [],
   );
   const mentimeterUrl = useMemo(
-    () => sanitizeSessionEmbedUrl(import.meta.env.VITE_MENTIMETER_EMBED_URL as string | undefined),
+    () =>
+      sanitizeSessionEmbedUrl(import.meta.env.VITE_MENTIMETER_EMBED_URL as string | undefined) ||
+      'https://www.mentimeter.com/app/home',
     [],
   );
 
-  // 멘티미터를 앞 탭(기본)으로 두고, 없으면 패들렛으로 폴백합니다.
-  const [tab, setTab] = useState<ToolTab>(() => (mentimeterUrl ? 'mentimeter' : 'padlet'));
-
-  const activeUrl = tab === 'padlet' ? padletUrl : mentimeterUrl;
-  const hasAny = Boolean(padletUrl || mentimeterUrl);
-
-  if (!hasAny) {
-    return (
-      <div className="rounded-3xl border border-slate-600/40 bg-[#050814]/90 p-6 backdrop-blur-md">
-        <h3 className="text-lg font-black text-white">현장 도구 (패들렛 · 멘티미터)</h3>
-        <p className="mt-2 text-xs leading-relaxed text-slate-400">
-          패들렛 또는 멘티미터에서 <span className="font-bold text-slate-200">공유 → Embed</span> 로 받은{' '}
-          <span className="font-mono text-cyan-200/90">https</span> 임베드 주소를 환경 변수에 넣으면 이 영역에 바로 표시됩니다. API 키는 필요하지
-          않습니다.
-        </p>
-        <ul className="mt-3 list-disc space-y-1 pl-4 text-[11px] text-slate-500">
-          <li>
-            <code className="text-slate-400">VITE_PADLET_EMBED_URL</code> — 패들렛 임베드 URL
-          </li>
-          <li>
-            <code className="text-slate-400">VITE_MENTIMETER_EMBED_URL</code> — 멘티미터 프레젠테이션 임베드 URL
-          </li>
-        </ul>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-3xl border border-violet-400/25 bg-gradient-to-br from-[#0c0a1a] to-[#12102a] p-5 shadow-xl backdrop-blur-md lg:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="text-xl font-black text-white">현장 도구</h3>
-          <p className="mt-1 text-xs text-slate-400">임베드된 패들렛·멘티미터 화면에서 그대로 참여할 수 있습니다.</p>
-        </div>
-        {padletUrl && mentimeterUrl && (
-          <div className="flex shrink-0 gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
-            <button
-              type="button"
-              onClick={() => setTab('mentimeter')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                tab === 'mentimeter' ? 'bg-violet-500/25 text-violet-100' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <Presentation className="h-3.5 w-3.5" />
-              Mentimeter
-            </button>
-            <button
-              type="button"
-              onClick={() => setTab('padlet')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                tab === 'padlet' ? 'bg-violet-500/25 text-violet-100' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Padlet
-            </button>
-          </div>
-        )}
+      <div>
+        <h3 className="text-xl font-black text-white">현장 도구 바로가기</h3>
+        <p className="mt-1 text-xs text-slate-400">이미지 카드를 클릭하면 각 서비스 로그인/실행 페이지로 이동합니다.</p>
       </div>
 
-      {tab === 'padlet' && (
-        <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
-          Padlet 보드가 비공개/로그인 필수면 iframe 내부 로그인 후에도 403이 날 수 있습니다. 이 경우 오른쪽 상단
-          <span className="font-bold"> 새 탭</span>으로 여는 방식이 가장 안정적입니다.
-        </div>
-      )}
-
-      {activeUrl && (
-        <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-          <div className="flex items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
-            <span className="truncate text-[11px] font-mono text-slate-500">{activeUrl}</span>
-            <a
-              href={activeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-white/15 px-2 py-1 text-[10px] font-bold text-slate-200 hover:border-cyan-400/40 hover:text-white"
-            >
-              새 탭
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          </div>
-          <div className="relative w-full" style={{ minHeight: 'min(70vh, 720px)' }}>
-            <iframe
-              title={tab === 'padlet' ? 'Padlet embed' : 'Mentimeter embed'}
-              src={activeUrl}
-              className="absolute inset-0 h-full w-full border-0"
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <a
+          href={mentimeterUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group overflow-hidden rounded-2xl border border-cyan-400/25 bg-[#060b1e] transition hover:border-cyan-300/60"
+        >
+          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+            <img
+              src="https://logo.clearbit.com/mentimeter.com"
+              alt="Mentimeter"
+              className="h-7 w-7 rounded bg-white object-contain p-1"
               loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allow="clipboard-write; fullscreen; autoplay"
             />
+            <p className="font-black text-cyan-100">Mentimeter</p>
           </div>
-        </div>
-      )}
+          <div className="flex min-h-[140px] items-end justify-between bg-gradient-to-br from-cyan-900/30 to-blue-900/20 p-4">
+            <p className="text-sm font-bold text-slate-100">발표/투표 화면 열기</p>
+            <ExternalLink className="h-4 w-4 text-cyan-200 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </div>
+        </a>
 
-      {!activeUrl && padletUrl && mentimeterUrl && (
-        <p className="mt-3 text-xs text-amber-200/90">표시할 주소가 없습니다. 탭을 다시 선택해 주세요.</p>
-      )}
+        <a
+          href={padletUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group overflow-hidden rounded-2xl border border-fuchsia-400/25 bg-[#12081c] transition hover:border-fuchsia-300/60"
+        >
+          <div className="flex items-center gap-3 border-b border-white/10 px-4 py-3">
+            <img
+              src="https://logo.clearbit.com/padlet.com"
+              alt="Padlet"
+              className="h-7 w-7 rounded bg-white object-contain p-1"
+              loading="lazy"
+            />
+            <p className="font-black text-fuchsia-100">Padlet</p>
+          </div>
+          <div className="flex min-h-[140px] items-end justify-between bg-gradient-to-br from-fuchsia-900/30 to-violet-900/20 p-4">
+            <p className="text-sm font-bold text-slate-100">보드/로그인 화면 열기</p>
+            <ExternalLink className="h-4 w-4 text-fuchsia-200 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </div>
+        </a>
+      </div>
     </div>
   );
 };
