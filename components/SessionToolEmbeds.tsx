@@ -47,7 +47,8 @@ const SessionToolEmbeds: React.FC = () => {
     [],
   );
 
-  const [tab, setTab] = useState<ToolTab>(() => (padletUrl ? 'padlet' : 'mentimeter'));
+  // 멘티미터를 앞 탭(기본)으로 두고, 없으면 패들렛으로 폴백합니다.
+  const [tab, setTab] = useState<ToolTab>(() => (mentimeterUrl ? 'mentimeter' : 'padlet'));
 
   const activeUrl = tab === 'padlet' ? padletUrl : mentimeterUrl;
   const hasAny = Boolean(padletUrl || mentimeterUrl);
@@ -84,16 +85,6 @@ const SessionToolEmbeds: React.FC = () => {
           <div className="flex shrink-0 gap-1 rounded-xl border border-white/10 bg-black/30 p-1">
             <button
               type="button"
-              onClick={() => setTab('padlet')}
-              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
-                tab === 'padlet' ? 'bg-violet-500/25 text-violet-100' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              Padlet
-            </button>
-            <button
-              type="button"
               onClick={() => setTab('mentimeter')}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
                 tab === 'mentimeter' ? 'bg-violet-500/25 text-violet-100' : 'text-slate-400 hover:text-white'
@@ -102,9 +93,26 @@ const SessionToolEmbeds: React.FC = () => {
               <Presentation className="h-3.5 w-3.5" />
               Mentimeter
             </button>
+            <button
+              type="button"
+              onClick={() => setTab('padlet')}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition-colors ${
+                tab === 'padlet' ? 'bg-violet-500/25 text-violet-100' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              Padlet
+            </button>
           </div>
         )}
       </div>
+
+      {tab === 'padlet' && (
+        <div className="mt-3 rounded-xl border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-[11px] leading-relaxed text-amber-100/90">
+          Padlet 보드가 비공개/로그인 필수면 iframe 내부 로그인 후에도 403이 날 수 있습니다. 이 경우 오른쪽 상단
+          <span className="font-bold"> 새 탭</span>으로 여는 방식이 가장 안정적입니다.
+        </div>
+      )}
 
       {activeUrl && (
         <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-black/40">
