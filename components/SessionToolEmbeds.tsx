@@ -8,20 +8,6 @@ function normalizeSessionToolUrl(raw: string): string {
   const u = new URL(raw.trim());
   const host = u.hostname.toLowerCase();
 
-  if (host === 'padlet.com' || host.endsWith('.padlet.com')) {
-    const segments = u.pathname.split('/').filter(Boolean);
-    const reserved = new Set(['embed', 'dashboard', 'auth', 'members', 'schools', 'organizations']);
-    if (
-      segments.length === 2 &&
-      !reserved.has(segments[0].toLowerCase()) &&
-      segments[0].toLowerCase() !== 'embed'
-    ) {
-      u.pathname = `/embed/${segments[0]}/${segments[1]}`;
-      u.search = '';
-      u.hash = '';
-    }
-  }
-
   if (host === 'mentimeter.com' || host === 'www.mentimeter.com' || host.endsWith('.mentimeter.com')) {
     const m = u.pathname.match(/^(\/app\/presentation\/[^/]+)\/edit\/?$/i);
     if (m) u.pathname = m[1];
