@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { CheckCircle2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, ExternalLink, LayoutGrid, Presentation } from 'lucide-react';
 
 /** Share 링크를 임베드에 쓰기 쉬운 형태로만 보정합니다. 공식 Embed 코드가 있으면 그걸 우선하세요. */
 function normalizeSessionToolUrl(raw: string): string {
@@ -82,12 +82,9 @@ const SessionToolEmbeds: React.FC = () => {
         >
           <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
             <div className="flex items-center gap-3">
-              <img
-                src="https://logo.clearbit.com/mentimeter.com"
-                alt="Mentimeter"
-                className="h-7 w-7 rounded bg-white object-contain p-1"
-                loading="lazy"
-              />
+              <div className="flex h-7 w-7 items-center justify-center rounded bg-cyan-500/20 text-cyan-100">
+                <Presentation className="h-4 w-4" />
+              </div>
               <p className="font-black text-cyan-100">Mentimeter</p>
             </div>
             <span className="rounded-full border border-cyan-300/40 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-bold text-cyan-100">
@@ -114,12 +111,9 @@ const SessionToolEmbeds: React.FC = () => {
         >
           <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
             <div className="flex items-center gap-3">
-              <img
-                src="https://logo.clearbit.com/padlet.com"
-                alt="Padlet"
-                className="h-7 w-7 rounded bg-white object-contain p-1"
-                loading="lazy"
-              />
+              <div className="flex h-7 w-7 items-center justify-center rounded bg-fuchsia-500/20 text-fuchsia-100">
+                <LayoutGrid className="h-4 w-4" />
+              </div>
               <p className="font-black text-fuchsia-100">Padlet</p>
             </div>
             <span className="rounded-full border border-fuchsia-300/40 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-bold text-fuchsia-100">
