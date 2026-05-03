@@ -66,6 +66,34 @@ function geminiDevPlugin(env: Record<string, string>): Plugin {
 
       server.middlewares.use(async (req, res, next) => {
         const url = (req.url || '').split('?')[0];
+        if (url !== '/api/metrics') return next();
+
+        const nodeRes = res as unknown as ServerResponse;
+        if (req.method === 'OPTIONS') {
+          nodeRes.statusCode = 204;
+          nodeRes.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+          nodeRes.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          return nodeRes.end();
+        }
+        if (req.method !== 'GET') {
+          nodeRes.statusCode = 405;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: 'Method not allowed' }));
+        }
+
+        try {
+          const { default: metricsHandler } = await import('./api/metrics.js');
+          await metricsHandler(req as IncomingMessage, nodeRes);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'metrics proxy error';
+          nodeRes.statusCode = 500;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ error: message }));
+        }
+      });
+
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0];
         if (url !== '/api/law-search') return next();
 
         const nodeRes = res as unknown as ServerResponse;

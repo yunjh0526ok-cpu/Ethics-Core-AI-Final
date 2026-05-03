@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "api/law-search.mjs": {
+      "regions": ["hnd1"]
+    },
+    "api/metrics.js": {
+      "regions": ["hnd1"]
+    }
+  },
+  "rewrites": [
+    { "source": "/dashboard", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/sw.js",

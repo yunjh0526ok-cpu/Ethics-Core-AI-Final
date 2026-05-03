@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
@@ -14,9 +15,11 @@
     "@react-three/fiber": "^9.5.0",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.33.0",
+    "mongodb": "^6.12.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.563.0",
+    "pdfjs-dist": "^5.6.205",
     "pptxgenjs": "^4.0.1",
     "react": "^19.2.4",
     "react-chartjs-2": "^5.3.1",
@@ -28,6 +31,7 @@
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
-    "vite": "^6.2.0"
+    "vite": "^6.2.0",
+    "vitest": "^3.2.0"
   }
 }
