@@ -5,6 +5,9 @@
     },
     "api/metrics.js": {
       "regions": ["hnd1"]
+    },
+    "api/feedback.js": {
+      "regions": ["hnd1"]
     }
   },
   "rewrites": [

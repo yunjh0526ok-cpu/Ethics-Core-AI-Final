@@ -3,9 +3,9 @@ import React from 'react';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="relative z-10 py-12 border-t border-slate-800 bg-slate-950 text-center">
+    <footer className="relative z-10 py-12 border-t border-[#B89150]/25 bg-[#0F172A] text-center">
       <div className="max-w-7xl mx-auto px-4">
-        <h3 className="text-2xl font-bold text-white mb-2 font-tech">Ethics-CoreAI</h3>
+        <h3 className="text-2xl font-bold text-white mb-2 tracking-[0.12em]">ETHICS-CORE AI</h3>
         
         {/* Updated Copyright Text */}
         <p className="text-slate-500 text-xs md:text-sm mb-8">

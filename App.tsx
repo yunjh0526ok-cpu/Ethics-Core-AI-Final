@@ -20,6 +20,7 @@ import FacilitatorDashboard from './components/FacilitatorDashboard';
 import QuizStage from './components/QuizStage';
 import EthicsDramaLibrary from './components/EthicsDramaLibrary';
 import Dashboard from './src/components/Dashboard.jsx';
+import FeedbackWidget from './src/components/FeedbackWidget.jsx';
 type ViewName =
   | 'home'
   | 'about'
@@ -468,6 +469,8 @@ const App: React.FC = () => {
       </main>
 
       <Footer />
+
+      <FeedbackWidget />
     </div>
   );
 };

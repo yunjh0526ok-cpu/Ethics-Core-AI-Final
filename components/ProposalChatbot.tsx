@@ -16,7 +16,7 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 const PROPOSAL_CONTEXT = `
-당신은 '청렴공정AI센터(Ethics-CoreAI)'의 **수석 컨설턴트 AI**입니다.
+당신은 '청렴공정연구센터(Ethics-Core AI)'의 **수석 컨설턴트 AI**입니다.
 당신의 역할은 교육 담당자에게 **2026년형 최신 교육 프로그램과 솔루션**을 전문적이고 신뢰감 있게 제안하는 것입니다.
 
 [핵심 레퍼런스: 2026년형 차세대 커리큘럼]
@@ -43,7 +43,7 @@ const ProposalChatbot: React.FC = () => {
   const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
     { 
       role: 'ai', 
-      text: "안녕하십니까. Ethics-CoreAI 수석 컨설턴트입니다.\n\n2026년형 차세대 AI 활용 청렴 교육 커리큘럼과\n조직문화 진단 솔루션에 대해 안내해 드리겠습니다.\n\n궁금하신 점을 편하게 말씀해 주세요." 
+      text: "안녕하십니까. Ethics-Core AI 수석 컨설턴트입니다.\n\n2026년형 차세대 AI 활용 청렴 교육 커리큘럼과\n조직문화 진단 솔루션에 대해 안내해 드리겠습니다.\n\n궁금하신 점을 편하게 말씀해 주세요."
     }
   ]);
   const [input, setInput] = useState('');
@@ -188,7 +188,7 @@ const ProposalChatbot: React.FC = () => {
                         <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-8 max-w-md text-center shadow-lg">
                             <div className="flex justify-center mb-4">
                                 <span className="text-[10px] font-bold text-blue-400 tracking-widest uppercase flex items-center gap-2">
-                                    <Sparkles className="w-3 h-3" /> Ethics-CoreAI Welcome Message
+                                    <Sparkles className="w-3 h-3" /> Ethics-Core AI Welcome Message
                                 </span>
                             </div>
                             <p className="text-slate-200 text-base leading-relaxed whitespace-pre-wrap font-medium">

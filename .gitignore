@@ -3,3 +3,6 @@ node_modules
 .env
 .vercel
 .env.vercel.pull
+dist-ppt/
+dist-ppt-gui/
+build/

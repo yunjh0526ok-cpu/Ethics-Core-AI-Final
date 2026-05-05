@@ -1,0 +1,59 @@
+{
+  "topic": "manual hash test",
+  "loadedManuals": [
+    "_common.md",
+    "orchestrator.md",
+    "research.md",
+    "report_draft.md",
+    "editor.md",
+    "security.md",
+    "template_design.md",
+    "slide_composer.md",
+    "qa.md"
+  ],
+  "steps": [
+    {
+      "step": "orchestrator",
+      "status": "pass",
+      "detail": "필수 매뉴얼 9개 로드"
+    },
+    {
+      "step": "research",
+      "status": "pass",
+      "detail": "sections 6개"
+    },
+    {
+      "step": "report_draft",
+      "status": "pass",
+      "detail": "갤러리 덱 생성에서는 report 본문 생략(요약 모드)"
+    },
+    {
+      "step": "editor",
+      "status": "pass",
+      "detail": "요약 모드: title/title_en 길이 제한만 적용"
+    },
+    {
+      "step": "security",
+      "status": "pass",
+      "detail": "민감 패턴 미검출"
+    },
+    {
+      "step": "template_design",
+      "status": "pass",
+      "detail": "다크 템플릿 6칸 배치 적용"
+    },
+    {
+      "step": "slide_composer",
+      "status": "pass",
+      "detail": "Morph transition OOXML 주입"
+    },
+    {
+      "step": "qa",
+      "status": "pass",
+      "detail": "생성 버퍼 정상 (비어있지 않음)"
+    }
+  ],
+  "outputFileName": "C:\\Users\\JOO\\Desktop\\ethics-coreai-웹-앱\\output\\orchestrated-dark-gallery-manual_hash_test.pptx",
+  "warnings": [],
+  "manualsHash": "055540761f59"
+}

@@ -50,7 +50,7 @@ const Contact: React.FC = () => {
                 <div className="w-20 h-20 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-[0_0_20px_rgba(139,92,246,0.3)]">
                    <User className="w-8 h-8 text-cyber-purple" />
                 </div>
-                <p className="text-slate-400 font-bold text-sm tracking-wide mb-2 group-hover:text-cyber-purple transition-colors">청렴공정AI센터 (Ethics-Core AI)</p>
+                <p className="text-slate-400 font-bold text-sm tracking-wide mb-2 group-hover:text-cyber-purple transition-colors">청렴공정연구센터 (Ethics-Core AI)</p>
                 <h3 className="text-white font-black text-3xl md:text-4xl mb-1">주양순 대표</h3>
              </div>
 

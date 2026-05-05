@@ -5,7 +5,7 @@ const POLL_MS = 5 * 60 * 1000;
 
 /**
  * @typedef {{ appId: string; label: string; users: number; activeUsers: number; errorRate: number }} AppMetric
- * @typedef {{ demo?: boolean; fallback?: boolean; error?: string; apps: AppMetric[]; updatedAt: string }} MetricsPayload
+ * @typedef {{ apps: AppMetric[]; updatedAt: string }} MetricsPayload
  */
 
 export default function Dashboard() {
@@ -19,13 +19,25 @@ export default function Dashboard() {
     setErr(null);
     try {
       const r = await fetch('/api/metrics', { credentials: 'same-origin' });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      /** @type {MetricsPayload} */
-      const j = await r.json();
+      /** @type {MetricsPayload & { error?: string; message?: string }} */
+      let j = {};
+      try {
+        j = await r.json();
+      } catch {
+        j = {};
+      }
+      if (!r.ok) {
+        const detail = j.message ? `${r.status}: ${j.message}` : `HTTP ${r.status}`;
+        console.error('[Dashboard] /api/metrics failed:', detail, j);
+        throw new Error(detail);
+      }
       setData(j);
       setLastFetch(new Date());
     } catch (e) {
-      setErr(e instanceof Error ? e.message : 'load_failed');
+      const msg = e instanceof Error ? e.message : 'load_failed';
+      console.error('[Dashboard] metrics load error:', e);
+      setData(null);
+      setErr(msg);
     } finally {
       setLoading(false);
     }
@@ -73,14 +85,6 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
-
-      {(data?.demo || data?.fallback) && (
-        <div className="mb-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          {data?.fallback && data?.error
-            ? `MongoDB unavailable — showing demo zeros (${data.error})`
-            : 'Demo mode: set MONGODB_URI for live counts.'}
-        </div>
-      )}
 
       {err && (
         <div className="mb-6 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-200">

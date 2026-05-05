@@ -3,7 +3,8 @@
  */
 export type GeminiClientPayload = Record<string, unknown> & { model: string };
 
-const REQUEST_TIMEOUT_MS = 30000;
+/** 리포트·덱 생성 등 긴 응답을 위해 여유 있게 */
+const REQUEST_TIMEOUT_MS = 120000;
 
 export async function geminiGenerateContent(payload: GeminiClientPayload): Promise<{ text: string }> {
   const run = async () => {

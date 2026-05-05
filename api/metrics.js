@@ -1,6 +1,8 @@
 /**
  * Unified ops metrics: Ethics Core AI, LexGuard, LogosWeb
- * MongoDB collections: `users`, `logs` (filter by `app` field)
+ * MongoDB: `process.env.MONGODB_URI` (또는 Vite dev에서 loadEnv 병합 후 동일).
+ * 응답에 demo 필드 없음 — URI 없음→503, 연결 실패→503.
+ * 컬렉션: `users`, `logs` (앱별 `app` 필드)
  */
 
 const DEFAULT_ORIGINS =
@@ -31,21 +33,6 @@ function sendJson(res, status, obj) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(body);
-}
-
-/** Demo / no-DB response (curl·local tests). */
-export function buildDemoMetrics() {
-  return {
-    demo: true,
-    apps: APP_DEFS.map((a) => ({
-      appId: a.appId,
-      label: a.label,
-      users: 0,
-      activeUsers: 0,
-      errorRate: 0,
-    })),
-    updatedAt: new Date().toISOString(),
-  };
 }
 
 function logWindowFilter(appKey, logSince) {
@@ -113,7 +100,6 @@ export async function aggregateMetrics(db) {
   }
 
   return {
-    demo: false,
     apps,
     updatedAt: new Date().toISOString(),
   };
@@ -142,7 +128,11 @@ export default async function handler(req, res) {
 
   const uri = (process.env.MONGODB_URI || '').trim();
   if (!uri) {
-    return sendJson(res, 200, buildDemoMetrics());
+    console.error('[api/metrics] MONGODB_URI is not set. Add it to .env (see .env.example).');
+    return sendJson(res, 503, {
+      error: 'mongodb_not_configured',
+      message: 'Set MONGODB_URI in .env',
+    });
   }
 
   try {
@@ -158,13 +148,11 @@ export default async function handler(req, res) {
       await client.close().catch(() => {});
     }
   } catch (e) {
-    console.error('[api/metrics]', e);
+    console.error('[api/metrics] MongoDB error:', e);
     const msg = e instanceof Error ? e.message : 'metrics_error';
-    return sendJson(res, 200, {
-      ...buildDemoMetrics(),
-      demo: true,
-      fallback: true,
-      error: msg,
+    return sendJson(res, 503, {
+      error: 'mongodb_connection_failed',
+      message: msg,
     });
   }
 }

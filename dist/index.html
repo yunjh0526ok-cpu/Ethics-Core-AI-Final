@@ -2,20 +2,20 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ethics-CoreAI | 청렴과 AI의 융합</title>
-  <meta name="theme-color" content="#020205" />
-  <meta name="description" content="Ethics-CoreAI 웹앱: 청렴·공정·윤리 교육과 ECA 상담 도구" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Ethics-Core AI | 청렴과 공정의 목소리</title>
+  <meta name="theme-color" content="#0F172A" />
+  <meta name="description" content="Ethics-Core AI 웹앱: 청렴·공정 실천을 지원하는 AI 어시스턴트 플랫폼" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Ethics-Core AI" />
-  <link rel="manifest" href="/manifest.webmanifest?v=robot-20260417" />
-  <link rel="icon" type="image/x-icon" href="/pwa-icons/favicon.ico?v=robot-20260417" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/pwa-icons/icon-32.png?v=robot-20260417" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/pwa-icons/icon-16.png?v=robot-20260417" />
-  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-icons/icon-192.png?v=robot-20260417" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/pwa-icons/icon-180.png?v=robot-20260417" />
+  <link rel="manifest" href="/manifest.webmanifest?v=robot-20260420b" />
+  <link rel="icon" type="image/x-icon" href="/pwa-icons/favicon.ico?v=robot-20260420b" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/pwa-icons/icon-32.png?v=robot-20260420b" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/pwa-icons/icon-16.png?v=robot-20260420b" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-icons/icon-192.png?v=robot-20260420b" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/pwa-icons/icon-180.png?v=robot-20260420b" />
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +23,9 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&family=Orbitron:wght@400;700&family=Gowun+Batang:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" rel="stylesheet">
 
   <!-- Tailwind Config -->
   <script>
@@ -31,20 +33,20 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Noto Sans KR"', 'sans-serif'],
-            tech: ['"Orbitron"', 'sans-serif'],
-            warm: ['"Gowun Batang"', 'serif'],
+            sans: ['Pretendard', 'system-ui', 'sans-serif'],
+            tech: ['Pretendard', 'system-ui', 'sans-serif'],
+            warm: ['"Nanum Myeongjo"', 'serif'],
           },
           colors: {
             cyber: {
-              950: '#020205',
-              900: '#0a0a12',
+              950: '#0F172A',
+              900: '#111827',
               800: '#13132b',
               600: '#2563eb',
               500: '#3b82f6',
               400: '#60a5fa',
-              accent: '#06b6d4',
-              purple: '#8b5cf6'
+              accent: '#38B2AC',
+              purple: '#B89150'
             }
           },
           animation: {
@@ -65,8 +67,9 @@
   <style>
     html { scroll-behavior: smooth; scroll-padding-top: 100px; }
     body {
-      background-color: #020205;
+      background-color: #0F172A;
       color: #e2e8f0;
+      font-family: Pretendard, system-ui, sans-serif;
       overflow-x: hidden;
       -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
       -webkit-touch-callout: none;
@@ -74,7 +77,7 @@
     img { pointer-events: none; user-drag: none; -webkit-user-drag: none; }
     a, button, input, textarea, select { pointer-events: auto; }
     ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #020205; }
+    ::-webkit-scrollbar-track { background: #0F172A; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #475569; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
@@ -84,7 +87,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   </style>
   <link rel="stylesheet" href="/index.css">
-  <script type="module" crossorigin src="/assets/index-DeMLaQsu.js"></script>
+  <script type="module" crossorigin src="/assets/index-C0Guo2uF.js"></script>
 </head>
 <body class="selection:bg-cyan-500 selection:text-white">
   <div id="root" class="h-full"></div>

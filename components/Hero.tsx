@@ -55,9 +55,9 @@ const PARTNER_DETAILS: Record<string, {
   etc: {
     title: "기타 문의",
     subtitle: "어떤 문의든 성심껏 답변드립니다",
-    description: "강의, 컨설팅, 협업 외에도 Ethics-CoreAI 플랫폼 활용, AI 교육 프로그램, 청렴 관련 연구 참여 등 다양한 분야에서 협력할 수 있습니다. 편하게 문의해 주세요.",
+    description: "강의, 컨설팅, 협업 외에도 Ethics-Core AI 플랫폼 활용, AI 교육 프로그램, 청렴 관련 연구 참여 등 다양한 분야에서 협력할 수 있습니다. 편하게 문의해 주세요.",
     points: [
-      "Ethics-CoreAI 플랫폼 도입 문의",
+      "Ethics-Core AI 플랫폼 도입 문의",
       "청렴·적극행정 연구 협력",
       "AI 교육 콘텐츠 개발 협업",
       "언론·방송 자문 및 출연",
@@ -115,6 +115,7 @@ const Hero: React.FC = () => {
   };
 
   const menuItems = [
+    { label: "에틱스 드라마 (9편)", action: "ethics_drama", desc: "국가법령·판례 기반 3막 스토리 + 퀴즈" },
     { label: "갑질 및 직장 내 괴롭힘 상담", action: "diagnostics", desc: "비가시적 괴롭힘 진단" },
     { label: "청렴 DNA 진단", action: "integrity", desc: "나의 청렴 MBTI 확인 및 마법의 소통 번역기" },
     { label: "관계 온도계", action: "relationship", desc: "성별 갈등·성인지사례·관계언어·온도 진단" },
@@ -223,7 +224,6 @@ const Hero: React.FC = () => {
               className="w-full flex flex-col items-center relative z-20 pb-32 px-2"
             >
               <div className="flex flex-col xl:flex-row items-center justify-center gap-8 xl:gap-[450px] w-full max-w-[1600px] relative z-10 pt-4">
-
                 {/* LEFT: PARTNER CARD */}
                 <motion.div
                   initial={{ opacity: 0, x: -50 }}
@@ -294,7 +294,7 @@ const Hero: React.FC = () => {
                       <Box className="w-6 h-6 md:w-7 md:h-7 text-white" />
                     </div>
                     <div className="relative z-10">
-                      <h3 className="text-white font-bold text-base md:text-xl">Ethics-CoreAI 전문상담관</h3>
+                      <h3 className="text-white font-bold text-base md:text-xl">Ethics-Core AI 전문상담관</h3>
                       <p className="text-blue-100 text-xs md:text-sm opacity-90 mt-0.5">원하시는 서비스를 선택해주세요.</p>
                     </div>
                   </div>

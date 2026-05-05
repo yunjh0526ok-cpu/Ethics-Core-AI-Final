@@ -5,9 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "start": "vite --host 0.0.0.0 --open /dashboard",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:ops": "node scripts/seed-ops-metrics.mjs",
+    "sync:desktop-launcher": "node scripts/sync-desktop-launcher.mjs",
+    "postinstall": "node scripts/sync-desktop-launcher.mjs",
+    "build:ppt-exe": "pkg ppt-exe-entry.cjs -t node18-win-x64 -o dist-ppt/EthicsCore-PPT.exe",
+    "build:ppt-gui": "py -m pip install -q -r requirements-ppt-gui.txt && py -m PyInstaller --noconfirm --clean --distpath dist-ppt-gui --workpath build/ppt-gui ppt_gui.spec"
+  },
+  "pkg": {
+    "scripts": [
+      "ppt-exe-entry.cjs",
+      "auto_ppt.cjs"
+    ]
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
@@ -15,10 +27,10 @@
     "@react-three/fiber": "^9.5.0",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.33.0",
-    "mongodb": "^6.12.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.563.0",
+    "mongodb": "^6.12.0",
     "pdfjs-dist": "^5.6.205",
     "pptxgenjs": "^4.0.1",
     "react": "^19.2.4",
@@ -30,6 +42,7 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "pkg": "^5.8.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0",
     "vitest": "^3.2.0"

@@ -97,7 +97,10 @@ export async function handleLawSearch(oc, query) {
     query: q,
     display: '20',
   });
-  const url = `https://www.law.go.kr/DRF/lawSearch.do?${params.toString()}`;
+  const proxyBase = String(process.env.LAW_PROXY_BASE_URL || '').trim();
+  const upstreamBase = proxyBase || 'https://www.law.go.kr/DRF/lawSearch.do';
+  const joiner = upstreamBase.includes('?') ? '&' : '?';
+  const url = `${upstreamBase}${joiner}${params.toString()}`;
 
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), 12_000);
@@ -107,7 +110,11 @@ export async function handleLawSearch(oc, query) {
       headers: { Accept: 'application/json, text/plain, */*' },
       signal: ac.signal,
     });
-  } catch {
+  } catch (e) {
+    const name = e && typeof e === 'object' && 'name' in e ? String(e.name) : '';
+    if (name === 'AbortError') {
+      return { context: '', laws: [], error: 'fetch_timeout' };
+    }
     return { context: '', laws: [], error: 'fetch_failed' };
   } finally {
     clearTimeout(timer);

@@ -46,7 +46,7 @@ const IntegratedCounseling: React.FC = () => {
   const getServiceDetails = (service: ServiceType) => {
       if (service === 'corruption') {
           return {
-              title: "ECA 부패상담관",
+              title: "Ethics-Core 부패상담관",
               subtitle: "청탁금지법 · 행동강령 · 이해충돌방지법",
               desc: "주양순 대표가 설계한 전문 AI입니다.\n안심하고 상담을 시작하세요.",
               themeColor: "text-blue-500",
@@ -184,7 +184,7 @@ const IntegratedCounseling: React.FC = () => {
                             <div className="flex items-center justify-between mb-3 px-1">
                                 <div className="flex items-center gap-2">
                                     <ShieldAlert className="w-5 h-5 text-blue-500" />
-                                    <h3 className="text-lg font-bold text-white">ECA 부패상담관</h3>
+                                    <h3 className="text-lg font-bold text-white">Ethics-Core 부패상담관</h3>
                                 </div>
                                 <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px] font-bold border border-blue-500/20">AI Powered</span>
                             </div>

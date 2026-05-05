@@ -17,6 +17,33 @@ function geminiDevPlugin(env: Record<string, string>): Plugin {
   return {
     name: 'gemini-api-dev',
     configureServer(server) {
+      /** api/metrics.js 등 Node 핸들러가 `process.env.MONGODB_URI`를 읽을 수 있도록 병합 */
+      Object.assign(process.env, env);
+
+      const mongoUri = (process.env.MONGODB_URI || '').trim();
+      if (mongoUri) {
+        void (async () => {
+          try {
+            const { MongoClient } = await import('mongodb');
+            const c = new MongoClient(mongoUri, { serverSelectionTimeoutMS: 8000 });
+            await c.connect();
+            await c.db('admin').command({ ping: 1 });
+            await c.close();
+            console.info('\n[MongoDB] 연결 확인: 성공 (ping)\n');
+          } catch (e) {
+            console.warn(
+              '\n[MongoDB] 연결 확인 실패:',
+              e instanceof Error ? e.message : e,
+              '\n→ .env의 MONGODB_URI, Atlas Network Access(IP), Database 사용자/비밀번호를 확인하세요.\n',
+            );
+          }
+        })();
+      } else {
+        console.warn(
+          '\n[env] MONGODB_URI 없음 — /api/metrics, /api/feedback 는 .env에 Connection String 설정 후 사용하세요.\n',
+        );
+      }
+
       server.middlewares.use(async (req, res, next) => {
         const url = (req.url || '').split('?')[0];
         if (url !== '/api/gemini') return next();
@@ -89,6 +116,34 @@ function geminiDevPlugin(env: Record<string, string>): Plugin {
           nodeRes.statusCode = 500;
           nodeRes.setHeader('Content-Type', 'application/json');
           return nodeRes.end(JSON.stringify({ error: message }));
+        }
+      });
+
+      server.middlewares.use(async (req, res, next) => {
+        const url = (req.url || '').split('?')[0];
+        if (url !== '/api/feedback') return next();
+
+        const nodeRes = res as unknown as ServerResponse;
+        if (req.method === 'OPTIONS') {
+          nodeRes.statusCode = 204;
+          nodeRes.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+          nodeRes.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          return nodeRes.end();
+        }
+        if (req.method !== 'POST') {
+          nodeRes.statusCode = 405;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+        }
+
+        try {
+          const { default: feedbackHandler } = await import('./api/feedback.js');
+          await feedbackHandler(req as IncomingMessage, nodeRes);
+        } catch (e) {
+          const message = e instanceof Error ? e.message : 'feedback proxy error';
+          nodeRes.statusCode = 500;
+          nodeRes.setHeader('Content-Type', 'application/json');
+          return nodeRes.end(JSON.stringify({ success: false, error: message }));
         }
       });
 
