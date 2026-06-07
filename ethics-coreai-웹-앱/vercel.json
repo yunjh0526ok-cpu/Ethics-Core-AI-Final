@@ -1,0 +1,4 @@
+{
+  "installCommand": "npm install --production=false",
+  "buildCommand": "rm -f public && npm run build"
+}
