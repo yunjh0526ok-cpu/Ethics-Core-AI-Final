@@ -11,7 +11,7 @@ interface MBTIProfile {
   diagnosis: string;
   intention: string;h
   latte: {
-    original: string;
+    original: string;h
     translated: string;
   };
   tips: {
@@ -167,7 +167,7 @@ const MBTI_Latte: React.FC = () => {
       );
 
       const apiPromise = genAI.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-2.5-flash",
         contents: `다음 말 또는 상황을 번역해줘: "${latteInput}"`,
         config: {
           systemInstruction,
