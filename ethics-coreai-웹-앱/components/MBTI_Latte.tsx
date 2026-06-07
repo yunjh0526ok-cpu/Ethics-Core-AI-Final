@@ -9,7 +9,7 @@ const genAI = apiKey ? new GoogleGenAI({ apiKey }) : null;
 interface MBTIProfile {
   nickname: string;
   diagnosis: string;
-  intention: string;
+  intention: string;h
   latte: {
     original: string;
     translated: string;
@@ -167,7 +167,7 @@ const MBTI_Latte: React.FC = () => {
       );
 
       const apiPromise = genAI.models.generateContent({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.0-flash",
         contents: `다음 말 또는 상황을 번역해줘: "${latteInput}"`,
         config: {
           systemInstruction,
